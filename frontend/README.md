@@ -1,6 +1,6 @@
 # Sistema de Gestión — Fundación Amor de Cuatro Patas
 
-Frontend del MVP conectado al backend Supabase v1.1.
+Frontend v2 del MVP conectado al backend Supabase v1.1. Esta versión incorpora correcciones surgidas de la primera prueba de integración real y mejoras de UX.
 
 ## 1. Configuración necesaria
 
@@ -48,9 +48,11 @@ Nunca colocar en este proyecto:
 
 Esos secretos permanecen configurados del lado de Supabase/Edge Functions.
 
-## 6. Pruebas pendientes con credenciales reales
+## 6. Pruebas de integración
 
-La revisión entregada valida estructura y sintaxis local del frontend. Las pruebas de integración reales (Auth, RLS, RPC, Storage y Edge Functions) deben realizarse una vez configuradas la URL y clave pública del proyecto.
+La v1 confirmó Auth y conexión real con Supabase. La v2 corrige los hallazgos de esa prueba: doble envío, catálogos, seguimiento, apertura Drive, gastos, hogares, foto principal, informes y flujo de esterilización. Debe repetirse la prueba funcional módulo por módulo con los datos reales.
+
+**Importante:** conservar el `js/config.js` local ya configurado; no subirlo a Git.
 
 ## 7. Logo
 
