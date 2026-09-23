@@ -310,7 +310,39 @@ BEGIN
     END IF;
 
 
-    -- 4. Ejecutar el cambio mediante la función interna.
+    -- 4. Bloquear el animal para serializar operaciones
+    --    concurrentes sobre su situación.
+    PERFORM 1
+    FROM public.animal
+    WHERE id_animal = p_id_animal
+    FOR UPDATE;
+
+
+    -- 5. Un cambio manual no puede dejar procesos abiertos:
+    --    la salida de un hogar temporal o de una adopción
+    --    se registra mediante su propio proceso.
+    IF EXISTS (
+        SELECT 1
+        FROM public.permanencia_animal_hogar
+        WHERE id_animal = p_id_animal
+          AND fecha_salida IS NULL
+    ) THEN
+        RAISE EXCEPTION
+            'El animal tiene un hogar temporal activo. Para cambiar su situación debe finalizarse la permanencia.';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM public.adopcion
+        WHERE id_animal = p_id_animal
+          AND fecha_finalizacion IS NULL
+    ) THEN
+        RAISE EXCEPTION
+            'El animal tiene una adopción activa. Para cambiar su situación debe registrarse la devolución.';
+    END IF;
+
+
+    -- 6. Ejecutar el cambio mediante la función interna.
     PERFORM public._cambiar_estado_animal(
         p_id_animal,
         p_id_nuevo_estado,
@@ -643,14 +675,35 @@ BEGIN
         RAISE EXCEPTION 'Usuario no autorizado o inactivo.';
     END IF;
 
-    -- Verificar animal activo.
-    IF NOT EXISTS (
-        SELECT 1
-        FROM public.animal
-        WHERE id_animal = p_id_animal
-          AND activo = TRUE
-    ) THEN
+    -- Verificar y bloquear animal activo.
+    PERFORM 1
+    FROM public.animal
+    WHERE id_animal = p_id_animal
+      AND activo = TRUE
+    FOR UPDATE;
+
+    IF NOT FOUND THEN
         RAISE EXCEPTION 'El animal no existe o se encuentra inactivo.';
+    END IF;
+
+    -- Un animal con adopción vigente (o en estado Adoptado)
+    -- no puede ingresar a un hogar temporal: primero debe
+    -- registrarse la devolución.
+    IF EXISTS (
+        SELECT 1
+        FROM public.adopcion
+        WHERE id_animal = p_id_animal
+          AND fecha_finalizacion IS NULL
+    ) OR EXISTS (
+        SELECT 1
+        FROM public.animal a
+        JOIN public.estado e
+            ON e.id_estado = a.id_estado_actual
+        WHERE a.id_animal = p_id_animal
+          AND e.nombre_estado = 'Adoptado'
+    ) THEN
+        RAISE EXCEPTION
+            'El animal tiene una adopción activa. No puede ingresar a un hogar temporal mientras la adopción esté vigente.';
     END IF;
 
     -- Verificar hogar activo.
