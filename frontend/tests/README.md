@@ -33,6 +33,9 @@ node --test tests/session.test.mjs
 | `router.test.mjs` | Parseo de rutas y filtros, respuestas de Auth en la URL, menú y rutas de la ficha |
 | `session.test.mjs` | Login, usuaria inactiva, doble envío, restauración, logout, expiración y revalidación |
 | `animals-logic.test.mjs` | Filtros del listado, formulario de animal, estados permitidos, hogares, salud y foto |
+| `adoptions-logic.test.mjs` | Adoptantes (RUT normalizado y duplicado), adopción, seguimiento (`medio_contacto`) y devolución |
+| `expenses-logic.test.mjs` | Gastos: montos, total/asignado/no asignado, igualdad con el total, exceso y filas |
+| `files-logic.test.mjs` | Archivos (validación, 10 MB) y difusión (solo datos autorizados, prompt base) |
 
 ## Alcance
 
