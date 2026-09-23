@@ -37,6 +37,7 @@ node --test tests/session.test.mjs
 | `expenses-logic.test.mjs` | Gastos: montos, total/asignado/no asignado, igualdad con el total, exceso y filas |
 | `files-logic.test.mjs` | Archivos (validación, 10 MB) y difusión (solo datos autorizados, prompt base) |
 | `sterilization-logic.test.mjs` | Proyectos, nómina (código/microchip por proyecto), profesionales N:M derivados, PDF obligatorio (tipo y firma), Adjuntar/Abrir sin reemplazo y exportación CSV |
+| `documents-logic.test.mjs` | Documentos: contexto de cada archivo (incluida asociación 1:1 de Fundación), búsqueda, filtros y fechas |
 
 ## Alcance
 

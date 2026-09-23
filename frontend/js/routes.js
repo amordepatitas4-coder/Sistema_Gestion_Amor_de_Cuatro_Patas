@@ -38,6 +38,7 @@ const IMPLEMENTED = {
     '/adopciones': () => import('./views/adoptions/list.js'),
     '/gastos': () => import('./views/expenses/list.js'),
     '/esterilizacion': () => import('./views/sterilization/list.js'),
+    '/documentos': () => import('./views/documents/list.js'),
 };
 
 const nav = (path) => NAV_ITEMS.find((item) => item.path === path);

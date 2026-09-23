@@ -103,7 +103,8 @@ export async function openFile(button, idArchivo) {
     }
 }
 
-async function openUploadForm({ context, idContext, onSaved }) {
+/** Formulario de carga (también lo usa el módulo Documentos para el contexto Fundación). */
+export async function openUploadForm({ context, idContext, onSaved }) {
     let categorias;
     try {
         categorias = selectable(await loadCatalog('categoria_archivo'));
