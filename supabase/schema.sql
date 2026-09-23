@@ -3171,76 +3171,66 @@ GRANT USAGE ON SCHEMA "public" TO "service_role";
 
 
 
-GRANT ALL ON FUNCTION "public"."_cambiar_estado_animal"("p_id_animal" bigint, "p_id_nuevo_estado" bigint, "p_motivo_cambio" "text", "p_observaciones" "text") TO "anon";
-GRANT ALL ON FUNCTION "public"."_cambiar_estado_animal"("p_id_animal" bigint, "p_id_nuevo_estado" bigint, "p_motivo_cambio" "text", "p_observaciones" "text") TO "authenticated";
+REVOKE ALL ON FUNCTION "public"."_cambiar_estado_animal"("p_id_animal" bigint, "p_id_nuevo_estado" bigint, "p_motivo_cambio" "text", "p_observaciones" "text") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."_cambiar_estado_animal"("p_id_animal" bigint, "p_id_nuevo_estado" bigint, "p_motivo_cambio" "text", "p_observaciones" "text") TO "service_role";
 
 
 
 REVOKE ALL ON FUNCTION "public"."activar_usuario"("p_id_usuario" "uuid") FROM PUBLIC;
-GRANT ALL ON FUNCTION "public"."activar_usuario"("p_id_usuario" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."activar_usuario"("p_id_usuario" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."activar_usuario"("p_id_usuario" "uuid") TO "service_role";
 
 
 
 REVOKE ALL ON FUNCTION "public"."asignar_gasto_animal"("p_id_gasto" bigint, "p_id_animal" bigint, "p_monto_asignado" bigint) FROM PUBLIC;
-GRANT ALL ON FUNCTION "public"."asignar_gasto_animal"("p_id_gasto" bigint, "p_id_animal" bigint, "p_monto_asignado" bigint) TO "anon";
 GRANT ALL ON FUNCTION "public"."asignar_gasto_animal"("p_id_gasto" bigint, "p_id_animal" bigint, "p_monto_asignado" bigint) TO "authenticated";
 GRANT ALL ON FUNCTION "public"."asignar_gasto_animal"("p_id_gasto" bigint, "p_id_animal" bigint, "p_monto_asignado" bigint) TO "service_role";
 
 
 
 REVOKE ALL ON FUNCTION "public"."cambiar_estado_animal"("p_id_animal" bigint, "p_id_nuevo_estado" bigint, "p_motivo_cambio" "text", "p_observaciones" "text") FROM PUBLIC;
-GRANT ALL ON FUNCTION "public"."cambiar_estado_animal"("p_id_animal" bigint, "p_id_nuevo_estado" bigint, "p_motivo_cambio" "text", "p_observaciones" "text") TO "anon";
 GRANT ALL ON FUNCTION "public"."cambiar_estado_animal"("p_id_animal" bigint, "p_id_nuevo_estado" bigint, "p_motivo_cambio" "text", "p_observaciones" "text") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."cambiar_estado_animal"("p_id_animal" bigint, "p_id_nuevo_estado" bigint, "p_motivo_cambio" "text", "p_observaciones" "text") TO "service_role";
 
 
 
 REVOKE ALL ON FUNCTION "public"."cambiar_hogar_temporal"("p_id_animal" bigint, "p_id_nuevo_hogar" bigint, "p_fecha_cambio" "date", "p_observaciones" "text") FROM PUBLIC;
-GRANT ALL ON FUNCTION "public"."cambiar_hogar_temporal"("p_id_animal" bigint, "p_id_nuevo_hogar" bigint, "p_fecha_cambio" "date", "p_observaciones" "text") TO "anon";
 GRANT ALL ON FUNCTION "public"."cambiar_hogar_temporal"("p_id_animal" bigint, "p_id_nuevo_hogar" bigint, "p_fecha_cambio" "date", "p_observaciones" "text") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."cambiar_hogar_temporal"("p_id_animal" bigint, "p_id_nuevo_hogar" bigint, "p_fecha_cambio" "date", "p_observaciones" "text") TO "service_role";
 
 
 
-GRANT ALL ON FUNCTION "public"."crear_usuario_publico"() TO "anon";
-GRANT ALL ON FUNCTION "public"."crear_usuario_publico"() TO "authenticated";
+REVOKE ALL ON FUNCTION "public"."crear_usuario_publico"() FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."crear_usuario_publico"() TO "service_role";
+GRANT ALL ON FUNCTION "public"."crear_usuario_publico"() TO "supabase_auth_admin";
 
 
 
 REVOKE ALL ON FUNCTION "public"."desactivar_usuario"("p_id_usuario" "uuid") FROM PUBLIC;
-GRANT ALL ON FUNCTION "public"."desactivar_usuario"("p_id_usuario" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."desactivar_usuario"("p_id_usuario" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."desactivar_usuario"("p_id_usuario" "uuid") TO "service_role";
 
 
 
 REVOKE ALL ON FUNCTION "public"."es_usuario_activo"() FROM PUBLIC;
-GRANT ALL ON FUNCTION "public"."es_usuario_activo"() TO "anon";
 GRANT ALL ON FUNCTION "public"."es_usuario_activo"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."es_usuario_activo"() TO "service_role";
 
 
 
 REVOKE ALL ON FUNCTION "public"."finalizar_hogar_temporal"("p_id_animal" bigint, "p_fecha_salida" "date", "p_id_nuevo_estado" bigint, "p_observaciones" "text") FROM PUBLIC;
-GRANT ALL ON FUNCTION "public"."finalizar_hogar_temporal"("p_id_animal" bigint, "p_fecha_salida" "date", "p_id_nuevo_estado" bigint, "p_observaciones" "text") TO "anon";
 GRANT ALL ON FUNCTION "public"."finalizar_hogar_temporal"("p_id_animal" bigint, "p_fecha_salida" "date", "p_id_nuevo_estado" bigint, "p_observaciones" "text") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."finalizar_hogar_temporal"("p_id_animal" bigint, "p_fecha_salida" "date", "p_id_nuevo_estado" bigint, "p_observaciones" "text") TO "service_role";
 
 
 
 REVOKE ALL ON FUNCTION "public"."ingresar_hogar_temporal"("p_id_animal" bigint, "p_id_hogar" bigint, "p_fecha_ingreso" "date", "p_observaciones" "text") FROM PUBLIC;
-GRANT ALL ON FUNCTION "public"."ingresar_hogar_temporal"("p_id_animal" bigint, "p_id_hogar" bigint, "p_fecha_ingreso" "date", "p_observaciones" "text") TO "anon";
 GRANT ALL ON FUNCTION "public"."ingresar_hogar_temporal"("p_id_animal" bigint, "p_id_hogar" bigint, "p_fecha_ingreso" "date", "p_observaciones" "text") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."ingresar_hogar_temporal"("p_id_animal" bigint, "p_id_hogar" bigint, "p_fecha_ingreso" "date", "p_observaciones" "text") TO "service_role";
 
 
 
 REVOKE ALL ON FUNCTION "public"."registrar_adopcion"("p_id_animal" bigint, "p_id_adoptante" bigint, "p_fecha_adopcion" "date", "p_observaciones" "text") FROM PUBLIC;
-GRANT ALL ON FUNCTION "public"."registrar_adopcion"("p_id_animal" bigint, "p_id_adoptante" bigint, "p_fecha_adopcion" "date", "p_observaciones" "text") TO "anon";
 GRANT ALL ON FUNCTION "public"."registrar_adopcion"("p_id_animal" bigint, "p_id_adoptante" bigint, "p_fecha_adopcion" "date", "p_observaciones" "text") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."registrar_adopcion"("p_id_animal" bigint, "p_id_adoptante" bigint, "p_fecha_adopcion" "date", "p_observaciones" "text") TO "service_role";
 
@@ -3253,21 +3243,18 @@ GRANT ALL ON FUNCTION "public"."registrar_animal"("p_id_especie" bigint, "p_id_r
 
 
 REVOKE ALL ON FUNCTION "public"."registrar_archivo"("p_id_categoria_archivo" bigint, "p_nombre_archivo" character varying, "p_nombre_original" character varying, "p_mime_type" character varying, "p_id_externo" character varying, "p_fecha_documento" "date", "p_descripcion" "text", "p_tipo_contexto" character varying, "p_id_contexto" bigint) FROM PUBLIC;
-GRANT ALL ON FUNCTION "public"."registrar_archivo"("p_id_categoria_archivo" bigint, "p_nombre_archivo" character varying, "p_nombre_original" character varying, "p_mime_type" character varying, "p_id_externo" character varying, "p_fecha_documento" "date", "p_descripcion" "text", "p_tipo_contexto" character varying, "p_id_contexto" bigint) TO "anon";
 GRANT ALL ON FUNCTION "public"."registrar_archivo"("p_id_categoria_archivo" bigint, "p_nombre_archivo" character varying, "p_nombre_original" character varying, "p_mime_type" character varying, "p_id_externo" character varying, "p_fecha_documento" "date", "p_descripcion" "text", "p_tipo_contexto" character varying, "p_id_contexto" bigint) TO "authenticated";
 GRANT ALL ON FUNCTION "public"."registrar_archivo"("p_id_categoria_archivo" bigint, "p_nombre_archivo" character varying, "p_nombre_original" character varying, "p_mime_type" character varying, "p_id_externo" character varying, "p_fecha_documento" "date", "p_descripcion" "text", "p_tipo_contexto" character varying, "p_id_contexto" bigint) TO "service_role";
 
 
 
 REVOKE ALL ON FUNCTION "public"."registrar_devolucion"("p_id_adopcion" bigint, "p_fecha_devolucion" "date", "p_id_nuevo_estado" bigint, "p_motivo" "text", "p_observaciones" "text") FROM PUBLIC;
-GRANT ALL ON FUNCTION "public"."registrar_devolucion"("p_id_adopcion" bigint, "p_fecha_devolucion" "date", "p_id_nuevo_estado" bigint, "p_motivo" "text", "p_observaciones" "text") TO "anon";
 GRANT ALL ON FUNCTION "public"."registrar_devolucion"("p_id_adopcion" bigint, "p_fecha_devolucion" "date", "p_id_nuevo_estado" bigint, "p_motivo" "text", "p_observaciones" "text") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."registrar_devolucion"("p_id_adopcion" bigint, "p_fecha_devolucion" "date", "p_id_nuevo_estado" bigint, "p_motivo" "text", "p_observaciones" "text") TO "service_role";
 
 
 
 REVOKE ALL ON FUNCTION "public"."registrar_seguimiento"("p_id_adopcion" bigint, "p_fecha" "date", "p_medio_contacto" character varying, "p_situacion_animal" "text", "p_observaciones" "text") FROM PUBLIC;
-GRANT ALL ON FUNCTION "public"."registrar_seguimiento"("p_id_adopcion" bigint, "p_fecha" "date", "p_medio_contacto" character varying, "p_situacion_animal" "text", "p_observaciones" "text") TO "anon";
 GRANT ALL ON FUNCTION "public"."registrar_seguimiento"("p_id_adopcion" bigint, "p_fecha" "date", "p_medio_contacto" character varying, "p_situacion_animal" "text", "p_observaciones" "text") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."registrar_seguimiento"("p_id_adopcion" bigint, "p_fecha" "date", "p_medio_contacto" character varying, "p_situacion_animal" "text", "p_observaciones" "text") TO "service_role";
 
@@ -3658,8 +3645,8 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQ
 
 
 
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" REVOKE ALL ON FUNCTIONS FROM PUBLIC;
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "postgres";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "anon";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "authenticated";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "service_role";
 
