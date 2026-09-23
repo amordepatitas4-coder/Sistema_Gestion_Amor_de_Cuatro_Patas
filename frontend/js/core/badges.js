@@ -29,6 +29,18 @@ export function availabilityIndicator(nombreEstado) {
         title="Indicador visual. El estado formal del animal es En hogar temporal.">💚 Disponible para adopción</span>`;
 }
 
+const ADOPTION_STYLES = {
+    'Activa': { cls: 'badge-soft-success', icon: 'bi-house-check' },
+    'Devuelto': { cls: 'badge-soft-warning', icon: 'bi-arrow-return-left' },
+    'Finalizada': { cls: 'badge-soft-muted', icon: 'bi-check2-all' },
+};
+
+/** Estado de una adopción (ESTADO_ADOPCION.nombre). */
+export function adoptionBadge(nombre) {
+    const style = ADOPTION_STYLES[nombre] ?? { cls: 'badge-soft-muted', icon: 'bi-circle' };
+    return html`<span class="badge ${style.cls}"><i class="bi ${style.icon}" aria-hidden="true"></i> ${nombre || '—'}</span>`;
+}
+
 export function activeBadge(activo) {
     return activo
         ? html`<span class="badge badge-soft-success"><i class="bi bi-check-circle" aria-hidden="true"></i> Activo</span>`

@@ -17,11 +17,10 @@ import { openEditAnimal, openPhotoForm } from './form.js';
 import { lastListQuery } from './list.js';
 import { animalName } from './logic.js';
 import { openChangeState } from './state.js';
-import {
-    renderAdoptionTab, renderDiffusionTab, renderExpensesTab, renderFilesTab, renderHistoryTab, renderSummaryTab,
-} from './tabs/basic.js';
+import { renderHistoryTab, renderSummaryTab } from './tabs/basic.js';
 import { renderHealthTab } from './tabs/health.js';
 import { renderHomesTab } from './tabs/homes.js';
+import { renderAdoptionTab, renderDiffusionTab, renderExpensesTab, renderFilesTab } from './tabs/processes.js';
 
 export const TABS = [
     { slug: 'resumen', label: 'Resumen', icon: 'bi-card-text', render: renderSummaryTab },

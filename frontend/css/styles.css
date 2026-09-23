@@ -950,7 +950,8 @@ a.kpi-card:hover {
     font-weight: 600;
 }
 
-.info-block dd { margin: .2rem 0 0; font-weight: 500; }
+.info-block dd { margin: .2rem 0 0; font-weight: 500; overflow-wrap: anywhere; }
+.info-block { min-width: 0; }
 
 /* Línea de tiempo (salud, historial) */
 .timeline {
@@ -1029,6 +1030,94 @@ a.kpi-card:hover {
     background: #F9FBFB;
     border-radius: var(--acp-radius-sm);
     padding: .6rem .8rem;
+}
+
+/* ------------------------------------------------------------
+   Subsecciones de módulo (Adopciones | Adoptantes)
+   ------------------------------------------------------------ */
+.section-tabs { border-bottom: 1px solid var(--acp-line); }
+.section-tabs .nav-link { color: var(--acp-muted); font-weight: 600; display: flex; gap: .35rem; align-items: center; }
+.section-tabs .nav-link.active { color: var(--acp-primary-dark); border-bottom-color: var(--acp-brand); }
+
+/* ------------------------------------------------------------
+   Gastos
+   ------------------------------------------------------------ */
+.expense-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: .75rem;
+}
+
+.expense-summary > div {
+    background: #F9FBFB;
+    border: 1px solid #EDF1F2;
+    border-radius: var(--acp-radius-sm);
+    padding: .6rem .8rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.expense-summary span { font-size: .8rem; color: var(--acp-muted); font-weight: 600; }
+.expense-summary strong { font-size: 1.15rem; color: var(--acp-primary-dark); font-variant-numeric: tabular-nums; }
+.expense-summary.is-over > div:last-child { background: var(--acp-danger-soft); border-color: #F2C4C4; }
+.expense-summary.is-over > div:last-child strong { color: var(--acp-danger); }
+
+.allocation-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: .5rem;
+    padding: .5rem 0;
+    border-bottom: 1px dashed var(--acp-line);
+}
+
+.allocation-amount { width: 170px; }
+.btn-icon-sm { width: 38px; height: 38px; padding: 0; }
+.allocation-row [data-row-error]:empty { display: none !important; }
+
+@media (max-width: 575.98px) {
+    .allocation-amount { width: calc(100% - 46px); }
+}
+
+/* ------------------------------------------------------------
+   Archivos
+   ------------------------------------------------------------ */
+.file-list { list-style: none; padding: 0; margin: 0; }
+
+.file-item {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: .7rem 0;
+    border-bottom: 1px solid #EDF1F2;
+}
+
+.file-item:last-child { border-bottom: 0; }
+.file-icon { font-size: 1.6rem; color: var(--acp-primary); }
+.file-info { flex: 1; min-width: 0; }
+
+@media (max-width: 575.98px) {
+    .file-item { flex-wrap: wrap; }
+    .file-item .btn { width: 100%; }
+}
+
+.upload-progress {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .6rem .8rem;
+    background: var(--acp-info-soft);
+    color: var(--acp-info);
+    border-radius: var(--acp-radius-sm);
+}
+
+/* ------------------------------------------------------------
+   Difusión
+   ------------------------------------------------------------ */
+.diffusion-text {
+    font-size: .95rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
 }
 
 /* ------------------------------------------------------------

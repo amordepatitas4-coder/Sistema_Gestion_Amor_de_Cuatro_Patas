@@ -56,8 +56,12 @@ js/views/             Vistas: login, shell, panel, animales (listado, ficha y pe
 ```
 
 Módulos implementados: Panel principal (Etapa 2), Animales con ficha integral
-(Etapa 3) y Salud / Hogares temporales (Etapa 4). Las pestañas Adopción, Gastos y
-Archivos de la ficha muestran el historial en modo consulta hasta sus etapas.
+(Etapa 3), Salud / Hogares temporales (Etapa 4), Adopciones y adoptantes (Etapa 5),
+Gastos (Etapa 6), y Archivos en Google Drive y Difusión (Etapa 7).
+
+Archivos: se suben con la Edge Function `subir-archivo-drive` y se abren con
+`obtener-link-archivo` (visor privado de Drive; nunca enlaces públicos). Cada contexto
+(animal, adopción, gasto) lista solo sus propios documentos.
 
 Reglas de acceso:
 

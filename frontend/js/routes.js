@@ -35,11 +35,18 @@ const IMPLEMENTED = {
     '/panel': () => import('./views/panel.js'),
     '/animales': () => import('./views/animals/list.js'),
     '/hogares': () => import('./views/homes/list.js'),
+    '/adopciones': () => import('./views/adoptions/list.js'),
+    '/gastos': () => import('./views/expenses/list.js'),
 };
+
+const nav = (path) => NAV_ITEMS.find((item) => item.path === path);
 
 export const ROUTES = [
     { path: LOGIN_PATH, public: true, load: () => import('./views/login.js') },
-    // Ficha integral del animal y sus pestañas (#/animales/12/salud).
-    { path: '/animales/:id/:tab?', load: () => import('./views/animals/detail.js'), module: NAV_ITEMS[1] },
+    // Subrutas: el orden importa (las rutas fijas antes que las con parámetros).
+    { path: '/animales/:id/:tab?', load: () => import('./views/animals/detail.js'), module: nav('/animales') },
+    { path: '/adopciones/adoptantes', load: () => import('./views/adoptions/list.js'), module: nav('/adopciones') },
+    { path: '/adopciones/:id', load: () => import('./views/adoptions/detail.js'), module: nav('/adopciones') },
+    { path: '/gastos/:id', load: () => import('./views/expenses/detail.js'), module: nav('/gastos') },
     ...NAV_ITEMS.map((item) => ({ path: item.path, load: IMPLEMENTED[item.path] ?? placeholder, module: item })),
 ];
