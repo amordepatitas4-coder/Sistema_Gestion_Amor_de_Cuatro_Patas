@@ -82,7 +82,12 @@ export default {
 Para habilitar un módulo, reemplazar su `load` en `js/routes.js` y agregar sus
 subrutas (por ejemplo `/animales/:id/:tab?`).
 
-## 5. Logo
+## 5. Pruebas automáticas
+
+Desde `frontend/`: `node --test "tests/*.test.mjs"` (Node 20+, sin dependencias ni
+credenciales). Detalle en `tests/README.md`.
+
+## 6. Logo
 
 `BRAND.LOGO_SRC` en `js/views/brand.js` es el espacio reemplazable para el logo
 oficial (PNG/SVG en `assets/`). Mientras sea `null` se muestra un distintivo con icono.
