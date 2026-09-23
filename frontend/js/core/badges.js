@@ -46,3 +46,17 @@ export function activeBadge(activo) {
         ? html`<span class="badge badge-soft-success"><i class="bi bi-check-circle" aria-hidden="true"></i> Activo</span>`
         : html`<span class="badge badge-soft-muted"><i class="bi bi-pause-circle" aria-hidden="true"></i> Inactivo</span>`;
 }
+
+const PROJECT_STYLES = {
+    'Postulado': { cls: 'badge-soft-info', icon: 'bi-send' },
+    'Aprobado': { cls: 'badge-soft-success', icon: 'bi-patch-check' },
+    'En ejecución': { cls: 'badge-soft-warning', icon: 'bi-play-circle' },
+    'Finalizado': { cls: 'badge-soft-muted', icon: 'bi-check2-all' },
+    'Cancelado': { cls: 'badge-soft-muted', icon: 'bi-x-circle' },
+};
+
+/** Estado de un proyecto de esterilización (ESTADO_PROYECTO.nombre). */
+export function projectBadge(nombre) {
+    const style = PROJECT_STYLES[nombre] ?? { cls: 'badge-soft-muted', icon: 'bi-circle' };
+    return html`<span class="badge ${style.cls}"><i class="bi ${style.icon}" aria-hidden="true"></i> ${nombre || '—'}</span>`;
+}

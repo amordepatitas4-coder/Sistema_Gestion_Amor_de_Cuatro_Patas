@@ -1140,3 +1140,40 @@ a.kpi-card:hover {
         box-shadow: none;
     }
 }
+
+/* ------------------------------------------------------------
+   Proyectos de esterilización (Etapa 8)
+   ------------------------------------------------------------ */
+.project-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+    transition: box-shadow .15s ease, transform .15s ease;
+}
+
+.project-card:hover,
+.project-card:focus-within { box-shadow: 0 6px 18px rgba(36, 71, 83, .14); transform: translateY(-1px); }
+.project-card a.stretched-link:focus-visible { outline: none; }
+.project-card:focus-within { outline: 2px solid var(--acp-primary); outline-offset: 2px; }
+
+.nomina-search { max-width: 420px; min-width: 220px; }
+.nomina-table td, .nomina-table th { font-size: .9rem; }
+.code-badge { font-size: .85rem; font-variant-numeric: tabular-nums; }
+.prof-function { width: 230px; }
+
+.quick-create {
+    background: #F9FBFB;
+    border: 1px dashed #C4DAE1;
+    border-radius: var(--acp-radius-sm);
+    padding: .75rem;
+}
+
+@media (max-width: 575.98px) {
+    .prof-function { width: calc(100% - 46px); }
+    .nomina-search { max-width: none; width: 100%; }
+}
+
+/* Los textos .visually-hidden (position:absolute) dentro de tablas con
+   desplazamiento no deben ensanchar la página. */
+.table-responsive { position: relative; }
