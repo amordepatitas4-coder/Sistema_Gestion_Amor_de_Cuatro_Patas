@@ -1177,3 +1177,76 @@ a.kpi-card:hover {
 /* Los textos .visually-hidden (position:absolute) dentro de tablas con
    desplazamiento no deben ensanchar la página. */
 .table-responsive { position: relative; }
+
+/* ------------------------------------------------------------
+   Informes (Etapa 10)
+   ------------------------------------------------------------ */
+.report-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: .75rem;
+    margin-bottom: 1rem;
+}
+
+.report-card {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: .75rem;
+    text-align: left;
+    background: #fff;
+    border: 2px solid var(--acp-line);
+    border-radius: var(--acp-radius);
+    padding: .85rem 1rem;
+    color: var(--acp-text);
+    box-shadow: 0 1px 3px rgba(36, 71, 83, .06);
+    transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
+}
+
+.report-card:hover { border-color: #9DBCC7; box-shadow: 0 4px 12px rgba(36, 71, 83, .12); }
+.report-card:focus-visible { outline: 3px solid var(--acp-primary); outline-offset: 2px; }
+
+.report-card.is-selected {
+    border-color: var(--acp-primary);
+    background: var(--acp-primary-soft);
+    box-shadow: inset 4px 0 0 var(--acp-brand), 0 4px 12px rgba(36, 71, 83, .12);
+}
+
+.report-card-icon {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--acp-primary-soft);
+    color: var(--acp-primary);
+    font-size: 1.2rem;
+}
+
+.report-card.is-selected .report-card-icon { background: var(--acp-primary); color: #fff; }
+.report-card-text { display: flex; flex-direction: column; gap: .15rem; }
+.report-card-text span { font-size: .82rem; color: var(--acp-muted); }
+.report-card-check { position: absolute; top: .5rem; right: .6rem; color: var(--acp-primary); }
+
+.report-summary > div.is-main { background: var(--acp-primary-soft); border-color: #C4DAE1; }
+.report-table th { white-space: nowrap; font-size: .85rem; }
+.report-table td { font-size: .88rem; }
+
+.print-only { display: none; }
+
+@media print {
+    .no-print,
+    .page-header,
+    .sidebar,
+    .topbar,
+    .toast-container,
+    .skip-link { display: none !important; }
+    .print-only { display: block !important; }
+    .app-main, .app-content { margin: 0 !important; padding: 0 !important; }
+    .report-result { border: 0; padding: 0; }
+    .table-responsive { overflow: visible !important; }
+    .report-table { font-size: 9pt; }
+    .report-table th, .report-table td { padding: .2rem .3rem; }
+}
