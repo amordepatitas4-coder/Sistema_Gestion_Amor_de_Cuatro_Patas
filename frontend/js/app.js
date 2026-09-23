@@ -10,6 +10,7 @@
 // no está en estado 'active'.
 // ============================================================
 
+import { clearCatalogCache } from './api/catalogs.js';
 import { reportError } from './core/errors.js';
 import { createRouter, isAuthCallback, parseAuthCallback } from './core/router.js';
 import { createSession } from './core/session.js';
@@ -84,6 +85,7 @@ function startApp() {
 
             case 'anonymous':
             case 'active':
+                if (state.status === 'anonymous') clearCatalogCache();
                 cleanAuthCallbackFromUrl(state);
                 if (!routerStarted) {
                     routerStarted = true;

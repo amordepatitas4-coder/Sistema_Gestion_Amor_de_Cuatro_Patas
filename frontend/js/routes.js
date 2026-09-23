@@ -31,8 +31,15 @@ export const NAV_ITEMS = [
 export const HOME_PATH = '/panel';
 export const LOGIN_PATH = '/login';
 
+const IMPLEMENTED = {
+    '/panel': () => import('./views/panel.js'),
+    '/animales': () => import('./views/animals/list.js'),
+    '/hogares': () => import('./views/homes/list.js'),
+};
+
 export const ROUTES = [
     { path: LOGIN_PATH, public: true, load: () => import('./views/login.js') },
-    { path: '/panel', load: () => import('./views/panel.js'), module: NAV_ITEMS[0] },
-    ...NAV_ITEMS.slice(1).map((item) => ({ path: item.path, load: placeholder, module: item })),
+    // Ficha integral del animal y sus pestañas (#/animales/12/salud).
+    { path: '/animales/:id/:tab?', load: () => import('./views/animals/detail.js'), module: NAV_ITEMS[1] },
+    ...NAV_ITEMS.map((item) => ({ path: item.path, load: IMPLEMENTED[item.path] ?? placeholder, module: item })),
 ];

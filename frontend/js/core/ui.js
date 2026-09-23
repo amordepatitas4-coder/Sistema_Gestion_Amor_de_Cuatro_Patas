@@ -37,6 +37,17 @@ export function html(strings, ...values) {
 /** Marca un texto como HTML confiable (usar solo con contenido propio). */
 export const raw = (value) => new SafeHtml(String(value ?? ''));
 
+/**
+ * Opciones de <select>. items: [{ value, label }] o strings.
+ * placeholder: texto de la opción vacía (null = sin opción vacía).
+ */
+export function options(items, selected = '', { placeholder = 'Selecciona…' } = {}) {
+    const sel = selected === null || selected === undefined ? '' : String(selected);
+    const rows = items.map((item) => (typeof item === 'object' ? item : { value: item, label: item }));
+    return html`${placeholder !== null ? html`<option value="">${placeholder}</option>` : ''}${rows.map((r) =>
+        html`<option value="${r.value}" ${String(r.value) === sel ? raw('selected') : ''}>${r.label}</option>`)}`;
+}
+
 /** Reemplaza el contenido de un elemento. */
 export function render(element, content) {
     element.innerHTML = renderValue(content);

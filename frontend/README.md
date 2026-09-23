@@ -46,8 +46,18 @@ js/core/forms.js      Envío seguro de formularios (captura antes de bloquear, s
 js/core/errors.js     Traducción de errores de red, Auth, PostgREST y Edge Functions.
 js/core/format.js     Fechas locales, CLP, RUT (12345678-9), microchip, textos.
 js/core/ui.js         Plantillas con escape, estados vacío/carga/error, toasts, modales.
-js/views/             Vistas: login, shell (layout), panel, provisional, pantallas.
+js/core/badges.js     Badges de estado consistentes (+ indicador visual "Disponible").
+js/core/images.js     Optimización de la foto principal a WebP (máx. 1400 px, 2 MB).
+js/core/domain.js     Constantes de dominio (estados con significado de proceso).
+js/api/               Acceso a datos por dominio (catálogos, animales, salud, hogares,
+                      dashboard y consultas de solo lectura de etapas posteriores).
+js/views/             Vistas: login, shell, panel, animales (listado, ficha y pestañas),
+                      hogares, provisional y pantallas.
 ```
+
+Módulos implementados: Panel principal (Etapa 2), Animales con ficha integral
+(Etapa 3) y Salud / Hogares temporales (Etapa 4). Las pestañas Adopción, Gastos y
+Archivos de la ficha muestran el historial en modo consulta hasta sus etapas.
 
 Reglas de acceso:
 
