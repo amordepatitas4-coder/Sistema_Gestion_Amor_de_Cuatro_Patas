@@ -1,6 +1,37 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Amor de Cuatro Patas · Sistema de Gestión</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"><link rel="stylesheet" href="./css/styles.css"></head><body>
-<div id="toast" class="toast"></div>
-<section id="loginView" class="login-shell"><div class="login-card"><div class="brand-mark"><i class="bi bi-heart-pulse"></i></div><h1>Amor de Cuatro Patas</h1><p>Sistema de Gestión</p><form id="loginForm"><label>Correo electrónico<input id="loginEmail" type="email" required autocomplete="email"></label><label>Contraseña<input id="loginPassword" type="password" required autocomplete="current-password"></label><button class="btn primary full" type="submit"><i class="bi bi-box-arrow-in-right"></i> Ingresar</button><div id="loginError" class="form-error"></div></form><small>Acceso exclusivo para usuarias autorizadas.</small></div></section>
-<div id="appView" class="app hidden"><aside class="sidebar"><div class="brand"><div class="brand-placeholder"><i class="bi bi-heart-fill"></i><i class="bi bi-paw-fill paw-fallback">🐾</i></div><div><strong>Amor de Cuatro Patas</strong><span>Sistema de Gestión</span></div></div><nav id="nav"></nav><div class="sidebar-user"><div><strong id="sidebarUser">Usuaria</strong><span id="sidebarEmail"></span></div><button id="logoutBtn" title="Cerrar sesión"><i class="bi bi-box-arrow-right"></i></button></div></aside><main><header class="topbar"><button id="menuBtn" class="icon-btn mobile"><i class="bi bi-list"></i></button><div><h2 id="pageTitle">Panel principal</h2><p id="pageSubtitle">Resumen de la Fundación</p></div><div class="top-actions"><button class="icon-btn" id="refreshBtn" title="Actualizar"><i class="bi bi-arrow-clockwise"></i></button></div></header><div id="content" class="content"></div></main></div>
-<div id="modal" class="modal hidden"><div class="modal-backdrop" data-close-modal></div><div class="modal-card"><div class="modal-head"><div><h3 id="modalTitle"></h3><p id="modalSubtitle"></p></div><button class="icon-btn" data-close-modal><i class="bi bi-x-lg"></i></button></div><div id="modalBody" class="modal-body"></div></div></div>
-<script type="module" src="./js/app.js"></script></body></html>
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#244753">
+    <title>Amor de Cuatro Patas · Sistema de Gestión</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+          integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css"
+          integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
+    <link rel="stylesheet" href="./css/styles.css">
+</head>
+<body>
+    <div id="app"></div>
+
+    <!-- Contenedores globales para toasts y modales -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" id="toastArea"></div>
+    <div id="modalHost"></div>
+
+    <noscript>
+        <p class="p-4">Este sistema requiere JavaScript habilitado en el navegador.</p>
+    </noscript>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+            crossorigin="anonymous" defer></script>
+    <script type="module" src="./js/app.js"></script>
+</body>
+</html>
