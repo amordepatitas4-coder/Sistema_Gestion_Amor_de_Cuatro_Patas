@@ -5,8 +5,8 @@
 | Fecha | 24-09-2026 |
 | Entorno principal | `https://sistema-gestion-amor-de-cuatro-patas-frontend-v1.pages.dev/` (Cloudflare Pages) |
 | Commit desplegado | `663d9f5` (`frontend-rebuild`); 66 archivos publicados comparados con el commit: idénticos |
-| Backend | Supabase + Google Drive reales, con scripts de seguridad 01, 03, 05 y 07 aplicados |
-| Pruebas automáticas | 101/101 (`node --test "tests/*.test.mjs"`) |
+| Backend | Supabase + Google Drive reales, con scripts de seguridad 01, 03, 05, 07 y 09 (S-1) aplicados |
+| Pruebas automáticas | 101/101 en la QA inicial; 113/113 tras S-1 y recuperación de contraseña |
 
 Convenciones: **PASS** ejecutada con resultado esperado · **FAIL** · **MANUAL
 PENDIENTE** requiere intervención física o autorización · **NO APLICA**
@@ -77,7 +77,7 @@ el sitio publicado.
 | PA-ERR-03 | PASS | Animal creado + foto/carpeta fallida diferenciados. |
 | PA-SEGUR-01..03 | PASS | Sin service_role ni secretos en frontend ni en el historial Git; `config.js` fuera de Git y generado en Cloudflare con clave *publishable*. |
 | PA-SEGUR-04 | PASS | Sin sesión: 22 tablas → `[]`, escrituras rechazadas, Storage privado, Edge Functions 401, registro público deshabilitado. |
-| PA-SEGUR-05 | PASS | 16 funciones de negocio: `anon` → permission denied. Ver incidencia S-1 (usuarias autenticadas). |
+| PA-SEGUR-05 | PASS | 16 funciones de negocio: `anon` → permission denied. Incidencia S-1 (usuarias autenticadas) corregida, ver §2. |
 | PA-TRA-01..05 | PASS | Historial de estados, hogares, adopciones y proyecto finalizado conservados (ver S-1). |
 | PA-UX-01..06 | PASS | Revisión integral Etapa 12. |
 | PA-RES-01..03 | PASS | Sitio publicado sin desbordes; tablas apiladas y filtros plegables en celular. |
@@ -86,7 +86,7 @@ el sitio publicado.
 | PA-E2E-02 | PASS | "Proyecto Esterilización QA E2E" completo y finalizado; sin tocar el módulo de rescate. |
 | REG-01..13 | PASS | Todas reejecutadas en el sitio publicado (REG-13: carpeta Drive fallida + reintento). |
 
-## 2. Incidencia de seguridad pendiente de decisión
+## 2. Incidencia de seguridad S-1 (corregida)
 
 **S-1 — Una usuaria activa puede omitir las reglas de las RPC escribiendo
 directamente en tablas de proceso.** Las políticas RLS permiten INSERT/UPDATE a
@@ -107,13 +107,43 @@ revocar INSERT/UPDATE directos de `authenticated` sobre `historial_estado`,
 carpeta Drive). Las RPC SECURITY DEFINER y las Edge Functions siguen
 funcionando. Script versionado + verificación, como los anteriores.
 
-## 3. Observaciones menores
+**Resolución (24-09-2026, commit `e33fbb6`).** Autorizada por la usuaria y
+aplicada por ella en el SQL Editor:
+`supabase/security/2026-09-24_09_restringir_escritura_directa.sql` (privilegios
+mínimos por tabla y columna; RLS sin cambios; sin DELETE/TRUNCATE para nadie).
+La verificación `2026-09-24_10_verificar_escritura_directa.sql` dio **todas las
+filas `true`**: 21 operaciones prohibidas rechazadas con 42501, 7 escrituras
+necesarias y 5 RPC funcionando, RLS habilitado.
+
+Regresión de los flujos afectados tras aplicar el script (aplicación real
+contra Supabase real, sesión de la usuaria):
+
+| Flujo | Resultado |
+|---|---|
+| Editar datos descriptivos de animal (UI) | PASS |
+| Cambio de estado por RPC (UI) | PASS (estado e historial actualizados) |
+| Registrar atención sanitaria (UI) | PASS |
+| Editar proyecto, entrada de nómina, función de profesional, descripción de estado | PASS (UPDATE con el mismo valor) |
+| `animal.id_estado_actual`, INSERT en `historial_estado`, `estado.nombre_estado` directos | Rechazados 42501 (esperado) |
+
+`frontend/tests/permissions.test.mjs` contrasta el script con las columnas que
+escribe el frontend para detectar desalineaciones futuras.
+
+## 3. Recuperación de contraseña (agregada tras la QA)
+
+Commit `94d03d1`: "¿Olvidaste tu contraseña?" en el login con
+`resetPasswordForEmail` nativo de Supabase; el enlace abre Configuración → Mi
+cuenta en modo recuperación. Redirect URLs y Site URL configuradas por la
+usuaria. Prueba real con la cuenta de la Fundación: **MANUAL PENDIENTE**
+(requiere el correo de la usuaria). Ver `DESPLIEGUE_PRUEBA.md` §3.1.
+
+## 4. Observaciones menores
 
 - Cloudflare publica también `tools/` y `tests/` (sin secretos).
 - Caché tras un despliegue: encabezados `no-cache` verificados; el efecto real
   se comprobará en el próximo despliegue.
 
-## 4. Datos QA creados en la Etapa 13
+## 5. Datos QA creados en la Etapa 13
 
 Animales: id 9 "Estrella Prueba QA" (microchip `000000000000303`, adoptada:
 adopción 7 Devuelto + 8 Activa), id 10 "Cometa Prueba QA", id 11 "Luz Prueba QA".
@@ -123,3 +153,7 @@ Proyectos id 5 "Proyecto Esterilización QA E2E" (finalizado, EST-001 microchip
 `000000000000404`, documento `EST-001.jpg`) e id 6 "Proyecto Esterilización QA
 Fallo Drive". Profesional "Profesional Doble Clic QA". Archivos:
 `certificado-estrella-qa.pdf`, `documento-red-qa.pdf`, `convenio-proyecto-qa.pdf`.
+
+Regresión S-1: en "Cometa Prueba QA" (id 10) se cambiaron observaciones
+("Regresión S-1 QA"), estado a "En tratamiento" (motivo "Regresión S-1") y se
+registró una atención "Control" del 24-09-2026.
