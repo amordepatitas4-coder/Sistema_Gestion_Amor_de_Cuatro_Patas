@@ -19,6 +19,7 @@
 // - Los animales de esterilización NO se incorporan a ANIMAL.
 // ============================================================
 
+import { AppError, functionMessage } from '../core/errors.js';
 import { supabase } from '../supabase.js';
 
 function raise(error) {
@@ -107,7 +108,7 @@ export async function createProjectFolder(idProyecto) {
         body: { id_proyecto: idProyecto },
     });
     raise(error);
-    if (data?.error) throw new Error(data.error);
+    if (data?.error) throw new AppError(functionMessage(data.error));
     return data;
 }
 

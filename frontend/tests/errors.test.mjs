@@ -2,6 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { AppError, MESSAGES, describeError } from '../js/core/errors.js';
+import * as E from '../js/core/errors.js';
 
 test('Credenciales incorrectas y red', async () => {
     assert.equal(await describeError({ __isAuthError: true, name: 'AuthApiError', code: 'invalid_credentials', status: 400 }), MESSAGES.invalidCredentials);
@@ -24,4 +25,21 @@ test('Edge Functions: se lee el cuerpo { error } de la respuesta', async () => {
 test('Errores propios y desconocidos', async () => {
     assert.equal(await describeError(new AppError('Mensaje propio')), 'Mensaje propio');
     assert.equal(await describeError({ weird: true }), MESSAGES.generic);
+});
+
+test('Edge Functions: detalles técnicos se reemplazan por mensajes comprensibles (Etapa 12)', async () => {
+    const { functionMessage, MESSAGES: M } = E;
+    assert.equal(functionMessage('Faltan variables de entorno requeridas.'), M.service);
+    assert.equal(functionMessage('Google Drive respondió 403: The user does not have sufficient permissions'), M.drive);
+    assert.equal(functionMessage('No fue posible autenticar con Google Drive: invalid_grant'), M.drive);
+    assert.equal(functionMessage(''), M.service);
+    // Mensajes de negocio se conservan
+    assert.equal(functionMessage('Esta esterilización ya tiene un documento registrado.'), 'Esta esterilización ya tiene un documento registrado.');
+    assert.equal(functionMessage('El animal todavía no posee una carpeta de Google Drive.'), 'El animal todavía no posee una carpeta de Google Drive.');
+    assert.equal(functionMessage('El archivo se alcanzó a subir a Google Drive, pero no pudo registrarse en la base de datos.'),
+        'El archivo se alcanzó a subir a Google Drive, pero no pudo registrarse en la base de datos.');
+    const err = { name: 'FunctionsHttpError', context: new Response(JSON.stringify({ error: 'Google Drive respondió 500: backendError' }), { status: 500 }) };
+    assert.equal(await E.describeError(err), M.drive);
+    const sinCuerpo = { name: 'FunctionsHttpError', context: new Response('no json', { status: 502 }) };
+    assert.equal(await E.describeError(sinCuerpo), M.service);
 });

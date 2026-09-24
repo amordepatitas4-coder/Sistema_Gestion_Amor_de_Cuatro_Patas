@@ -14,7 +14,7 @@ import { clearCatalogCache } from './api/catalogs.js';
 import { reportError } from './core/errors.js';
 import { createRouter, isAuthCallback, parseAuthCallback } from './core/router.js';
 import { createSession } from './core/session.js';
-import { errorState, loadingState, render, setButtonBusy, toast } from './core/ui.js';
+import { errorState, loadingState, observeTables, render, setButtonBusy, toast } from './core/ui.js';
 import { HOME_PATH, LOGIN_PATH, NAV_ITEMS, ROUTES } from './routes.js';
 import { configProblem, supabase } from './supabase.js';
 import { notFoundView, renderConfigProblem, renderSplash, renderVerifyError } from './views/screens.js';
@@ -174,6 +174,10 @@ function startApp() {
             email: user?.email ?? '',
             onLogout: logout,
         });
+        // Tablas legibles en celular (cada fila como tarjeta etiquetada).
+        observeTables(shell.outlet);
+        const modalHost = document.getElementById('modalHost');
+        if (modalHost && !modalHost.dataset.tablesObserved) { observeTables(modalHost); modalHost.dataset.tablesObserved = '1'; }
         screen = 'shell';
         loginNotice = undefined;
         firstViewRendered = false;

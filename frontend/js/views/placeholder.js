@@ -16,7 +16,7 @@ export default {
                 ${emptyState({
                     icon: module.icon,
                     title: 'Módulo en preparación',
-                    text: `Esta sección se habilitará en la Etapa ${module.stage} de la reconstrucción del sistema.`,
+                    text: "Esta sección todavía no está disponible.",
                     action: { label: 'Volver al panel principal', icon: 'bi-arrow-left', href: '#/panel' },
                 })}
             </section>`);

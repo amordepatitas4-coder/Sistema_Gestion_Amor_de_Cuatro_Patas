@@ -58,6 +58,9 @@ async function loadSources(report) {
     return out;
 }
 
+/** Texto de la opción vacía concordante con el filtro ("Todas las categorías", etc.). */
+const ALL_LABEL = { especie: 'Todas', categoria: 'Todas', situacion: 'Todas' };
+
 const optionLabel = (list = [], value) => {
     const item = list.find((o) => String(typeof o === 'object' ? o.value : o) === String(value));
     return item ? (typeof item === 'object' ? item.label : item) : value;
@@ -84,7 +87,7 @@ export default {
                     <button type="button" class="report-card ${r === report ? 'is-selected' : ''}" data-report="${r.key}"
                             aria-pressed="${r === report ? 'true' : 'false'}">
                         <span class="report-card-icon" aria-hidden="true"><i class="bi ${r.icon}"></i></span>
-                        <span class="report-card-text"><strong>${r.label}</strong><span>${r.description}</span></span>
+                        <span class="report-card-text"><strong>${r.label}</strong><span><span class="visually-hidden">: </span>${r.description}</span></span>
                         ${r === report ? html`<i class="bi bi-check-circle-fill report-card-check" aria-hidden="true"></i>` : ''}
                     </button>`)}
             </section>
@@ -128,7 +131,7 @@ export default {
                             <label class="form-label small" for="rf-${flt.key}">${flt.label}</label>
                             ${flt.type === 'date'
                                 ? html`<input class="form-control" type="date" id="rf-${flt.key}" name="${flt.key}" value="${f[flt.key]}">`
-                                : html`<select class="form-select" id="rf-${flt.key}" name="${flt.key}">${options(sources[flt.source] ?? [], f[flt.key], { placeholder: 'Todos' })}</select>`}
+                                : html`<select class="form-select" id="rf-${flt.key}" name="${flt.key}">${options(sources[flt.source] ?? [], f[flt.key], { placeholder: ALL_LABEL[flt.key] ?? 'Todos' })}</select>`}
                         </div>`)}
                     <div class="col-12 d-flex flex-wrap gap-2 mt-3">
                         <button type="submit" class="btn btn-primary"><i class="bi bi-funnel" aria-hidden="true"></i> Generar informe</button>

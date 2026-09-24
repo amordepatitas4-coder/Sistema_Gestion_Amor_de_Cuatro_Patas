@@ -19,6 +19,8 @@ export const MESSAGES = {
     invalidCredentials: 'Correo o contraseña incorrectos.',
     rateLimit: 'Demasiados intentos en poco tiempo. Espera unos minutos e intenta nuevamente.',
     inactive: 'Tu cuenta no está habilitada para usar el sistema. Comunícate con una administradora de la Fundación.',
+    service: 'El servicio no pudo completar la operación. Intenta nuevamente en unos minutos; si se repite, avisa a la administradora del sistema.',
+    drive: 'Google Drive no respondió correctamente. Intenta nuevamente en unos minutos; si se repite, avisa a la administradora del sistema.',
 };
 
 /** Error propio de la aplicación con mensaje ya apto para la usuaria. */
@@ -129,6 +131,20 @@ function describePostgrestError(err) {
 }
 
 /**
+ * Mensaje de una Edge Function apto para la usuaria (Etapa 12).
+ * Los mensajes de negocio ya vienen redactados en español y se conservan;
+ * los detalles técnicos (códigos de Google, configuración del servidor)
+ * se reemplazan por una indicación comprensible.
+ */
+export function functionMessage(text) {
+    const msg = String(text ?? '').trim();
+    if (!msg) return MESSAGES.service;
+    if (/variables de entorno|^error interno|service.?role|\bundefined\b|\bnull\b|TypeError|ReferenceError/i.test(msg)) return MESSAGES.service;
+    if (/Google Drive respondió \d|Google Drive rechazó el archivo: |autenticar con Google|invalid_grant|oauth/i.test(msg)) return MESSAGES.drive;
+    return msg;
+}
+
+/**
  * Obtiene un mensaje seguro para la usuaria a partir de cualquier error.
  * Es asíncrona porque los errores de Edge Functions traen el detalle
  * en el cuerpo de la respuesta HTTP.
@@ -141,8 +157,7 @@ export async function describeError(err) {
     // Edge Functions: FunctionsHttpError trae la Response en context.
     if (err.name === 'FunctionsHttpError' || err.name === 'FunctionsRelayError') {
         const body = await readFunctionErrorBody(err);
-        if (body?.error) return String(body.error);
-        return 'El servicio de documentos respondió con un error. Intenta nuevamente.';
+        return functionMessage(body?.error);
     }
 
     if (err.__isAuthError || String(err.name ?? '').startsWith('Auth')) {

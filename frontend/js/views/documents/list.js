@@ -15,7 +15,7 @@ import { loadCatalog } from '../../api/catalogs.js';
 import { listDocuments } from '../../api/documents.js';
 import { reportError } from '../../core/errors.js';
 import { formatDate, formatDateTime } from '../../core/format.js';
-import { emptyState, errorState, html, loadingState, options, pageHeader, render } from '../../core/ui.js';
+import { collapsibleFilters, emptyState, errorState, html, loadingState, options, pageHeader, render } from '../../core/ui.js';
 import { openFile, openUploadForm } from '../files/section.js';
 import { CONTEXT_TYPES, FILTER_KEYS, fileContexts, filterDocuments, filterOptions } from './logic.js';
 
@@ -63,27 +63,27 @@ export default {
                         <label class="form-label small" for="dfQ">Buscar</label>
                         <input class="form-control" type="search" id="dfQ" name="q" value="${f.q}" autocomplete="off" placeholder="Nombre, descripción o contexto">
                     </div>
-                    <div class="col-6 col-lg-4">
+                    <div class="col-6 col-lg-4 filter-extra">
                         <label class="form-label small" for="dfCat">Categoría</label>
                         <select class="form-select" id="dfCat" name="categoria">${options(categorias.map((c) => ({ value: c.id, label: c.nombre })), f.categoria, { placeholder: 'Todas' })}</select>
                     </div>
-                    <div class="col-6 col-lg-4">
+                    <div class="col-6 col-lg-4 filter-extra">
                         <label class="form-label small" for="dfCtx">Contexto</label>
                         <select class="form-select" id="dfCtx" name="contexto">${options(CONTEXT_TYPES, f.contexto, { placeholder: 'Todos' })}</select>
                     </div>
-                    <div class="col-6 col-lg-3">
+                    <div class="col-6 col-lg-3 filter-extra">
                         <label class="form-label small" for="dfAnimal">Animal</label>
                         <select class="form-select" id="dfAnimal" name="animal">${options(opts.animals, f.animal, { placeholder: 'Todos' })}</select>
                     </div>
-                    <div class="col-6 col-lg-3">
+                    <div class="col-6 col-lg-3 filter-extra">
                         <label class="form-label small" for="dfProyecto">Proyecto</label>
                         <select class="form-select" id="dfProyecto" name="proyecto">${options(opts.projects, f.proyecto, { placeholder: 'Todos' })}</select>
                     </div>
-                    <div class="col-6 col-lg-3">
+                    <div class="col-6 col-lg-3 filter-extra">
                         <label class="form-label small" for="dfDesde">Fecha desde</label>
                         <input class="form-control" type="date" id="dfDesde" name="desde" value="${f.desde}">
                     </div>
-                    <div class="col-6 col-lg-3">
+                    <div class="col-6 col-lg-3 filter-extra">
                         <label class="form-label small" for="dfHasta">Fecha hasta</label>
                         <input class="form-control" type="date" id="dfHasta" name="hasta" value="${f.hasta}">
                     </div>
@@ -139,6 +139,7 @@ export default {
             history.replaceState(null, '', `#/documentos${qs ? `?${qs}` : ''}`);
         };
         const form = body.querySelector('#docFilters');
+        collapsibleFilters(form);
         form.addEventListener('submit', (e) => e.preventDefault());
         const onChange = (e) => {
             if (!e.target.name) return;

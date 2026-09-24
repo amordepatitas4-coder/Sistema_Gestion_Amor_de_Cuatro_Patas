@@ -15,6 +15,7 @@
 //   el servidor).
 // ============================================================
 
+import { AppError, functionMessage } from '../core/errors.js';
 import { supabase } from '../supabase.js';
 
 function raise(error) {
@@ -48,7 +49,7 @@ export async function deactivateUser(idUsuario) {
 export async function inviteUser({ nombre, email }) {
     const { data, error } = await supabase.functions.invoke('invitar-usuario', { body: { nombre, email } });
     raise(error);
-    if (data?.error) throw new Error(data.error);
+    if (data?.error) throw new AppError(functionMessage(data.error));
     return data;
 }
 

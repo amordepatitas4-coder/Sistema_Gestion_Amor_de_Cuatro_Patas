@@ -150,7 +150,7 @@ export function manualChangeBlock(nombreEstadoActual, hasActiveStay) {
         return { reason: 'El animal tiene una permanencia activa en un hogar temporal. Para cambiar su situación, finaliza la permanencia indicando el nuevo estado.', tab: 'hogares', action: 'Ir a Hogares' };
     }
     if (nombreEstadoActual === ESTADOS.ADOPTADO) {
-        return { reason: 'El animal está Adoptado. Su situación solo cambia mediante el registro de una devolución (módulo Adopciones, Etapa 5).', tab: 'adopcion', action: 'Ir a Adopción' };
+        return { reason: 'El animal está Adoptado. Su situación solo cambia registrando una devolución desde el detalle de su adopción.', tab: 'adopcion', action: 'Ir a Adopción' };
     }
     return null;
 }

@@ -17,11 +17,11 @@
     --acp-bg: #F7F9FA;
     --acp-surface: #FFFFFF;
     --acp-text: #263238;
-    --acp-muted: #6B7880;
+    --acp-muted: #58656C;   /* ≥ 4.5:1 sobre fondos claros (WCAG AA, Etapa 12) */
     --acp-line: #DDE5E8;
 
     /* Semánticos */
-    --acp-success: #2E7D5B;
+    --acp-success: #2A7152;
     --acp-success-soft: #E8F5EE;
     --acp-warning: #9A6212;
     --acp-warning-soft: #FFF4DE;
@@ -41,6 +41,9 @@
     --bs-body-color: var(--acp-text);
     --bs-body-bg: var(--acp-bg);
     --bs-secondary-color: var(--acp-muted);
+    --bs-secondary-rgb: 88, 101, 108;
+    --bs-danger-rgb: 179, 38, 30;
+    --bs-success-rgb: 42, 113, 82;
     --bs-border-color: var(--acp-line);
     --bs-border-radius: var(--acp-radius-sm);
     --bs-border-radius-lg: var(--acp-radius);
@@ -92,6 +95,43 @@ body {
     background: var(--acp-surface);
 }
 
+.btn-outline-secondary {
+    --bs-btn-color: var(--acp-muted);
+    --bs-btn-border-color: #AEB9BF;
+    --bs-btn-hover-bg: var(--acp-muted);
+    --bs-btn-hover-border-color: var(--acp-muted);
+    --bs-btn-active-bg: var(--acp-text);
+    --bs-btn-disabled-color: var(--acp-muted);
+    background: var(--acp-surface);
+}
+
+/* Colores semánticos con contraste AA (Bootstrap usa tonos más claros). */
+.btn-outline-danger {
+    --bs-btn-color: var(--acp-danger);
+    --bs-btn-border-color: var(--acp-danger);
+    --bs-btn-hover-bg: var(--acp-danger);
+    --bs-btn-hover-border-color: var(--acp-danger);
+    --bs-btn-active-bg: #8E1E18;
+    --bs-btn-disabled-color: var(--acp-danger);
+    background: var(--acp-surface);
+}
+
+.btn-outline-success {
+    --bs-btn-color: var(--acp-success);
+    --bs-btn-border-color: var(--acp-success);
+    --bs-btn-hover-bg: var(--acp-success);
+    --bs-btn-hover-border-color: var(--acp-success);
+    --bs-btn-active-bg: #1F5A40;
+    background: var(--acp-surface);
+}
+
+.btn-danger {
+    --bs-btn-bg: var(--acp-danger);
+    --bs-btn-border-color: var(--acp-danger);
+    --bs-btn-hover-bg: #8E1E18;
+    --bs-btn-hover-border-color: #8E1E18;
+}
+
 .btn-brand {
     --bs-btn-color: #fff;
     --bs-btn-bg: var(--acp-brand);
@@ -116,6 +156,15 @@ body {
 :focus-visible {
     outline: 3px solid rgba(49, 93, 109, .55);
     outline-offset: 2px;
+}
+
+/* Botones: anillo doble (blanco + azul) visible sobre fondos claros y oscuros. */
+.btn:focus-visible,
+.btn-check:focus-visible + .btn,
+.nav-link:focus-visible,
+.dropdown-item:focus-visible {
+    outline: 0;
+    box-shadow: 0 0 0 2px #fff, 0 0 0 5px var(--acp-primary);
 }
 
 .form-control:focus,
@@ -646,6 +695,12 @@ body {
     font-weight: 600;
     border-radius: 999px;
     padding: .35em .7em;
+    /* Textos largos (p. ej. contexto de un documento) no deben ensanchar la página. */
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: break-word;
+    text-align: left;
+    line-height: 1.25;
 }
 
 .badge-state { border: 1px solid transparent; }
@@ -1159,7 +1214,7 @@ a.kpi-card:hover {
 
 .nomina-search { max-width: 420px; min-width: 220px; }
 .nomina-table td, .nomina-table th { font-size: .9rem; }
-.code-badge { font-size: .85rem; font-variant-numeric: tabular-nums; }
+.code-badge { font-size: .85rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .prof-function { width: 230px; }
 
 .quick-create {
@@ -1173,6 +1228,9 @@ a.kpi-card:hover {
     .prof-function { width: calc(100% - 46px); }
     .nomina-search { max-width: none; width: 100%; }
 }
+
+/* Las tablas toman el fondo de su tarjeta (Bootstrap usa el gris del body). */
+.table { --bs-table-bg: transparent; }
 
 /* Los textos .visually-hidden (position:absolute) dentro de tablas con
    desplazamiento no deben ensanchar la página. */
@@ -1274,4 +1332,97 @@ a.kpi-card:hover {
     padding: .5rem .6rem;
     background: var(--acp-danger-soft);
     border-radius: var(--acp-radius-sm);
+}
+
+/* ------------------------------------------------------------
+   Etapa 12: objetivos táctiles en pantallas táctiles (celular/tablet)
+   ------------------------------------------------------------ */
+.photo-button { min-height: 32px; }
+
+@media (pointer: coarse) {
+    .btn-sm, .btn-group-sm > .btn { min-height: 38px; min-width: 38px; }
+    .form-control, .form-select { min-height: 44px; }
+    .nav-link { min-height: 40px; }
+}
+
+/* Panel en celular: KPI en dos columnas para ver el resumen sin desplazarse tanto. */
+@media (max-width: 575.98px) {
+    .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem; }
+    .kpi-card { padding: .8rem .85rem; }
+    .kpi-value { font-size: 1.6rem; }
+    .kpi-hint { font-size: .75rem; }
+}
+
+/* Filtros plegables: solo en celular (ver collapsibleFilters en core/ui.js). */
+.filters-toggle-row { display: none; }
+@media (max-width: 575.98px) {
+    .filters-toggle-row { display: block; }
+    .filters-collapsed .filter-extra { display: none; }
+}
+
+/* Celular: todas las pestañas visibles (sin desplazamiento horizontal oculto)
+   y datos de fichas en dos columnas. */
+@media (max-width: 575.98px) {
+    .detail-tabs .nav { flex-wrap: wrap !important; row-gap: .15rem; }
+    .detail-tabs .nav-link { padding: .45rem .5rem; font-size: .86rem; }
+    .section-tabs .nav { flex-wrap: wrap; }
+    .info-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; }
+    .info-block { padding: .5rem .6rem; }
+    .animal-card-photo { height: 150px; }
+}
+
+/* ------------------------------------------------------------
+   Tablas en celular: cada fila como tarjeta "Etiqueta: valor"
+   (data-label lo agrega labelTableCells en core/ui.js).
+   Excepción: .table-keep conserva el desplazamiento horizontal.
+   ------------------------------------------------------------ */
+@media (max-width: 575.98px) {
+    .table-responsive:has(> .table:not(.table-keep)) { overflow: visible; }
+    .table-responsive > .table:not(.table-keep) > thead {
+        position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+    }
+    .table-responsive > .table:not(.table-keep),
+    .table-responsive > .table:not(.table-keep) > tbody { display: block; }
+    .table-responsive > .table:not(.table-keep) > tbody > tr {
+        display: block;
+        position: relative;
+        margin: 0 0 .65rem;
+        padding: .45rem .75rem;
+        border: 1px solid var(--acp-line);
+        border-radius: var(--acp-radius-sm);
+        background: var(--acp-surface);
+    }
+    .card-panel.p-0 > .table-responsive { padding: .65rem; }
+    .table-responsive > .table:not(.table-keep) > tbody > tr > * {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: .75rem;
+        padding: .3rem 0;
+        border: 0;
+        text-align: right !important;
+        box-shadow: none !important;
+        white-space: normal !important;
+        overflow-wrap: break-word;
+    }
+    .table-responsive > .table:not(.table-keep) > tbody > tr > *[data-label]:not([data-label=""])::before {
+        content: attr(data-label);
+        flex: 0 0 42%;
+        text-align: left;
+        font-weight: 600;
+        font-size: .8rem;
+        color: var(--acp-muted);
+    }
+    .table-responsive > .table:not(.table-keep) > tbody > tr > *:last-child:not(:first-child) { justify-content: flex-end; }
+    .table-responsive > .table:not(.table-keep) > tbody > tr > * > ul { text-align: right; }
+    .table-responsive > .table:not(.table-keep) > tbody > tr > * .btn { white-space: nowrap; }
+}
+
+/* Informes en celular: tarjetas de tipo compactas en dos columnas. */
+@media (max-width: 575.98px) {
+    .report-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; }
+    .report-card { padding: .6rem .65rem; gap: .5rem; }
+    .report-card-icon { width: 32px; height: 32px; font-size: 1rem; }
+    .report-card-text span { display: none; }
+    .report-card-check { top: .35rem; right: .4rem; }
 }

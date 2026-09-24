@@ -12,7 +12,7 @@ import { ESTADOS, findByName, loadCatalogs } from '../../api/catalogs.js';
 import { availabilityIndicator, stateBadge } from '../../core/badges.js';
 import { reportError } from '../../core/errors.js';
 import { formatDate } from '../../core/format.js';
-import { emptyState, errorState, html, loadingState, options, pageHeader, render } from '../../core/ui.js';
+import { emptyState, errorState, html, loadingState, options, pageHeader, render, collapsibleFilters } from '../../core/ui.js';
 import { openRegisterAnimal } from './form.js';
 import {
     ESTADO_ACTIVOS, SEXOS, animalName, applyFilters, filtersToQuery, hasActiveFilters, readFilters,
@@ -72,7 +72,7 @@ export default {
                             <input class="form-control" id="flQ" name="q" type="search" value="${filters.q}" autocomplete="off">
                         </div>
                     </div>
-                    <div class="col-6 col-lg-3">
+                    <div class="col-6 col-lg-3 filter-extra">
                         <label class="form-label small" for="flEstado">Estado</label>
                         <select class="form-select" id="flEstado" name="estado">
                             ${options([
@@ -81,21 +81,21 @@ export default {
                             ], filters.estado, { placeholder: 'Todos' })}
                         </select>
                     </div>
-                    <div class="col-6 col-lg-2">
+                    <div class="col-6 col-lg-2 filter-extra">
                         <label class="form-label small" for="flEspecie">Especie</label>
                         <select class="form-select" id="flEspecie" name="especie">
                             ${options(catalogs.especie.map((e) => ({ value: e.id, label: e.nombre })), filters.especie, { placeholder: 'Todas' })}
                         </select>
                     </div>
-                    <div class="col-6 col-lg-3">
+                    <div class="col-6 col-lg-3 filter-extra">
                         <label class="form-label small" for="flSexo">Sexo</label>
                         <select class="form-select" id="flSexo" name="sexo">${options(SEXOS, filters.sexo, { placeholder: 'Todos' })}</select>
                     </div>
-                    <div class="col-6 col-lg-3">
+                    <div class="col-6 col-lg-3 filter-extra">
                         <label class="form-label small" for="flDesde">Rescatado desde</label>
                         <input class="form-control" type="date" id="flDesde" name="desde" value="${filters.desde}">
                     </div>
-                    <div class="col-6 col-lg-3">
+                    <div class="col-6 col-lg-3 filter-extra">
                         <label class="form-label small" for="flHasta">Rescatado hasta</label>
                         <input class="form-control" type="date" id="flHasta" name="hasta" value="${filters.hasta}">
                     </div>
@@ -115,6 +115,7 @@ export default {
             <div id="animalResults" aria-live="polite"></div>`);
 
         const form = body.querySelector('#animalFilters');
+        collapsibleFilters(form);
         const summary = body.querySelector('#filterSummary');
         const results = body.querySelector('#animalResults');
 

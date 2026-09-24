@@ -9,6 +9,7 @@
 //   Nunca se envía id_externo ni se hacen públicos los archivos.
 // ============================================================
 
+import { AppError, functionMessage } from '../core/errors.js';
 import { supabase } from '../supabase.js';
 
 const FILE_COLUMNS = `id_archivo, nombre_archivo, nombre_original, mime_type, fecha_documento, fecha_carga, descripcion,
@@ -50,7 +51,7 @@ export async function uploadFile(context, idContext, values) {
 
     const { data, error } = await supabase.functions.invoke('subir-archivo-drive', { body });
     if (error) throw error;
-    if (data?.error) throw new Error(data.error);
+    if (data?.error) throw new AppError(functionMessage(data.error));
     return data; // { id_archivo, archivo: {...}, ... }
 }
 
@@ -59,6 +60,6 @@ export async function getFileLink(idArchivo) {
     const { data, error } = await supabase.functions.invoke('obtener-link-archivo', { body: { id_archivo: idArchivo } });
     if (error) throw error;
     const url = data?.archivo?.url;
-    if (!url) throw new Error(data?.error || 'El servicio no devolvió un enlace para el archivo.');
+    if (!url) throw new AppError(data?.error ? functionMessage(data.error) : 'No fue posible obtener el enlace del archivo. Intenta nuevamente.');
     return url;
 }

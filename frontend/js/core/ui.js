@@ -178,13 +178,15 @@ export function toast(message, type = 'info', { delay = 5000 } = {}) {
 let activeModal = null;
 
 export function openModal({ title, body, size = '', onHidden = null }) {
+    // Elemento que abrió el modal: recibe el foco al cerrar (accesibilidad de teclado).
+    const opener = activeModal?.opener ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null);
     if (activeModal) activeModal.close(true);
 
     const host = document.getElementById('modalHost');
     const titleId = `modalTitle${Date.now()}`;
     render(host, html`
         <div class="modal fade" tabindex="-1" aria-labelledby="${titleId}" aria-modal="true" role="dialog">
-            <div class="modal-dialog modal-dialog-scrollable ${size}">
+            <div class="modal-dialog modal-dialog-scrollable modal-fullscreen-sm-down ${size}">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h2 class="modal-title fs-5" id="${titleId}">${title}</h2>
@@ -201,6 +203,7 @@ export function openModal({ title, body, size = '', onHidden = null }) {
 
     const api = {
         element,
+        opener,
         body: element.querySelector('.modal-body'),
         setBusy(value) {
             busy = Boolean(value);
@@ -218,14 +221,97 @@ export function openModal({ title, body, size = '', onHidden = null }) {
     element.addEventListener('click', (event) => {
         if (event.target.closest('[data-modal-close]')) api.close();
     });
+    // Foco inicial razonable (§25): primer campo editable. Solo con puntero
+    // preciso (mouse/teclado) para no abrir el teclado en celulares.
+    element.addEventListener('shown.bs.modal', () => {
+        if (!window.matchMedia?.('(pointer: fine)').matches) return;
+        element.querySelector('.modal-body input:not([type=hidden]):not([readonly]):not([disabled]), .modal-body select:not([disabled]), .modal-body textarea:not([disabled])')
+            ?.focus({ preventScroll: true });
+    });
     element.addEventListener('hidden.bs.modal', () => {
         instance.dispose();
         element.remove();
         if (activeModal === api) activeModal = null;
         onHidden?.();
+        // Si el modal no fue reemplazado por otro, devolver el foco al disparador
+        // o, si ya no existe (la vista se refrescó), al título de la página.
+        if (!activeModal) {
+            queueMicrotask(() => {
+                if (activeModal || (document.activeElement && document.activeElement !== document.body)) return;
+                const target = opener?.isConnected ? opener : document.querySelector('main h1[tabindex="-1"]');
+                target?.focus({ preventScroll: true });
+            });
+        }
     });
 
     activeModal = api;
     instance.show();
     return api;
+}
+
+// ------------------------------------------------------------
+// Filtros plegables en celular (Etapa 12).
+//
+// Las columnas marcadas con .filter-extra se ocultan en pantallas
+// pequeñas hasta pulsar "Más filtros"; en escritorio siempre se ven.
+// Si alguno de esos filtros está aplicado, se muestran desplegados.
+// No cambia qué filtros existen ni cómo se aplican.
+// ------------------------------------------------------------
+export function collapsibleFilters(form) {
+    const extras = [...form.querySelectorAll('.filter-extra')];
+    if (!extras.length) return;
+    const activeCount = () => extras.filter((col) =>
+        [...col.querySelectorAll('input, select')].some((el) => String(el.value ?? '').trim() !== '')).length;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'col-12 filters-toggle-row';
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'btn btn-sm btn-outline-primary w-100';
+    const id = `${form.id || 'filtros'}-extra`;
+    extras.forEach((col, i) => { if (!col.id) col.id = `${id}-${i}`; });
+    button.setAttribute('aria-controls', extras.map((c) => c.id).join(' '));
+    wrapper.appendChild(button);
+    form.insertBefore(wrapper, extras[0]);
+
+    const update = (open) => {
+        form.classList.toggle('filters-collapsed', !open);
+        button.setAttribute('aria-expanded', String(open));
+        const n = activeCount();
+        render(button, html`<i class="bi ${open ? 'bi-chevron-up' : 'bi-sliders'}" aria-hidden="true"></i>
+            ${open ? 'Ocultar filtros' : 'Más filtros'}${n ? ` (${n} aplicado${n === 1 ? '' : 's'})` : ''}`);
+    };
+    let open = activeCount() > 0;
+    update(open);
+    button.addEventListener('click', () => { open = !open; update(open); });
+    form.addEventListener('change', () => update(open));
+}
+
+// ------------------------------------------------------------
+// Tablas apiladas en celular (Etapa 12).
+//
+// Copia el texto de cada encabezado a data-label en sus celdas; en
+// pantallas pequeñas el CSS muestra cada fila como tarjeta con
+// "Etiqueta: valor", sin desplazamiento horizontal. No altera datos.
+// ------------------------------------------------------------
+export function labelTableCells(root) {
+    root.querySelectorAll('table').forEach((table) => {
+        const heads = [...table.querySelectorAll('thead th')].map((th) => th.textContent.trim());
+        if (!heads.length) return;
+        table.querySelectorAll('tbody tr').forEach((tr) => {
+            [...tr.children].forEach((cell, i) => {
+                if (!cell.hasAttribute('data-label')) cell.setAttribute('data-label', heads[i] ?? '');
+            });
+        });
+    });
+}
+
+/** Mantiene etiquetadas las tablas que se rendericen dentro de root. */
+export function observeTables(root) {
+    let scheduled = false;
+    const run = () => { scheduled = false; labelTableCells(root); };
+    const observer = new MutationObserver(() => {
+        if (!scheduled) { scheduled = true; queueMicrotask(run); }
+    });
+    observer.observe(root, { childList: true, subtree: true });
+    return () => observer.disconnect();
 }
