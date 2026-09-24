@@ -9,9 +9,10 @@
 -- Simula una usuaria autenticada y activa (misma técnica que el
 -- script 04) y, cuando corresponde, el rol anon.
 --
--- Usa registros QA: EST-003 del "Proyecto Esterilización QA"
--- (dos profesionales) y EST-001 del "Proyecto Esterilización QA 2"
--- (un profesional).
+-- Usa registros QA: EST-003 del "Proyecto Esterilización QA" y
+-- EST-001 del "Proyecto Esterilización QA 2" (un profesional).
+-- A1 no depende de cuántos profesionales tenga EST-003: agrega una
+-- asociación temporal dentro de la misma prueba (revertida) y la quita.
 --
 -- Ejecutar completo en Supabase → SQL Editor. Columna ok = true.
 -- ============================================================
@@ -20,9 +21,10 @@ DO $qa$
 DECLARE
     v_uid      uuid;
     v_auth     text;
-    v_rel      bigint;   -- relación a quitar (EST-003, segundo profesional)
-    v_prof     bigint;   -- profesional de esa relación
+    v_rel      bigint;   -- asociación temporal a quitar (A1)
+    v_prof     bigint;   -- profesional no asociado a EST-003
     v_ae       bigint;   -- EST-003
+    v_base     bigint;   -- asociaciones de EST-003 antes de la prueba
     v_unica    bigint;   -- relación única (EST-001 del proyecto QA 2)
     v_res      jsonb := '[]'::jsonb;
     v_state    text;
@@ -38,10 +40,13 @@ BEGIN
     FROM public.animal_esterilizacion ae JOIN public.proyecto_esterilizacion p USING (id_proyecto)
     WHERE p.nombre = 'Proyecto Esterilización QA' AND ae.codigo = 'EST-003';
 
-    SELECT id_esterilizacion_profesional, id_profesional INTO v_rel, v_prof
-    FROM public.esterilizacion_profesional
-    WHERE id_animal_esterilizacion = v_ae
-    ORDER BY id_esterilizacion_profesional DESC LIMIT 1;
+    SELECT count(*) INTO v_base FROM public.esterilizacion_profesional WHERE id_animal_esterilizacion = v_ae;
+
+    SELECT pr.id_profesional INTO v_prof
+    FROM public.profesional pr
+    WHERE NOT EXISTS (SELECT 1 FROM public.esterilizacion_profesional ep
+                      WHERE ep.id_animal_esterilizacion = v_ae AND ep.id_profesional = pr.id_profesional)
+    ORDER BY pr.id_profesional LIMIT 1;
 
     SELECT ep.id_esterilizacion_profesional INTO v_unica
     FROM public.esterilizacion_profesional ep
@@ -50,7 +55,11 @@ BEGIN
     WHERE p.nombre = 'Proyecto Esterilización QA 2' AND ae.codigo = 'EST-001';
 
     -- A1. Quitar una asociación válida: solo desaparece esa relación.
+    --     Se crea una asociación temporal (revertida al final del bloque).
     BEGIN
+        INSERT INTO public.esterilizacion_profesional (id_animal_esterilizacion, id_profesional, funcion)
+        VALUES (v_ae, v_prof, 'Asociación temporal QA')
+        RETURNING id_esterilizacion_profesional INTO v_rel;
         PERFORM set_config('role', 'authenticated', true);
         PERFORM set_config('request.jwt.claims', v_auth, true);
         PERFORM public.quitar_profesional_esterilizacion(v_rel);
@@ -61,8 +70,10 @@ BEGIN
         RAISE EXCEPTION USING ERRCODE = 'QA000', MESSAGE = format('relación=%s profesional=%s restantes=%s', v_n1, v_n2, v_n3);
     EXCEPTION WHEN OTHERS THEN v_state := SQLSTATE; v_msg := SQLERRM;
     END;
-    v_res := v_res || jsonb_build_object('prueba', 'A1. Quitar asociación (EST-003)', 'esperado', 'relación=0 profesional=1 restantes=1',
-        'obtenido', v_state || ': ' || v_msg, 'ok', v_state = 'QA000' AND v_msg = 'relación=0 profesional=1 restantes=1');
+    v_res := v_res || jsonb_build_object('prueba', 'A1. Quitar asociación (EST-003, asociación temporal)',
+        'esperado', format('relación=0 profesional=1 restantes=%s', v_base),
+        'obtenido', v_state || ': ' || v_msg,
+        'ok', v_state = 'QA000' AND v_msg = format('relación=0 profesional=1 restantes=%s', v_base));
 
     -- A2. No permite quitar al último profesional del animal.
     BEGIN
@@ -102,7 +113,7 @@ BEGIN
     BEGIN
         PERFORM set_config('role', 'authenticated', true);
         PERFORM set_config('request.jwt.claims', v_auth, true);
-        DELETE FROM public.esterilizacion_profesional WHERE id_esterilizacion_profesional = v_rel;
+        DELETE FROM public.esterilizacion_profesional WHERE id_esterilizacion_profesional = v_unica;   -- relación real existente
         GET DIAGNOSTICS v_n1 = ROW_COUNT;
         RAISE EXCEPTION USING ERRCODE = 'QA000', MESSAGE = format('filas=%s', v_n1);
     EXCEPTION WHEN OTHERS THEN v_state := SQLSTATE; v_msg := SQLERRM;
