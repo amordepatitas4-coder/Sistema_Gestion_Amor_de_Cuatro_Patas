@@ -56,7 +56,7 @@ el sitio publicado.
 | PA-GAS-03, 04, 08 | PASS (Etapa 6) | Parcial, compartido y fallo en segunda asignación. |
 | PA-GAS-05..07 | PASS | Exceso rechazado, indicador "Excede en $1", misma asignación rechazada. |
 | PA-ARC-01, 02, 05 | PASS | Subida por contexto, triple clic → 1 archivo, errores comprensibles (tipo, red). |
-| PA-ARC-03 | MANUAL PENDIENTE | Enlace de Drive obtenido correctamente desde el dominio publicado; falta clic real en el visor. |
+| PA-ARC-03 | PASS | Enlace de Drive obtenido desde el dominio publicado; la usuaria abrió el archivo con clic real (24-09-2026). |
 | PA-ARC-04 | MANUAL PENDIENTE | Confirmar en Drive que los archivos no son "cualquiera con el enlace" (el sistema no cambia permisos). |
 | PA-DIF-01..05 | PASS | Texto y prompt editables, sin microchip/RUT/hogar/adoptante, sin API de IA. Copiar al portapapeles: manual. |
 | PA-PRO-01..04 | PASS | Proyecto sin meta; estructura Drive; fallo Drive → reintento (proyecto 6); 4 pestañas. |
@@ -64,7 +64,7 @@ el sitio publicado.
 | PA-PRF-01..05 | PASS | Reutilizables, N:M con función, derivados de la nómina; corrección de función y quitar asociación (revisión). |
 | PA-PDF-01..06 | PASS | Documento PDF/JPG/PNG/WebP; tipo y unicidad también en servidor; `EST-001.jpg`; abrir desde nómina; sin reemplazo. Ubicación visual en carpeta `Animales`: confirmar en Drive (manual). |
 | PA-DOC-01..05 | PASS | Documentación del proyecto separada; buscador transversal con contexto y filtros; sin `id_externo`. |
-| PA-INF-01..09 | PASS | Selección persistente, filtros contextuales, fechas, combinaciones, limpiar, sin resultados, CSV con BOM. Impresión: diálogo del navegador manual. |
+| PA-INF-01..09 | PASS | Selección persistente, filtros contextuales, fechas, combinaciones, limpiar, sin resultados, CSV con BOM; descarga real confirmada por la usuaria (24-09-2026). Impresión: diálogo del navegador manual. |
 | PA-CON-01 | PASS | Nombre + correo de Auth (sin duplicar); edición de nombre. |
 | PA-CON-02 | MANUAL PENDIENTE | Invitación real requiere un correo QA; validación del servidor verificada. |
 | PA-CON-03 | MANUAL PENDIENTE | RPC verificada (script 08); no se desactivó una cuenta real. |
@@ -137,13 +137,21 @@ cuenta en modo recuperación. Redirect URLs y Site URL configuradas por la
 usuaria. Prueba real con la cuenta de la Fundación: **MANUAL PENDIENTE**
 (requiere el correo de la usuaria). Ver `DESPLIEGUE_PRUEBA.md` §3.1.
 
-## 4. Observaciones menores
+## 4. Confirmaciones manuales de la usuaria (24-09-2026)
+
+- Fotografía agregada desde un celular real al sitio publicado: PASS.
+- Apertura real del archivo en Drive: PASS (PA-ARC-03).
+- Descarga de informe: PASS.
+- Limpieza de datos QA: la realizará la usuaria directamente en la base de
+  datos (fuera del alcance del frontend).
+
+## 5. Observaciones menores
 
 - Cloudflare publica también `tools/` y `tests/` (sin secretos).
 - Caché tras un despliegue: encabezados `no-cache` verificados; el efecto real
   se comprobará en el próximo despliegue.
 
-## 5. Datos QA creados en la Etapa 13
+## 6. Datos QA creados en la Etapa 13
 
 Animales: id 9 "Estrella Prueba QA" (microchip `000000000000303`, adoptada:
 adopción 7 Devuelto + 8 Activa), id 10 "Cometa Prueba QA", id 11 "Luz Prueba QA".
