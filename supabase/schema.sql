@@ -169,6 +169,40 @@ $$;
 ALTER FUNCTION "public"."activar_usuario"("p_id_usuario" "uuid") OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public".actualizar_mi_nombre(p_nombre text)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO ''
+AS $$
+DECLARE
+    v_nombre text := regexp_replace(btrim(coalesce(p_nombre, '')), '\s+', ' ', 'g');
+BEGIN
+    IF NOT public.es_usuario_activo() THEN
+        RAISE EXCEPTION 'Usuario no autorizado o inactivo.';
+    END IF;
+
+    IF char_length(v_nombre) < 2 THEN
+        RAISE EXCEPTION 'El nombre debe tener al menos 2 caracteres.';
+    END IF;
+
+    IF char_length(v_nombre) > 150 THEN
+        RAISE EXCEPTION 'El nombre no puede superar los 150 caracteres.';
+    END IF;
+
+    UPDATE public.usuario
+    SET nombre = v_nombre
+    WHERE id_usuario = auth.uid();
+END;
+$$;
+
+
+ALTER FUNCTION "public"."actualizar_mi_nombre"("p_nombre" "text") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."actualizar_mi_nombre"("p_nombre" "text") IS 'La usuaria activa actualiza solo su propio nombre en public.usuario.';
+
+
 CREATE OR REPLACE FUNCTION "public"."asignar_gasto_animal"("p_id_gasto" bigint, "p_id_animal" bigint, "p_monto_asignado" bigint) RETURNS bigint
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO ''
@@ -767,6 +801,89 @@ $$;
 
 
 ALTER FUNCTION "public"."ingresar_hogar_temporal"("p_id_animal" bigint, "p_id_hogar" bigint, "p_fecha_ingreso" "date", "p_observaciones" "text") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public".listar_usuarias()
+RETURNS TABLE (
+    id_usuario uuid,
+    nombre text,
+    email text,
+    activo boolean,
+    fecha_registro timestamptz
+)
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path TO ''
+AS $$
+BEGIN
+    IF NOT public.es_usuario_activo() THEN
+        RAISE EXCEPTION 'Usuario no autorizado o inactivo.';
+    END IF;
+
+    RETURN QUERY
+    SELECT u.id_usuario, u.nombre::text, a.email::text, u.activo, u.fecha_registro
+    FROM public.usuario u
+    LEFT JOIN auth.users a ON a.id = u.id_usuario
+    ORDER BY u.fecha_registro;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."listar_usuarias"() OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."listar_usuarias"() IS 'Usuarias internas con su correo de Supabase Auth (solo lectura) para Configuración → Usuarias.';
+
+
+CREATE OR REPLACE FUNCTION "public".quitar_profesional_esterilizacion(p_id_esterilizacion_profesional bigint)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO ''
+AS $$
+DECLARE
+    v_id_animal_esterilizacion bigint;
+    v_total integer;
+BEGIN
+    IF NOT public.es_usuario_activo() THEN
+        RAISE EXCEPTION 'Usuario no autorizado o inactivo.';
+    END IF;
+
+    SELECT id_animal_esterilizacion
+    INTO v_id_animal_esterilizacion
+    FROM public.esterilizacion_profesional
+    WHERE id_esterilizacion_profesional = p_id_esterilizacion_profesional;
+
+    IF v_id_animal_esterilizacion IS NULL THEN
+        RAISE EXCEPTION 'La asociación indicada no existe.';
+    END IF;
+
+    -- Serializa operaciones concurrentes sobre el mismo animal.
+    PERFORM 1
+    FROM public.animal_esterilizacion
+    WHERE id_animal_esterilizacion = v_id_animal_esterilizacion
+    FOR UPDATE;
+
+    SELECT count(*)
+    INTO v_total
+    FROM public.esterilizacion_profesional
+    WHERE id_animal_esterilizacion = v_id_animal_esterilizacion;
+
+    IF v_total <= 1 THEN
+        RAISE EXCEPTION 'No es posible quitar al último profesional asociado. Agrega primero el profesional correcto.';
+    END IF;
+
+    DELETE FROM public.esterilizacion_profesional
+    WHERE id_esterilizacion_profesional = p_id_esterilizacion_profesional;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."quitar_profesional_esterilizacion"("p_id_esterilizacion_profesional" bigint) OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."quitar_profesional_esterilizacion"("p_id_esterilizacion_profesional" bigint) IS 'Corrige una asociación profesional–esterilización ingresada por error. No elimina al profesional ni permite dejar al animal sin profesionales.';
 
 
 CREATE OR REPLACE FUNCTION "public"."registrar_adopcion"("p_id_animal" bigint, "p_id_adoptante" bigint, "p_fecha_adopcion" "date", "p_observaciones" "text" DEFAULT NULL::"text") RETURNS bigint
@@ -3243,6 +3360,12 @@ GRANT ALL ON FUNCTION "public"."activar_usuario"("p_id_usuario" "uuid") TO "serv
 
 
 
+REVOKE ALL ON FUNCTION "public"."actualizar_mi_nombre"("p_nombre" "text") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."actualizar_mi_nombre"("p_nombre" "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."actualizar_mi_nombre"("p_nombre" "text") TO "service_role";
+
+
+
 REVOKE ALL ON FUNCTION "public"."asignar_gasto_animal"("p_id_gasto" bigint, "p_id_animal" bigint, "p_monto_asignado" bigint) FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."asignar_gasto_animal"("p_id_gasto" bigint, "p_id_animal" bigint, "p_monto_asignado" bigint) TO "authenticated";
 GRANT ALL ON FUNCTION "public"."asignar_gasto_animal"("p_id_gasto" bigint, "p_id_animal" bigint, "p_monto_asignado" bigint) TO "service_role";
@@ -3288,6 +3411,18 @@ GRANT ALL ON FUNCTION "public"."finalizar_hogar_temporal"("p_id_animal" bigint, 
 REVOKE ALL ON FUNCTION "public"."ingresar_hogar_temporal"("p_id_animal" bigint, "p_id_hogar" bigint, "p_fecha_ingreso" "date", "p_observaciones" "text") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."ingresar_hogar_temporal"("p_id_animal" bigint, "p_id_hogar" bigint, "p_fecha_ingreso" "date", "p_observaciones" "text") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."ingresar_hogar_temporal"("p_id_animal" bigint, "p_id_hogar" bigint, "p_fecha_ingreso" "date", "p_observaciones" "text") TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."listar_usuarias"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."listar_usuarias"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."listar_usuarias"() TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."quitar_profesional_esterilizacion"("p_id_esterilizacion_profesional" bigint) FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."quitar_profesional_esterilizacion"("p_id_esterilizacion_profesional" bigint) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."quitar_profesional_esterilizacion"("p_id_esterilizacion_profesional" bigint) TO "service_role";
 
 
 
