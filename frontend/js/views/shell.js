@@ -70,6 +70,13 @@ export function mountShell(root, { navItems, profile, email, onLogout }) {
     const context = root.querySelector('#topbarContext');
     const logoutButton = root.querySelector('#logoutButton');
 
+    // "Saltar al contenido": mueve el foco al contenido sin cambiar la ruta.
+    root.querySelector('.skip-link').addEventListener('click', (event) => {
+        event.preventDefault();
+        outlet.focus();
+        outlet.scrollIntoView({ block: 'start' });
+    });
+
     // En móvil, cerrar el menú al elegir una opción.
     sidebar.addEventListener('click', (event) => {
         if (event.target.closest('[data-nav]')) {

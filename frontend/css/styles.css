@@ -369,7 +369,7 @@ body {
 .sidebar-foot {
     padding: 1rem;
     font-size: .75rem;
-    color: rgba(255, 255, 255, .55);
+    color: rgba(255, 255, 255, .72);
     border-top: 1px solid rgba(255, 255, 255, .12);
 }
 
@@ -1425,4 +1425,20 @@ a.kpi-card:hover {
     .report-card-icon { width: 32px; height: 32px; font-size: 1rem; }
     .report-card-text span { display: none; }
     .report-card-check { top: .35rem; right: .4rem; }
+}
+
+/* ------------------------------------------------------------
+   Textos largos sin espacios (correos, códigos, nombres extensos)
+   no deben ensanchar la página (Etapa 12).
+   ------------------------------------------------------------ */
+.page-title, .page-subtitle, .modal-title,
+.card-panel h1, .card-panel h2, .card-panel h3,
+.info-block dd, .file-info, .home-contact dd, .animal-card-name,
+.timeline-card, .pre-line, .state-text, .alert, .toast {
+    overflow-wrap: anywhere;
+}
+.d-flex > h1, .d-flex > h2, .d-flex > h3, .d-flex > div, .d-flex > p,
+.page-header > div, .home-contact dd, .file-info { min-width: 0; }
+@media (max-width: 575.98px) {
+    .table-responsive > .table:not(.table-keep) > tbody > tr > * { overflow-wrap: anywhere; }
 }

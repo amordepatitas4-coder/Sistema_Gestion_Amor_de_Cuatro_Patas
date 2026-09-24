@@ -21,6 +21,16 @@ export function parseAuthCallback(hash) {
     return new URLSearchParams(String(hash ?? '').replace(/^#\/?/, ''));
 }
 
+/**
+ * ¿El hash corresponde a una ruta de la aplicación? ("", "#", "#/…").
+ * Un ancla interna como "#main" (enlace "Saltar al contenido") no es una
+ * ruta y no debe llevar a "Página no encontrada" (Etapa 12).
+ */
+export function isRouteHash(hash) {
+    const value = String(hash ?? '');
+    return value === '' || value === '#' || value.startsWith('#/');
+}
+
 /** "#/animales/12?estado=3" → { path: "/animales/12", query: URLSearchParams } */
 export function parseHash(hash) {
     let value = String(hash ?? '').replace(/^#/, '');
@@ -83,9 +93,13 @@ export function buildHash(path, query = {}) {
  * route es null si ninguna coincide.
  */
 export function createRouter({ routes, onResolve }) {
+    let resolvedOnce = false;
     function resolve() {
         if (isAuthCallback(window.location.hash)) return;
-        const { path, query } = parseHash(window.location.hash);
+        // Ancla interna: se ignora si ya hay una vista; al iniciar se trata como "/".
+        if (!isRouteHash(window.location.hash) && resolvedOnce) return;
+        resolvedOnce = true;
+        const { path, query } = parseHash(isRouteHash(window.location.hash) ? window.location.hash : '');
         const found = matchRoute(routes, path);
         onResolve({ route: found?.route ?? null, params: found?.params ?? {}, query, path });
     }

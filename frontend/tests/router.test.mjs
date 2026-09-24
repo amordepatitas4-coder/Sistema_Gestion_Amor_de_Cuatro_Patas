@@ -46,3 +46,10 @@ test('Rutas de Esterilización y Configuración (Etapas 8 y 11)', () => {
     assert.equal(R.matchRoute(ROUTES, '/configuracion/usuarios').route.module.path, '/configuracion');
     assert.ok(!ROUTES.some((r) => r.load && String(r.load).includes('placeholder') && ['/esterilizacion', '/documentos', '/informes', '/configuracion'].includes(r.path)));
 });
+
+test('Anclas internas ("#main") no son rutas (enlace Saltar al contenido, Etapa 12)', () => {
+    assert.equal(R.isRouteHash('#main'), false);
+    assert.equal(R.isRouteHash('#/panel'), true);
+    assert.equal(R.isRouteHash(''), true);
+    assert.equal(R.isRouteHash('#'), true);
+});
