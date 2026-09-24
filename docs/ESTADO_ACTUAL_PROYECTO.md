@@ -45,13 +45,15 @@ f5d72d4 feat: configuración — mi cuenta, usuarias y catálogos (Etapa 11)
 | 5 | Adopciones, adoptantes, seguimientos y devolución |
 | 6 | Gastos con asignaciones a animales (total / asignado / no asignado) |
 | 7 | Archivos en Google Drive (animal, adopción, gasto) y Difusión (texto + prompt) |
-| 8 | Proyectos de esterilización: proyecto + carpeta Drive, nómina, profesionales N:M, ficha PDF (Adjuntar/Abrir, sin reemplazo), documentación, exportación CSV — *implementada y probada; pendiente de aprobación* |
-| 9 | Documentos: buscador transversal con contexto, filtros y subida de documentos de la Fundación — *pendiente de aprobación* |
-| 10 | Informes: 6 tipos con filtros propios, resumen, CSV e impresión — *pendiente de aprobación* |
-| 11 | Configuración: Mi cuenta (contraseña), Usuarias (invitar/activar/desactivar), Catálogos — *pendiente de aprobación* |
+| 8 | Proyectos de esterilización: proyecto + carpeta Drive, nómina, profesionales N:M, ficha PDF (Adjuntar/Abrir, sin reemplazo), documentación, exportación CSV  |
+| 9 | Documentos: buscador transversal con contexto, filtros y subida de documentos de la Fundación |
+| 10 | Informes: 6 tipos con filtros propios, resumen, CSV e impresión |
+| 11 | Configuración: Mi cuenta (contraseña y nombre), Usuarias (correo, invitar/activar/desactivar), Catálogos |
+| 12 | Revisión visual, responsive, UX y accesibilidad: contraste AA, celular (filtros plegables, tablas apiladas, modales a pantalla completa), teclado (foco, retorno de foco, Saltar al contenido), mensajes comprensibles |
 
-Pendientes de módulo: Etapa 12 (revisión visual y accesibilidad) y 13 (pruebas
-integrales). No iniciarlas hasta la aprobación de las Etapas 8–11.
+Etapas 8–11 aprobadas y publicadas en `origin/frontend-rebuild`. Etapa 12 en
+commits locales. Pendiente: Etapa 13 (QA integral) y despliegue de prueba
+(ver `docs/DESPLIEGUE_PRUEBA.md`; requiere acción de la usuaria).
 
 ## 3. Qué funciona hoy (resumen)
 

@@ -1,0 +1,21 @@
+# Encabezados HTTP para el despliegue estático (Cloudflare Pages / Netlify).
+# Sistema interno: sin indexación en buscadores.
+/*
+  X-Robots-Tag: noindex, nofollow
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: DENY
+  Permissions-Policy: geolocation=(), microphone=(), payment=()
+
+# Siempre revalidar HTML, JS y CSS: evita versiones antiguas en caché
+# después de publicar cambios (problema observado en las pruebas).
+/index.html
+  Cache-Control: no-cache
+/js/*
+  Cache-Control: no-cache
+/css/*
+  Cache-Control: no-cache
+
+# La configuración pública generada en el despliegue nunca se cachea.
+/js/config.js
+  Cache-Control: no-store
