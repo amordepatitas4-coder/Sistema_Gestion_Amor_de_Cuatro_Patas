@@ -102,6 +102,8 @@ Cambios aplicados en el proyecto real con autorización y versionados en `supaba
 |---|---|---|
 | `2026-09-23_01_restringir_privilegios_funciones.sql` | Sin EXECUTE para `anon`/PUBLIC en funciones de `public`; `_cambiar_estado_animal` solo interna; `es_usuario_activo` solo `authenticated`; defaults de funciones futuras sin `anon`/PUBLIC | Script `02`: todo `ok = true` + prueba desde cliente anon |
 | `2026-09-23_03_reforzar_procesos_estado_hogar.sql` | `cambiar_estado_animal` rechaza cambio manual con hogar temporal o adopción activa; `ingresar_hogar_temporal` rechaza animal con adopción activa | Script `04`: 10/10 `ok = true` + prueba real |
+| `2026-09-23_05_documento_esterilizacion_unico.sql` + Edge Function `subir-archivo-drive` (desplegada desde el Dashboard, Verify JWT activo) | Un documento de esterilización por animal (índice `uq_esterilizacion_archivo_documento`); tipo real PDF/JPG/PNG/WebP verificado por firma; extensión canónica en Drive; 409 si ya existe; compensación en Drive ante carga simultánea | Script `06`: todo `ok = true` + pruebas reales (disfrazado rechazado, cargas simultáneas → 1 documento) |
+| `2026-09-23_07_profesionales_y_usuarias.sql` | RPC `quitar_profesional_esterilizacion` (solo la relación; no el último), `listar_usuarias` (correo de auth.users en servidor), `actualizar_mi_nombre`; sin acceso anon; sin DELETE en la tabla | Script `08`: todo `ok = true` + pruebas reales |
 
 - Registro público de usuarios **deshabilitado** en el Dashboard de Supabase (solo invitación). `supabase/config.toml` local alineado.
 - `schema.sql` refleja privilegios y funciones actuales.
@@ -162,6 +164,7 @@ proyecto id 1 "Frutillar" (1 animal en nómina) y profesional "Juan".
 - Exportación a Excel mediante CSV (sin dependencia .xlsx).
 - `public.usuario` no tiene política UPDATE: el nombre de la usuaria no es editable desde el frontend.
 - Gastos: no existe RPC transaccional gasto + asignaciones (se informa resultado parcial); las asignaciones no se eliminan (sin DELETE).
+- Altas multipaso seguras de reintentar (nómina y proyecto): tras una respuesta perdida se recupera el registro idéntico en vez de duplicarlo; relaciones, documento y profesionales existentes se reutilizan u omiten.
 - Pruebas manuales pendientes de la usuaria: "Abrir en Drive" con clic real y "Copiar texto/prompt" en su navegador.
 - Privilegios por defecto del rol `supabase_admin` los administra Supabase (no modificables desde `postgres`).
 - Caché del navegador al actualizar archivos estáticos: resolver al definir el despliegue.
