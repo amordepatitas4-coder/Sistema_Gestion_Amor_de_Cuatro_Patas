@@ -38,6 +38,7 @@ const UNIQUE_MESSAGES = {
     uq_animal_esterilizacion_codigo: 'Ese código ya se utiliza en este proyecto.',
     uq_animal_esterilizacion_proyecto_microchip: 'Ese microchip ya está registrado en la nómina de este proyecto.',
     uq_esterilizacion_profesional: 'Ese profesional ya está asociado a esta esterilización.',
+    uq_esterilizacion_archivo_documento: 'Esta esterilización ya tiene un documento registrado.',
     uq_animal_gasto: 'El gasto ya tiene una asignación para ese animal.',
     uq_archivo_id_externo: 'El archivo ya se encuentra registrado.',
     uq_especie_nombre: 'Ya existe una especie con ese nombre.',

@@ -58,7 +58,7 @@ test('Esterilizaciones: filtro por profesional (N:M) y resumen', () => {
     const s = Object.fromEntries(rep.summary(rows, {}).map((x) => [x.label, x.value]));
     assert.equal(s.Esterilizaciones, 3);
     assert.equal(s.Hembra, 2);
-    assert.equal(s['Con ficha PDF'], 2);
+    assert.equal(s['Con documento'], 2);
     assert.equal(s.Proyectos, 2);
 });
 

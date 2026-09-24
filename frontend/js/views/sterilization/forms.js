@@ -7,28 +7,33 @@
 //
 // Alta en nómina (Prompt §18, flujo conceptual):
 //   1. capturar y validar TODO antes de bloquear (datos, filas de
-//      profesionales y el File del PDF: REG-04, REG-06);
-//   2. verificar que el archivo sea realmente un PDF (firma %PDF-);
+//      profesionales y el File del documento: REG-04, REG-06);
+//   2. verificar el tipo real del documento (PDF, JPG, PNG o WebP);
 //   3. INSERT animal_esterilizacion  → desde aquí el registro EXISTE
 //      y el formulario se reemplaza por un resumen (no reenviable);
 //   4. INSERT esterilizacion_profesional por cada profesional (N:M);
-//   5. subir-archivo-drive (contexto 'esterilizacion'): el PDF queda
-//      en Proyecto/Animales/{codigo}.pdf y registrar_archivo crea
-//      ARCHIVO + ESTERILIZACION_ARCHIVO.
+//   5. subir-archivo-drive (contexto 'esterilizacion'): el documento
+//      queda en Proyecto/Animales/{codigo}.{ext} y registrar_archivo
+//      crea ARCHIVO + ESTERILIZACION_ARCHIVO.
 //   Un fallo en 4 o 5 se informa como resultado parcial y se
-//   completa desde la nómina (Adjuntar PDF / Agregar profesional).
+//   completa desde la nómina (Adjuntar documento / Profesionales).
 //
-// Ficha PDF: MVP sin reemplazo. Si no existe → Adjuntar PDF; si
-// existe → Abrir PDF. Antes de adjuntar se vuelve a consultar si
-// ya existe una ficha (control de interfaz; el backend todavía no
-// garantiza unicidad ni formato PDF en servidor).
+// Reintentos seguros (sin duplicados):
+//   - si el INSERT del paso 3 falla, se busca el código: si el animal
+//     existe con los mismos datos se recupera en vez de crear otro;
+//   - los pasos 4 y 5 omiten relaciones y documento ya existentes;
+//   - UNIQUE en BD: (id_proyecto, codigo), (esterilización, profesional)
+//     y uq_esterilizacion_archivo_documento (un documento por animal).
+//
+// Documento de esterilización: uno por animal, sin reemplazo en el MVP.
+// Si no existe → "Adjuntar documento"; si existe → "Abrir documento".
 // ============================================================
 
 import { selectable } from '../../api/catalogs.js';
 import { uploadFile } from '../../api/files.js';
 import {
-    countEntryFiles, createEntry, createProfessional, createProject, createProjectFolder,
-    linkProfessional, updateEntry, updateProfessional, updateProject,
+    countEntryFiles, createEntry, createProfessional, createProject, createProjectFolder, findEntryByCode,
+    linkProfessional, listEntryLinks, listProfessionals, updateEntry, updateLinkFunction, updateProfessional, updateProject,
 } from '../../api/sterilization.js';
 import { AppError, reportError } from '../../core/errors.js';
 import { bindForm } from '../../core/forms.js';
@@ -36,13 +41,14 @@ import { displayText, emptyToNull, formatDate, formatDateTime, todayISO } from '
 import { html, openModal, options, render, setButtonBusy, toast } from '../../core/ui.js';
 import { openFile } from '../files/section.js';
 import {
-    FUNCIONES_SUGERIDAS, PDF_MAX_BYTES, REGISTRO_NACIONAL, SEXOS,
-    collectEntry, collectProfessional, collectProject, hasPdfSignature, hasRowErrors, pdfStatus,
-    suggestNextCode, validateEntry, validatePdfFile, validateProfessional, validateProfessionalRows, validateProject,
+    DOC_ACCEPT, DOC_MAX_BYTES, FUNCIONES_SUGERIDAS, REGISTRO_NACIONAL, SEXOS,
+    collectEntry, collectProfessional, collectProject, documentStatus, findSimilarProfessional, hasRowErrors,
+    isSameEntry, pendingLinks, readDocumentType, suggestNextCode, validateDocumentFile, validateEntry,
+    validateFunction, validateProfessional, validateProfessionalRows, validateProject,
 } from './logic.js';
 
 const req = html`<span class="text-danger" aria-hidden="true">*</span>`;
-const NOT_PDF = 'El archivo seleccionado no es un PDF válido. Selecciona la ficha digitalizada en formato PDF.';
+const NOT_DOC = 'El archivo seleccionado no es un PDF ni una imagen válida (JPG, PNG o WebP). Selecciona el documento de esterilización.';
 
 function formActions(submitLabel, icon) {
     return html`
@@ -79,8 +85,18 @@ function stepsPanel(modal, { title, steps, warning, goLabel }) {
         </div>`);
 }
 
-/** Asegura un File con tipo application/pdf (algunos sistemas no informan el tipo). */
-const asPdf = (file) => (file.type === 'application/pdf' ? file : new File([file], file.name, { type: 'application/pdf' }));
+/** File con el tipo real detectado (algunos sistemas no informan el tipo o lo informan mal). */
+const withType = (file, type) => (file.type === type.mime ? file : new File([file], file.name, { type: type.mime }));
+
+/** Icono según el tipo del documento (PDF o imagen). */
+export const documentIcon = (mime) => (String(mime ?? '').startsWith('image/') ? 'bi-file-earmark-image' : 'bi-file-earmark-pdf');
+
+/** Verifica el tipo real ANTES de crear registros; devuelve el File listo para subir. */
+async function prepareDocument(file) {
+    const type = await readDocumentType(file);
+    if (!type) throw new AppError(NOT_DOC);
+    return { file: withType(file, type), type };
+}
 
 // ============================================================
 // Proyecto: crear / editar
@@ -332,18 +348,24 @@ function professionalPicker(form, { professionals, excludeIds = [] }) {
         creating = true;
         const restore = setButtonBusy(e.currentTarget, 'Creando…');
         try {
-            const prof = await createProfessional(values);
-            professionals.push(prof);
-            professionals.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
-            const option = html`<option value="${prof.id_profesional}">${prof.nombre} — ${prof.profesion}</option>`;
-            rowsBox.querySelectorAll('[data-pr-prof]').forEach((sel) => sel.insertAdjacentHTML('beforeend', String(option)));
+            // Reintento seguro: si ya existe (p. ej. se perdió la respuesta de un
+            // intento anterior), se reutiliza en lugar de duplicar el profesional.
+            const existing = findSimilarProfessional(await listProfessionals(), values);
+            const prof = existing ?? await createProfessional(values);
+            if (!professionals.some((p) => p.id_profesional === prof.id_profesional)) {
+                professionals.push(prof);
+                professionals.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+                const option = html`<option value="${prof.id_profesional}">${prof.nombre} — ${prof.profesion}</option>`;
+                rowsBox.querySelectorAll('[data-pr-prof]').forEach((sel) => sel.insertAdjacentHTML('beforeend', String(option)));
+            }
             const emptyRow = [...rowsBox.querySelectorAll('[data-prof-row]')].find((r) => !r.querySelector('[data-pr-prof]').value);
             const row = emptyRow ?? addRow();
             row.querySelector('[data-pr-prof]').value = String(prof.id_profesional);
             restore();
             closeQuick();
             row.querySelector('[data-pr-fun]').focus();
-            toast(`Profesional "${prof.nombre}" creado. Indica su función.`, 'success');
+            toast(existing ? `"${prof.nombre}" ya estaba registrado: se seleccionó el existente. Indica su función.`
+                : `Profesional "${prof.nombre}" creado. Indica su función.`, existing ? 'info' : 'success');
         } catch (err) {
             restore();
             quickError.textContent = await reportError(err, 'Creación de profesional');
@@ -391,7 +413,7 @@ function professionalPickerHtml({ required }) {
 }
 
 // ============================================================
-// Nómina: agregar animal (datos + profesionales + PDF)
+// Nómina: agregar animal (datos + profesionales + documento)
 // ============================================================
 
 function entryFields(v, catalogs, { lockCode = false } = {}) {
@@ -407,7 +429,7 @@ function entryFields(v, catalogs, { lockCode = false } = {}) {
                     <input class="form-control" id="eCodigo" name="codigo" maxlength="50" required autocomplete="off"
                            value="${v.codigo ?? ''}" ${lockCode ? 'readonly' : ''} aria-describedby="eCodigoHelp">
                     <div class="form-text" id="eCodigoHelp">${lockCode
-                        ? 'No se modifica porque la ficha PDF ya fue guardada con este código.'
+                        ? 'No se modifica porque el documento de esterilización ya fue guardado con este código.'
                         : 'Código interno del proyecto (no es el microchip). Puedes editarlo.'}</div>
                 </div>
                 <div class="col-md-4">
@@ -465,26 +487,27 @@ function entryFields(v, catalogs, { lockCode = false } = {}) {
         </fieldset>`;
 }
 
-function pdfFieldsHtml({ prefix = 'e' } = {}) {
+function documentFieldsHtml({ prefix = 'e' } = {}) {
     return html`
         <div class="row g-3">
             <div class="col-md-8">
-                <label class="form-label" for="${prefix}Pdf">Ficha digitalizada (PDF) ${req}</label>
-                <input class="form-control" type="file" id="${prefix}Pdf" name="pdf" accept="application/pdf,.pdf" required aria-describedby="${prefix}PdfHelp">
-                <div class="form-text" id="${prefix}PdfHelp">Solo PDF, máximo ${PDF_MAX_BYTES / (1024 * 1024)} MB. Se guardará en la carpeta <em>Animales</em> del proyecto con el código como nombre.</div>
+                <label class="form-label" for="${prefix}Doc">Documento de esterilización ${req}</label>
+                <input class="form-control" type="file" id="${prefix}Doc" name="documento" accept="${DOC_ACCEPT}" required aria-describedby="${prefix}DocHelp">
+                <div class="form-text" id="${prefix}DocHelp">PDF o fotografía del documento (JPG, PNG o WebP), máximo ${DOC_MAX_BYTES / (1024 * 1024)} MB.
+                    Se guardará en la carpeta <em>Animales</em> del proyecto con el código como nombre.</div>
             </div>
             <div class="col-md-4">
-                <label class="form-label" for="${prefix}PdfFecha">Fecha del documento</label>
-                <input class="form-control" type="date" id="${prefix}PdfFecha" name="pdf_fecha">
+                <label class="form-label" for="${prefix}DocFecha">Fecha del documento</label>
+                <input class="form-control" type="date" id="${prefix}DocFecha" name="doc_fecha">
             </div>
         </div>`;
 }
 
 /**
  * entries: nómina actual del proyecto (para sugerir código y validar duplicados).
- * idCategoriaPdf: id de "Documento de esterilización".
+ * idCategoriaDoc: id de "Documento de esterilización".
  */
-export function openAddEntry({ project, entries, catalogs, professionals, idCategoriaPdf, onDone }) {
+export function openAddEntry({ project, entries, catalogs, professionals, idCategoriaDoc, onDone }) {
     let created = false;
     const modal = openModal({
         title: 'Agregar animal a la nómina',
@@ -500,8 +523,8 @@ export function openAddEntry({ project, entries, catalogs, professionals, idCate
                 ${entryFields({ codigo: suggestNextCode(entries.map((e) => e.codigo)), fecha_esterilizacion: todayISO() }, catalogs)}
                 ${professionalPickerHtml({ required: true })}
                 <fieldset class="form-section">
-                    <legend>Ficha digitalizada</legend>
-                    ${pdfFieldsHtml()}
+                    <legend>Documento de esterilización</legend>
+                    ${documentFieldsHtml()}
                 </fieldset>
                 ${formActions('Agregar a la nómina', 'bi-clipboard2-plus')}
             </form>`,
@@ -512,74 +535,52 @@ export function openAddEntry({ project, entries, catalogs, professionals, idCate
     bindForm(form, {
         context: 'Alta en nómina',
         busyLabel: 'Registrando…',
-        // El File del PDF y las filas se capturan aquí, antes de bloquear el botón.
+        // El File del documento y las filas se capturan aquí, antes de bloquear el botón.
         collect: (fd) => ({
             values: collectEntry(fd),
             rows: picker.readRows().filter((r) => r.idProfesional || r.funcion),
-            pdf: fd.get('pdf'),
-            fechaDocumento: emptyToNull(fd.get('pdf_fecha')),
+            documento: fd.get('documento'),
+            fechaDocumento: emptyToNull(fd.get('doc_fecha')),
         }),
-        validate: ({ values, rows, pdf, fechaDocumento }) => {
+        validate: ({ values, rows, documento, fechaDocumento }) => {
             const errors = validateEntry(values, entries);
-            const pdfError = validatePdfFile(pdf);
-            if (pdfError) errors.pdf = pdfError;
-            if (fechaDocumento && !/^\d{4}-\d{2}-\d{2}$/.test(fechaDocumento)) errors.pdf_fecha = 'La fecha no es válida.';
+            const docError = validateDocumentFile(documento);
+            if (docError) errors.documento = docError;
+            if (fechaDocumento && !/^\d{4}-\d{2}-\d{2}$/.test(fechaDocumento)) errors.doc_fecha = 'La fecha no es válida.';
             const rowCheck = validateProfessionalRows(rows, { required: true });
             picker.showRowErrors(rowCheck);
             if (hasRowErrors(rowCheck)) errors._form = rowCheck.general ?? 'Revisa los profesionales participantes.';
             return errors;
         },
-        submit: async ({ values, pdf }) => {
+        submit: async (data) => {
             modal.setBusy(true);
             try {
                 // Verificación de contenido ANTES de crear cualquier registro.
-                if (!(await hasPdfSignature(pdf))) throw new AppError(NOT_PDF);
-                return await createEntry(project.id_proyecto, values);
+                data.prepared = await prepareDocument(data.documento);
+                return await createEntrySafely(project.id_proyecto, data.values);
             } catch (err) {
                 modal.setBusy(false);
                 throw err;
             }
         },
-        onSuccess: async (idEntry, { values, rows, pdf, fechaDocumento }) => {
+        onSuccess: async ({ id: idEntry, recovered }, { values, rows, prepared, fechaDocumento }) => {
             created = true;
             const profName = (id) => professionals.find((p) => p.id_profesional === id)?.nombre ?? 'Profesional';
             const steps = [
-                { key: 'entry', label: `Animal ${values.codigo} agregado a la nómina`, status: 'ok' },
+                { key: 'entry', label: `Animal ${values.codigo} agregado a la nómina`, status: 'ok',
+                    message: recovered ? 'El registro ya se había creado en un intento anterior: se continuó con él (sin duplicarlo).' : '' },
                 ...rows.map((r) => ({ key: 'prof', row: r, label: `Profesional: ${profName(r.idProfesional)} (${r.funcion})`, status: 'pending' })),
-                { key: 'pdf', label: `Ficha PDF → Animales/${values.codigo}.pdf`, status: 'pending' },
+                { key: 'doc', label: `Documento → Animales/${values.codigo}${prepared.type.extension}`, status: 'pending' },
             ];
             const draw = stepsPanel(modal, {
                 title: `Nómina de ${project.nombre}`,
                 steps,
                 warning: html`El animal quedó registrado en la nómina. <strong>No vuelvas a agregarlo.</strong>
-                    Lo pendiente puede completarse desde la nómina (<em>Agregar profesional</em> o <em>Adjuntar PDF</em>).`,
+                    Lo pendiente puede completarse desde la nómina (<em>Profesionales</em> o <em>Adjuntar documento</em>).`,
             });
             modal.setBusy(true);
             draw();
-            for (const step of steps.filter((s) => s.key === 'prof')) {
-                step.status = 'running';
-                draw();
-                try {
-                    await linkProfessional(idEntry, step.row.idProfesional, step.row.funcion);
-                    step.status = 'ok';
-                } catch (err) {
-                    step.status = 'error';
-                    step.message = await reportError(err, 'Relación con profesional');
-                }
-                draw();
-            }
-            const pdfStep = steps.find((s) => s.key === 'pdf');
-            pdfStep.status = 'running';
-            draw();
-            try {
-                await uploadFile('esterilizacion', idEntry, {
-                    archivo: asPdf(pdf), idCategoria: idCategoriaPdf, fechaDocumento, descripcion: null,
-                });
-                pdfStep.status = 'ok';
-            } catch (err) {
-                pdfStep.status = 'error';
-                pdfStep.message = `${await reportError(err, 'Ficha PDF')} Podrás adjuntarla desde la nómina.`;
-            }
+            await runEntryCompletion({ idEntry, steps, draw, prepared, idCategoriaDoc, fechaDocumento });
             modal.setBusy(false);
             draw(true);
             const failed = steps.some((s) => s.status === 'error');
@@ -588,11 +589,70 @@ export function openAddEntry({ project, entries, catalogs, professionals, idCate
     });
 }
 
+/**
+ * INSERT del animal de la nómina con recuperación segura: si falla (red,
+ * respuesta perdida o código ya usado), se busca por código y, solo si el
+ * registro existente tiene exactamente los mismos datos, se continúa con él.
+ */
+async function createEntrySafely(idProyecto, values) {
+    try {
+        return { id: await createEntry(idProyecto, values), recovered: false };
+    } catch (err) {
+        let existing = null;
+        try { existing = await findEntryByCode(idProyecto, values.codigo); } catch { /* se informa el error original */ }
+        if (existing && isSameEntry(values, existing)) return { id: existing.id_animal_esterilizacion, recovered: true };
+        throw err;
+    }
+}
+
+/** Pasos 4 y 5 del alta; cada uno omite lo que ya existe (reintento sin duplicados). */
+async function runEntryCompletion({ idEntry, steps, draw, prepared, idCategoriaDoc, fechaDocumento }) {
+    const profSteps = steps.filter((s) => s.key === 'prof');
+    let linked = [];
+    try {
+        linked = (await listEntryLinks(idEntry)).map((l) => l.id_profesional);
+    } catch { /* si no se puede consultar, la restricción única evita duplicados */ }
+    const plan = pendingLinks(profSteps.map((s) => s.row), linked);
+    for (const [i, step] of profSteps.entries()) {
+        step.status = 'running';
+        draw();
+        if (plan[i].alreadyLinked) {
+            step.status = 'ok';
+            step.message = 'Ya estaba asociado.';
+        } else {
+            try {
+                await linkProfessional(idEntry, step.row.idProfesional, step.row.funcion);
+                step.status = 'ok';
+            } catch (err) {
+                step.status = 'error';
+                step.message = await reportError(err, 'Relación con profesional');
+            }
+        }
+        draw();
+    }
+    const docStep = steps.find((s) => s.key === 'doc');
+    docStep.status = 'running';
+    draw();
+    try {
+        if ((await countEntryFiles(idEntry)) > 0) {
+            docStep.message = 'Ya existía un documento registrado: no se volvió a subir.';
+        } else {
+            await uploadFile('esterilizacion', idEntry, {
+                archivo: prepared.file, idCategoria: idCategoriaDoc, fechaDocumento, descripcion: null,
+            });
+        }
+        docStep.status = 'ok';
+    } catch (err) {
+        docStep.status = 'error';
+        docStep.message = `${await reportError(err, 'Documento de esterilización')} Podrás adjuntarlo desde la nómina.`;
+    }
+}
+
 // ------------------------------------------------------------
 // Editar datos de un animal de la nómina
 // ------------------------------------------------------------
 export function openEditEntry({ entry, others, catalogs, onSaved }) {
-    const lockCode = pdfStatus(entry).exists;
+    const lockCode = documentStatus(entry).exists;
     const modal = openModal({
         title: `Editar ${entry.codigo}`,
         size: 'modal-lg',
@@ -600,7 +660,7 @@ export function openEditEntry({ entry, others, catalogs, onSaved }) {
             <form id="entryEditForm" novalidate>
                 <div data-form-error hidden></div>
                 ${entryFields(entry, catalogs, { lockCode })}
-                <p class="small text-secondary">Los profesionales y la ficha PDF se gestionan desde la nómina.</p>
+                <p class="small text-secondary">Los profesionales y el documento de esterilización se gestionan desde la nómina.</p>
                 ${formActions('Guardar cambios', 'bi-check-lg')}
             </form>`,
     });
@@ -625,25 +685,79 @@ export function openEditEntry({ entry, others, catalogs, onSaved }) {
 }
 
 // ------------------------------------------------------------
-// Agregar profesional(es) a una esterilización existente
+// Profesionales de una esterilización: corregir la función de las
+// asociaciones existentes (UPDATE permitido por RLS) y agregar otros.
+// Quitar una asociación queda pendiente de decisión de backend
+// (no existe política DELETE en esterilizacion_profesional).
 // ------------------------------------------------------------
-export function openAddProfessionals({ entry, professionals, onSaved }) {
+export function openEntryProfessionals({ entry, professionals, onSaved }) {
     let changed = false;
-    const existingIds = (entry.profesionales ?? []).map((r) => r.id_profesional);
+    const links = entry.profesionales ?? [];
+    const existingIds = links.map((r) => r.id_profesional);
     const modal = openModal({
         title: `Profesionales de ${entry.codigo}`,
         size: 'modal-lg',
         onHidden: () => { if (changed) onSaved?.(); },
         body: html`
-            ${existingIds.length ? html`<p class="small mb-2"><strong>Ya asociados:</strong>
-                ${(entry.profesionales ?? []).map((r) => `${r.profesional?.nombre ?? '—'} (${r.funcion})`).join(', ')}</p>` : ''}
+            ${links.length ? html`
+            <section class="mb-3" aria-labelledby="linksTitle">
+                <h3 class="h6 fw-bold" id="linksTitle">Asociados actualmente</h3>
+                <p class="small text-secondary mb-2">Puedes corregir la función de cada profesional en esta esterilización.
+                    El registro del profesional y sus demás participaciones no cambian.</p>
+                <ul class="list-unstyled mb-0">${links.map((r) => html`
+                    <li class="allocation-row" data-link="${r.id_esterilizacion_profesional}">
+                        <div class="flex-grow-1">
+                            <div class="fw-semibold">${r.profesional?.nombre ?? '—'}</div>
+                            <div class="small text-secondary">${r.profesional?.profesion ?? ''}</div>
+                        </div>
+                        <div class="allocation-amount prof-function">
+                            <label class="form-label small" for="lf${r.id_esterilizacion_profesional}">Función</label>
+                            <input class="form-control" id="lf${r.id_esterilizacion_profesional}" data-link-fun list="funcionesSugeridasEdit"
+                                maxlength="100" autocomplete="off" value="${r.funcion}" data-original="${r.funcion}">
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-primary" data-save-link disabled>
+                            <i class="bi bi-check-lg" aria-hidden="true"></i> Guardar</button>
+                        <div class="invalid-feedback d-block w-100" data-row-error></div>
+                    </li>`)}</ul>
+                <datalist id="funcionesSugeridasEdit">${FUNCIONES_SUGERIDAS.map((f) => html`<option value="${f}"></option>`)}</datalist>
+            </section>` : ''}
             <form id="addProfForm" novalidate>
                 <div data-form-error hidden></div>
                 ${professionalPickerHtml({ required: true })}
-                <p class="small text-secondary">Las relaciones registradas se conservan como historial (no se eliminan).</p>
                 ${formActions('Agregar profesional(es)', 'bi-person-plus')}
             </form>`,
     });
+
+    // --- Corrección de función (una asociación a la vez) ---
+    modal.body.querySelectorAll('[data-link]').forEach((row) => {
+        const input = row.querySelector('[data-link-fun]');
+        const button = row.querySelector('[data-save-link]');
+        const errorBox = row.querySelector('[data-row-error]');
+        input.addEventListener('input', () => { button.disabled = input.value.trim() === input.dataset.original; });
+        button.addEventListener('click', async () => {
+            const funcion = input.value.trim();   // capturado antes de bloquear
+            const error = validateFunction(funcion);
+            errorBox.textContent = error ?? '';
+            if (error) return;
+            const restore = setButtonBusy(button, 'Guardando…');
+            modal.setBusy(true);
+            try {
+                await updateLinkFunction(Number(row.dataset.link), funcion);
+                changed = true;
+                input.dataset.original = funcion;
+                restore();
+                button.disabled = true;
+                toast('Función actualizada.', 'success');
+            } catch (err) {
+                restore();
+                errorBox.textContent = await reportError(err, 'Corregir función');
+            } finally {
+                modal.setBusy(false);
+            }
+        });
+    });
+
+    // --- Agregar nuevas asociaciones ---
     const form = modal.body.querySelector('#addProfForm');
     const picker = professionalPicker(form, { professionals, excludeIds: existingIds });
     bindForm(form, {
@@ -658,7 +772,10 @@ export function openAddProfessionals({ entry, professionals, onSaved }) {
             modal.setBusy(true);
             const results = [];
             try {
-                for (const r of rows) {
+                // Reintento seguro: se omiten las asociaciones que ya existan en la BD.
+                const current = (await listEntryLinks(entry.id_animal_esterilizacion)).map((l) => l.id_profesional);
+                for (const r of pendingLinks(rows, current)) {
+                    if (r.alreadyLinked) { results.push({ ok: true, r, skipped: true }); continue; }
                     try {
                         await linkProfessional(entry.id_animal_esterilizacion, r.idProfesional, r.funcion);
                         changed = true;
@@ -675,6 +792,7 @@ export function openAddProfessionals({ entry, professionals, onSaved }) {
         onSuccess: async (results) => {
             const failed = results.filter((x) => !x.ok);
             if (failed.length === 0) {
+                changed = true;
                 modal.close();
                 toast('Profesional(es) asociado(s).', 'success');
                 return;
@@ -691,43 +809,44 @@ export function openAddProfessionals({ entry, professionals, onSaved }) {
 }
 
 // ------------------------------------------------------------
-// Adjuntar PDF (solo cuando no existe ficha; sin reemplazo en MVP)
+// Adjuntar documento (solo cuando no existe; sin reemplazo en MVP).
+// La unicidad y el tipo se verifican también en el servidor.
 // ------------------------------------------------------------
-export function openAttachPdf({ entry, idCategoriaPdf, onSaved }) {
+export function openAttachDocument({ entry, idCategoriaDoc, onSaved }) {
     const modal = openModal({
-        title: `Adjuntar ficha PDF — ${entry.codigo}`,
+        title: `Adjuntar documento — ${entry.codigo}`,
         body: html`
-            <form id="attachPdfForm" novalidate>
+            <form id="attachDocForm" novalidate>
                 <div data-form-error hidden></div>
-                ${pdfFieldsHtml({ prefix: 'a' })}
-                <div class="upload-progress mt-3" id="pdfProgress" hidden role="status">
+                ${documentFieldsHtml({ prefix: 'a' })}
+                <div class="upload-progress mt-3" id="docProgress" hidden role="status">
                     <span class="spinner-border spinner-border-sm text-primary" aria-hidden="true"></span>
                     Subiendo a Google Drive… No cierres esta ventana.
                 </div>
-                ${formActions('Adjuntar PDF', 'bi-cloud-arrow-up')}
+                ${formActions('Adjuntar documento', 'bi-cloud-arrow-up')}
             </form>`,
     });
-    const form = modal.body.querySelector('#attachPdfForm');
-    const progress = form.querySelector('#pdfProgress');
+    const form = modal.body.querySelector('#attachDocForm');
+    const progress = form.querySelector('#docProgress');
     bindForm(form, {
-        context: 'Adjuntar ficha PDF',
+        context: 'Adjuntar documento de esterilización',
         busyLabel: 'Subiendo…',
-        collect: (fd) => ({ pdf: fd.get('pdf'), fechaDocumento: emptyToNull(fd.get('pdf_fecha')) }),
-        validate: ({ pdf }) => {
-            const error = validatePdfFile(pdf);
-            return error ? { pdf: error } : null;
+        collect: (fd) => ({ documento: fd.get('documento'), fechaDocumento: emptyToNull(fd.get('doc_fecha')) }),
+        validate: ({ documento }) => {
+            const error = validateDocumentFile(documento);
+            return error ? { documento: error } : null;
         },
-        submit: async ({ pdf, fechaDocumento }) => {
+        submit: async ({ documento, fechaDocumento }) => {
             modal.setBusy(true);
             progress.hidden = false;
             try {
-                if (!(await hasPdfSignature(pdf))) throw new AppError(NOT_PDF);
-                // Control de interfaz contra fichas duplicadas (no hay garantía en servidor).
+                const prepared = await prepareDocument(documento);
+                // Aviso anticipado (el servidor también lo impide).
                 if ((await countEntryFiles(entry.id_animal_esterilizacion)) > 0) {
-                    throw new AppError('Esta esterilización ya tiene una ficha PDF registrada. Cierra esta ventana para ver la nómina actualizada y usa "Abrir PDF".');
+                    throw new AppError('Esta esterilización ya tiene un documento registrado. Cierra esta ventana para ver la nómina actualizada y usa "Abrir documento".');
                 }
                 return await uploadFile('esterilizacion', entry.id_animal_esterilizacion, {
-                    archivo: asPdf(pdf), idCategoria: idCategoriaPdf, fechaDocumento, descripcion: null,
+                    archivo: prepared.file, idCategoria: idCategoriaDoc, fechaDocumento, descripcion: null,
                 });
             } finally {
                 modal.setBusy(false);
@@ -736,8 +855,15 @@ export function openAttachPdf({ entry, idCategoriaPdf, onSaved }) {
         },
         onSuccess: async () => {
             modal.close();
-            toast('Ficha PDF guardada en Google Drive.', 'success');
+            toast('Documento de esterilización guardado en Google Drive.', 'success');
             await onSaved?.();
+        },
+        onError: async (err, message) => {
+            // Si otro intento lo registró, se actualiza la nómina para mostrar "Abrir documento".
+            const box = form.querySelector('[data-form-error]');
+            box.hidden = false;
+            render(box, html`<div class="alert alert-danger" role="alert">${message}</div>`);
+            if (/ya tiene un documento/i.test(message)) await onSaved?.();
         },
     });
 }
@@ -775,8 +901,14 @@ export function openProfessionalForm({ professional = null, onSaved }) {
         submit: async (values) => {
             modal.setBusy(true);
             try {
-                if (professional) await updateProfessional(professional.id_profesional, values);
-                else await createProfessional(values);
+                if (professional) {
+                    await updateProfessional(professional.id_profesional, values);
+                } else {
+                    // Evita duplicar el registro global (p. ej. al reintentar tras perder la respuesta).
+                    const similar = findSimilarProfessional(await listProfessionals(), values);
+                    if (similar) throw new AppError(`Ya existe el profesional "${similar.nombre}" (${similar.profesion}). Puedes asociarlo desde la nómina.`);
+                    await createProfessional(values);
+                }
             } finally {
                 modal.setBusy(false);
             }
@@ -793,7 +925,7 @@ export function openProfessionalForm({ professional = null, onSaved }) {
 // Detalle (solo lectura) de un animal de la nómina
 // ------------------------------------------------------------
 export function openEntryDetail({ entry }) {
-    const pdf = pdfStatus(entry);
+    const doc = documentStatus(entry);
     const item = (label, value) => html`<div class="info-block"><dt>${label}</dt><dd>${displayText(value)}</dd></div>`;
     const modal = openModal({
         title: `Nómina — ${entry.codigo}`,
@@ -820,14 +952,14 @@ export function openEntryDetail({ entry }) {
                 ? html`<ul class="mb-3">${entry.profesionales.map((r) => html`<li>${r.profesional?.nombre ?? '—'} — ${r.funcion}
                     <span class="text-secondary small">(${r.profesional?.profesion ?? ''})</span></li>`)}</ul>`
                 : html`<p class="small text-secondary">Sin profesionales asociados.</p>`}
-            <h3 class="h6 fw-bold">Ficha digitalizada</h3>
-            ${pdf.exists
-                ? html`<p class="mb-0"><button type="button" class="btn btn-sm btn-outline-primary" data-open-pdf="${pdf.latest.id_archivo}">
-                    <i class="bi bi-file-earmark-pdf" aria-hidden="true"></i> Abrir PDF</button>
-                    <span class="small text-secondary ms-2">Cargada: ${formatDateTime(pdf.latest.fecha_carga)}</span></p>`
-                : html`<p class="small text-warning-emphasis mb-0"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> Ficha pendiente.</p>`}
+            <h3 class="h6 fw-bold">Documento de esterilización</h3>
+            ${doc.exists
+                ? html`<p class="mb-0"><button type="button" class="btn btn-sm btn-outline-primary" data-open-doc="${doc.latest.id_archivo}">
+                    <i class="bi ${documentIcon(doc.latest.mime_type)}" aria-hidden="true"></i> Abrir documento</button>
+                    <span class="small text-secondary ms-2">Cargado: ${formatDateTime(doc.latest.fecha_carga)}</span></p>`
+                : html`<p class="small text-warning-emphasis mb-0"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> Documento pendiente.</p>`}
             <div class="modal-actions"><button type="button" class="btn btn-primary" data-modal-close>Cerrar</button></div>`,
     });
-    modal.body.querySelector('[data-open-pdf]')?.addEventListener('click', (e) => openFile(e.currentTarget, Number(e.currentTarget.dataset.openPdf)));
+    modal.body.querySelector('[data-open-doc]')?.addEventListener('click', (e) => openFile(e.currentTarget, Number(e.currentTarget.dataset.openDoc)));
 }
 

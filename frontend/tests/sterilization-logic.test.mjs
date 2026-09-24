@@ -101,27 +101,78 @@ test('Profesionales del proyecto derivados de la nómina, sin FK directa (PA-PRF
 });
 
 test('Documento: Adjuntar si no existe, Abrir si existe; sin Reemplazar (PA-PDF-05/06)', () => {
-    assert.deepEqual(S.pdfStatus({ archivos: [] }), { exists: false, latest: null, count: 0, action: 'attach' });
-    const st = S.pdfStatus({ archivos: [
+    assert.deepEqual(S.documentStatus({ archivos: [] }), { exists: false, latest: null, count: 0, action: 'attach' });
+    const st = S.documentStatus({ archivos: [
         { archivo: { id_archivo: 1, fecha_carga: '2026-09-20T10:00:00Z' } },
         { archivo: { id_archivo: 2, fecha_carga: '2026-09-21T10:00:00Z' } },
     ] });
     assert.equal(st.action, 'open');
     assert.equal(st.latest.id_archivo, 2);
-    assert.equal(st.count, 2);
 });
 
-test('PDF: se exige PDF y se rechaza otro tipo (PA-PDF-01/02, REG-06)', async () => {
-    const pdf = new File(['%PDF-1.4 contenido'], 'ficha.pdf', { type: 'application/pdf' });
-    assert.equal(S.validatePdfFile(pdf), null);
-    assert.equal(await S.hasPdfSignature(pdf), true);
-    assert.match(S.validatePdfFile(new File(['x'], 'foto.jpg', { type: 'image/jpeg' })), /PDF/);
-    assert.match(S.validatePdfFile(null), /Selecciona/);
-    const fake = new File(['no es pdf'], 'falso.pdf', { type: 'application/pdf' });
-    assert.equal(S.validatePdfFile(fake), null);
-    assert.equal(await S.hasPdfSignature(fake), false);
-    const big = new File([new Uint8Array(S.PDF_MAX_BYTES + 1)], 'grande.pdf', { type: 'application/pdf' });
-    assert.match(S.validatePdfFile(big), /10 MB/);
+// Firmas reales de cada formato (primeros bytes).
+const SIG = {
+    pdf: [0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x34],
+    jpg: [0xff, 0xd8, 0xff, 0xe0, 0, 0x10, 0x4a, 0x46, 0x49, 0x46, 0, 1],
+    png: [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0x0d],
+    webp: [0x52, 0x49, 0x46, 0x46, 0x24, 0, 0, 0, 0x57, 0x45, 0x42, 0x50],
+    gif: [0x47, 0x49, 0x46, 0x38, 0x39, 0x61],
+};
+const file = (sig, name, type) => new File([new Uint8Array([...sig, 1, 2, 3])], name, { type });
+
+test('Documento de esterilización: PDF, JPG/JPEG, PNG o WebP (revisión 23/09)', () => {
+    assert.equal(S.validateDocumentFile(file(SIG.pdf, 'ficha.pdf', 'application/pdf')), null);
+    assert.equal(S.validateDocumentFile(file(SIG.jpg, 'IMG_1234.JPG', 'image/jpeg')), null);
+    assert.equal(S.validateDocumentFile(file(SIG.jpg, 'foto.jpeg', '')), null);
+    assert.equal(S.validateDocumentFile(file(SIG.png, 'ficha.png', 'image/png')), null);
+    assert.equal(S.validateDocumentFile(file(SIG.webp, 'ficha.webp', 'image/webp')), null);
+    assert.match(S.validateDocumentFile(file(SIG.gif, 'ficha.gif', 'image/gif')), /PDF, JPG, PNG o WebP/);
+    assert.match(S.validateDocumentFile(file(SIG.pdf, 'ficha.docx', 'application/msword')), /PDF, JPG, PNG o WebP/);
+    assert.match(S.validateDocumentFile(file(SIG.png, 'ficha.png', 'image/jpeg')), /PDF, JPG, PNG o WebP/);
+    assert.match(S.validateDocumentFile(null), /Selecciona/);
+    const big = new File([new Uint8Array(S.DOC_MAX_BYTES + 1)], 'grande.jpg', { type: 'image/jpeg' });
+    assert.match(S.validateDocumentFile(big), /10 MB/);
+    assert.ok(S.DOC_ACCEPT.includes('image/webp') && S.DOC_ACCEPT.includes('.jpeg'));
+});
+
+test('Tipo real por contenido: no se confía en la extensión (PA-PDF-02, REG-06)', async () => {
+    assert.equal((await S.readDocumentType(file(SIG.pdf, 'a.pdf'))).mime, 'application/pdf');
+    assert.equal((await S.readDocumentType(file(SIG.jpg, 'a.jpg'))).extension, '.jpg');
+    assert.equal((await S.readDocumentType(file(SIG.png, 'a.png'))).mime, 'image/png');
+    assert.equal((await S.readDocumentType(file(SIG.webp, 'a.webp'))).mime, 'image/webp');
+    assert.equal(await S.readDocumentType(new File(['no es un documento'], 'falso.pdf', { type: 'application/pdf' })), null);
+    assert.equal(await S.readDocumentType(file(SIG.gif, 'renombrado.png', 'image/png')), null);
+    assert.equal(S.detectDocumentType(new Uint8Array([0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x41, 0x56, 0x49, 0x20])), null); // RIFF no WebP
+});
+
+test('Recuperación del alta: solo se reutiliza un registro con exactamente los mismos datos', () => {
+    const values = { codigo: 'EST-003', id_especie: 1, id_rango_etario: null, sexo: 'Hembra', fecha_nacimiento: null,
+        caracteristicas: null, sector_origen: 'Sector QA', fecha_esterilizacion: '2026-09-23', lugar_esterilizacion: null,
+        microchip: null, estado_registro_nacional: null, observaciones: null };
+    const row = { id_animal_esterilizacion: 9, ...values, sector_origen: 'Sector QA ', lugar_esterilizacion: '' };
+    assert.ok(S.isSameEntry(values, row));
+    assert.ok(!S.isSameEntry(values, { ...row, sexo: 'Macho' }));
+    assert.ok(!S.isSameEntry(values, { ...row, microchip: '000000000000303' }));
+    assert.ok(!S.isSameEntry(values, null));
+});
+
+test('Reintento de relaciones: las ya asociadas se omiten (sin duplicar)', () => {
+    const plan = S.pendingLinks([{ idProfesional: 2, funcion: 'Cirujano(a)' }, { idProfesional: 3, funcion: 'Asistente' }], [2]);
+    assert.deepEqual(plan.map((r) => r.alreadyLinked), [true, false]);
+    assert.deepEqual(S.pendingLinks([{ idProfesional: 2 }], []).map((r) => r.alreadyLinked), [false]);
+});
+
+test('Profesional existente se reutiliza (mismo nombre y profesión, sin tildes ni mayúsculas)', () => {
+    const list = [{ id_profesional: 2, nombre: 'Veterinario Prueba QA', profesion: 'Médico veterinario' }];
+    assert.equal(S.findSimilarProfessional(list, { nombre: '  veterinario  prueba qa', profesion: 'medico veterinario' }).id_profesional, 2);
+    assert.equal(S.findSimilarProfessional(list, { nombre: 'Veterinario Prueba QA', profesion: 'TENS' }), null);
+    assert.equal(S.findSimilarProfessional([], { nombre: 'X', profesion: 'Y' }), null);
+});
+
+test('Corrección de función: obligatoria y máximo 100 caracteres', () => {
+    assert.equal(S.validateFunction('Anestesista'), null);
+    assert.match(S.validateFunction('  '), /Indica/);
+    assert.match(S.validateFunction('x'.repeat(101)), /100/);
 });
 
 test('Búsqueda en nómina por código, microchip y profesional', () => {
@@ -149,5 +200,6 @@ test('CSV: separador ;, BOM, texto seguro y microchip como texto', () => {
     assert.ok(csv.startsWith('﻿Código;Especie;Sexo'));
     assert.ok(csv.includes('EST-001;;Hembra;;;="000000000000202";'));
     assert.ok(!/id_|externo/i.test(csv));
+    assert.ok(csv.includes(';Documento de esterilización;'));
     assert.equal(csvFileName('Nómina Proyecto QA', '2026-09-23'), 'nomina-proyecto-qa-2026-09-23.csv');
 });

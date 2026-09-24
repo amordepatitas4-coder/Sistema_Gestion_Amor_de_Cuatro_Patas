@@ -11,8 +11,10 @@
 //   pasos y la interfaz informa explícitamente resultados parciales.
 // - Carpeta Drive: Edge Function crear-carpeta-proyecto (idempotente:
 //   recupera o crea la carpeta principal + Documentación + Animales).
-// - PDF de la nómina: subir-archivo-drive con contexto 'esterilizacion'
-//   (se guarda como Proyecto/Animales/{codigo}.pdf).
+// - Documento de la nómina (PDF, JPG, PNG o WebP; uno por animal):
+//   subir-archivo-drive con contexto 'esterilizacion'
+//   (Proyecto/Animales/{codigo}.{ext}); único en servidor por
+//   uq_esterilizacion_archivo_documento.
 // - Sin eliminación: no existen políticas DELETE en estas tablas.
 // - Los animales de esterilización NO se incorporan a ANIMAL.
 // ============================================================
@@ -116,7 +118,7 @@ const ENTRY_SELECT = `
         profesional:profesional!fk_esterilizacion_profesional_profesional(id_profesional, nombre, profesion, telefono, email, observaciones)),
     archivos:esterilizacion_archivo!fk_esterilizacion_archivo_animal(
         id_archivo,
-        archivo:archivo!fk_esterilizacion_archivo_archivo(id_archivo, nombre_archivo, nombre_original, fecha_documento, fecha_carga))`;
+        archivo:archivo!fk_esterilizacion_archivo_archivo(id_archivo, nombre_archivo, nombre_original, mime_type, fecha_documento, fecha_carga))`;
 
 export async function listEntries(idProyecto) {
     const { data, error } = await supabase
@@ -136,6 +138,21 @@ export async function createEntry(idProyecto, values) {
         .single();
     raise(error);
     return data.id_animal_esterilizacion;
+}
+
+/**
+ * Busca un animal de la nómina por código exacto (recuperación del alta:
+ * si el INSERT falló sin respuesta, puede haberse creado igualmente).
+ */
+export async function findEntryByCode(idProyecto, codigo) {
+    const { data, error } = await supabase
+        .from('animal_esterilizacion')
+        .select(`id_animal_esterilizacion, ${ENTRY_COLUMNS.join(', ')}`)
+        .eq('id_proyecto', idProyecto)
+        .eq('codigo', codigo)
+        .maybeSingle();
+    raise(error);
+    return data;
 }
 
 /** Edición de datos descriptivos (nunca id_proyecto). */
@@ -187,6 +204,25 @@ export async function updateProfessional(id, values) {
         .from('profesional')
         .update(pick(values, PROFESSIONAL_COLUMNS))
         .eq('id_profesional', id);
+    raise(error);
+}
+
+/** Relaciones actuales de una esterilización (para no duplicarlas al reintentar). */
+export async function listEntryLinks(idAnimalEsterilizacion) {
+    const { data, error } = await supabase
+        .from('esterilizacion_profesional')
+        .select('id_esterilizacion_profesional, id_profesional, funcion')
+        .eq('id_animal_esterilizacion', idAnimalEsterilizacion);
+    raise(error);
+    return data;
+}
+
+/** Corrige la función de una asociación existente (UPDATE permitido por RLS). */
+export async function updateLinkFunction(idEsterilizacionProfesional, funcion) {
+    const { error } = await supabase
+        .from('esterilizacion_profesional')
+        .update({ funcion })
+        .eq('id_esterilizacion_profesional', idEsterilizacionProfesional);
     raise(error);
 }
 

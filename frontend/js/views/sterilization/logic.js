@@ -1,7 +1,8 @@
 // ============================================================
 // Lógica pura del módulo Proyectos de esterilización (sin DOM
 // ni Supabase): formularios, código sugerido, profesionales
-// derivados, estado del documento PDF y exportación de nómina.
+// derivados, documento de esterilización, recuperación idempotente
+// del alta multipaso y exportación de nómina.
 // ============================================================
 
 import { emptyToNull, isValidEmail, isValidMicrochip, normalizeMicrochip, parseISODate } from '../../core/format.js';
@@ -9,9 +10,22 @@ import { emptyToNull, isValidEmail, isValidMicrochip, normalizeMicrochip, parseI
 export const SEXOS = ['Macho', 'Hembra', 'Desconocido'];
 export const REGISTRO_NACIONAL = ['Inscrito', 'No inscrito', 'No verificado'];
 
-/** Categoría de ARCHIVO para las fichas digitalizadas (catálogo base v1.1). */
-export const PDF_CATEGORY = 'Documento de esterilización';
-export const PDF_MAX_BYTES = 10 * 1024 * 1024; // límite de subir-archivo-drive
+/** Categoría de ARCHIVO del documento de esterilización (catálogo base v1.1). */
+export const DOC_CATEGORY = 'Documento de esterilización';
+export const DOC_MAX_BYTES = 10 * 1024 * 1024; // límite de subir-archivo-drive
+
+/**
+ * Tipos admitidos para el documento de esterilización (revisión 23/09/2026):
+ * PDF o fotografía del documento físico. Deben coincidir con la
+ * verificación de subir-archivo-drive (firma del contenido).
+ */
+export const DOC_TYPES = [
+    { mime: 'application/pdf', extensions: ['pdf'], extension: '.pdf', label: 'PDF' },
+    { mime: 'image/jpeg', extensions: ['jpg', 'jpeg'], extension: '.jpg', label: 'JPG' },
+    { mime: 'image/png', extensions: ['png'], extension: '.png', label: 'PNG' },
+    { mime: 'image/webp', extensions: ['webp'], extension: '.webp', label: 'WebP' },
+];
+export const DOC_ACCEPT = 'application/pdf,image/jpeg,image/png,image/webp,.pdf,.jpg,.jpeg,.png,.webp';
 
 /** Funciones habituales (sugerencias editables; el campo es texto libre). */
 export const FUNCIONES_SUGERIDAS = ['Cirujano(a)', 'Médico(a) veterinario(a)', 'Anestesista', 'Asistente', 'Técnico(a) veterinario(a)'];
@@ -203,11 +217,14 @@ export function deriveProjectProfessionals(entries) {
 }
 
 // ------------------------------------------------------------
-// Ficha PDF (MVP: Adjuntar si no existe; Abrir si existe; sin Reemplazar)
+// Documento de esterilización (uno por animal de la nómina).
+// MVP: "Adjuntar documento" si no existe; "Abrir documento" si
+// existe; sin reemplazo. Unicidad garantizada en servidor por
+// uq_esterilizacion_archivo_documento + subir-archivo-drive.
 // ------------------------------------------------------------
 
 /** Estado documental de una fila de la nómina. */
-export function pdfStatus(entry) {
+export function documentStatus(entry) {
     const files = (entry.archivos ?? []).map((a) => a.archivo).filter(Boolean)
         .sort((a, b) => String(b.fecha_carga).localeCompare(String(a.fecha_carga)));
     return {
@@ -218,20 +235,76 @@ export function pdfStatus(entry) {
     };
 }
 
-/** Validación síncrona del PDF (tipo declarado, extensión y tamaño). */
-export function validatePdfFile(file) {
-    if (!(file instanceof File) || file.size === 0) return 'Selecciona la ficha digitalizada en PDF.';
-    const byName = /\.pdf$/i.test(file.name);
-    const byType = ['application/pdf', 'application/x-pdf', ''].includes(file.type);
-    if (!byName || !byType) return 'La ficha debe ser un archivo PDF.';
-    if (file.size > PDF_MAX_BYTES) return 'El archivo supera el límite de 10 MB.';
+const extensionOf = (name) => (/\.([a-z0-9]+)$/i.exec(String(name ?? ''))?.[1] ?? '').toLowerCase();
+
+/** Validación síncrona: extensión, tipo declarado coherente y tamaño. */
+export function validateDocumentFile(file) {
+    if (!(file instanceof File) || file.size === 0) return 'Selecciona el documento de esterilización (PDF o fotografía).';
+    const type = DOC_TYPES.find((t) => t.extensions.includes(extensionOf(file.name)));
+    const declaredOk = type && (file.type === '' || file.type === type.mime || (type.mime === 'application/pdf' && file.type === 'application/x-pdf'));
+    if (!declaredOk) return 'El documento debe ser PDF, JPG, PNG o WebP.';
+    if (file.size > DOC_MAX_BYTES) return 'El archivo supera el límite de 10 MB.';
     return null;
 }
 
-/** Comprueba la firma "%PDF-" del contenido (se ejecuta antes de crear registros). */
-export async function hasPdfSignature(file) {
-    const head = new Uint8Array(await file.slice(0, 5).arrayBuffer());
-    return String.fromCharCode(...head) === '%PDF-';
+/** Tipo real según la firma del contenido (mismos criterios que la Edge Function). */
+export function detectDocumentType(bytes) {
+    const is = (offset, sig) => sig.every((v, i) => bytes[offset + i] === v);
+    if (is(0, [0x25, 0x50, 0x44, 0x46, 0x2d])) return DOC_TYPES[0];
+    if (is(0, [0xff, 0xd8, 0xff])) return DOC_TYPES[1];
+    if (is(0, [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) return DOC_TYPES[2];
+    if (is(0, [0x52, 0x49, 0x46, 0x46]) && is(8, [0x57, 0x45, 0x42, 0x50])) return DOC_TYPES[3];
+    return null;
+}
+
+/** Lee el tipo real del archivo (null si no es un tipo admitido). */
+export async function readDocumentType(file) {
+    return detectDocumentType(new Uint8Array(await file.slice(0, 12).arrayBuffer()));
+}
+
+// ------------------------------------------------------------
+// Alta multipaso segura de reintentar (revisión 23/09/2026)
+//
+// - Animal: UNIQUE(id_proyecto, codigo). Si el INSERT falla (p. ej. se
+//   perdió la respuesta) se busca el código: si existe con los MISMOS
+//   datos, se recupera ese registro en lugar de crear otro.
+// - Relaciones: UNIQUE(id_animal_esterilizacion, id_profesional); antes
+//   de insertar se omiten las ya existentes.
+// - Documento: índice único + verificación previa (ver arriba).
+// - Profesional (creación rápida): se vuelve a consultar el directorio
+//   y se reutiliza el existente con igual nombre y profesión.
+// ------------------------------------------------------------
+
+const norm = (v) => (v === undefined || v === null || v === '' ? null : String(v).trim());
+
+/** ¿El registro encontrado corresponde exactamente a los datos enviados? */
+export function isSameEntry(values, row) {
+    if (!row) return false;
+    return ['codigo', 'id_especie', 'id_rango_etario', 'sexo', 'fecha_nacimiento', 'caracteristicas', 'sector_origen',
+        'fecha_esterilizacion', 'lugar_esterilizacion', 'microchip', 'estado_registro_nacional', 'observaciones']
+        .every((k) => norm(values[k]) === norm(row[k]));
+}
+
+/** Filas de profesionales que aún no están asociadas (evita duplicar relaciones). */
+export function pendingLinks(rows, existingIds) {
+    const done = new Set(existingIds.map(String));
+    return rows.map((r) => ({ ...r, alreadyLinked: done.has(String(r.idProfesional)) }));
+}
+
+const foldName = (t) => String(t ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
+
+/** Profesional existente con el mismo nombre y profesión (o null). */
+export function findSimilarProfessional(list, values) {
+    return list.find((p) => foldName(p.nombre) === foldName(values.nombre)
+        && foldName(p.profesion) === foldName(values.profesion)) ?? null;
+}
+
+/** Validación de la función al corregir una asociación existente. */
+export function validateFunction(funcion) {
+    const f = norm(funcion);
+    if (!f) return 'Indica la función del profesional.';
+    if (f.length > 100) return 'La función admite máximo 100 caracteres.';
+    return null;
 }
 
 // ------------------------------------------------------------
@@ -268,7 +341,7 @@ export const NOMINA_EXPORT_COLUMNS = [
     { label: 'Fecha de esterilización', value: (e) => e.fecha_esterilizacion },
     { label: 'Lugar de esterilización', value: (e) => e.lugar_esterilizacion },
     { label: 'Profesional(es)', value: professionalsText },
-    { label: 'Ficha PDF', value: (e) => (pdfStatus(e).exists ? 'Sí' : 'No') },
+    { label: 'Documento de esterilización', value: (e) => (documentStatus(e).exists ? 'Sí' : 'No') },
     { label: 'Características', value: (e) => e.caracteristicas },
     { label: 'Observaciones', value: (e) => e.observaciones },
 ];

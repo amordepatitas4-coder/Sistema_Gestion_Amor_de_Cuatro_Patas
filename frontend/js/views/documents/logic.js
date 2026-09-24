@@ -10,7 +10,7 @@ export const CONTEXT_TYPES = [
     { value: 'adopcion', label: 'Adopción' },
     { value: 'gasto', label: 'Gasto' },
     { value: 'proyecto', label: 'Proyecto de esterilización' },
-    { value: 'esterilizacion', label: 'Ficha de esterilización' },
+    { value: 'esterilizacion', label: 'Documento de esterilización' },
     { value: 'fundacion', label: 'Fundación' },
 ];
 
@@ -44,7 +44,7 @@ export function fileContexts(file) {
         tipo: 'proyecto', label: `Proyecto: ${proyecto.nombre}`, href: `#/esterilizacion/${proyecto.id_proyecto}/documentacion`, proyectoId: proyecto.id_proyecto,
     }));
     asList(file.esterilizacion_archivo).forEach(({ esterilizacion: e }) => e && out.push({
-        tipo: 'esterilizacion', label: `Ficha ${e.codigo} · ${e.proyecto?.nombre ?? 'Proyecto'}`, href: `#/esterilizacion/${e.id_proyecto}/nomina`, proyectoId: e.id_proyecto,
+        tipo: 'esterilizacion', label: `Documento de esterilización ${e.codigo} · ${e.proyecto?.nombre ?? 'Proyecto'}`, href: `#/esterilizacion/${e.id_proyecto}/nomina`, proyectoId: e.id_proyecto,
     }));
     if (asList(file.fundacion_archivo).length > 0) out.push({ tipo: 'fundacion', label: 'Documentación de la Fundación', href: null });
     return out;

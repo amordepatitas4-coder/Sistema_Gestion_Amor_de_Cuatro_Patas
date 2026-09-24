@@ -6,7 +6,8 @@
 //
 // - Nómina (§18): código, especie, sexo, microchip, Registro Nacional,
 //   fecha, lugar, profesional(es), documento y acciones.
-//   Documento: "Adjuntar PDF" si no existe ficha; "Abrir PDF" si existe.
+//   Documento de esterilización (PDF, JPG, PNG o WebP; uno por animal):
+//   "Adjuntar documento" si no existe; "Abrir documento" si existe.
 //   Sin "Reemplazar" en el MVP (decisión 23/09/2026).
 // - Profesionales (§19): derivados de la nómina
 //   (PROYECTO → ANIMAL_ESTERILIZACION → ESTERILIZACION_PROFESIONAL → PROFESIONAL).
@@ -23,11 +24,11 @@ import { displayText, formatDate, todayISO } from '../../core/format.js';
 import { emptyState, errorState, html, loadingState, render, setButtonBusy, toast } from '../../core/ui.js';
 import { openFile, renderFilesSection } from '../files/section.js';
 import {
-    openAddEntry, openAddProfessionals, openAttachPdf, openEditEntry, openEditProject,
+    documentIcon, openAddEntry, openAttachDocument, openEditEntry, openEditProject, openEntryProfessionals,
     openEntryDetail, openProfessionalForm, retryProjectFolder,
 } from './forms.js';
 import {
-    NOMINA_EXPORT_COLUMNS, PDF_CATEGORY, deriveProjectProfessionals, filterEntries, pdfStatus, projectPeriod,
+    DOC_CATEGORY, NOMINA_EXPORT_COLUMNS, deriveProjectProfessionals, documentStatus, filterEntries, projectPeriod,
 } from './logic.js';
 
 export const TABS = [
@@ -71,7 +72,7 @@ export default {
         document.title = `${project.nombre} · Amor de Cuatro Patas`;
 
         const professionals = deriveProjectProfessionals(entries);
-        const pendingPdf = entries.filter((e) => !pdfStatus(e).exists).length;
+        const pendingDocs = entries.filter((e) => !documentStatus(e).exists).length;
         const hasFolder = Boolean(project.id_carpeta_drive);
 
         render(outlet, html`
@@ -87,7 +88,7 @@ export default {
                             ${projectBadge(project.estado?.nombre)}
                             <span class="badge badge-soft-info"><i class="bi bi-list-check" aria-hidden="true"></i> ${entries.length} en nómina</span>
                             <span class="badge badge-soft-info"><i class="bi bi-person-badge" aria-hidden="true"></i> ${professionals.length} profesionales</span>
-                            ${pendingPdf > 0 ? html`<span class="badge badge-soft-warning"><i class="bi bi-file-earmark-pdf" aria-hidden="true"></i> ${pendingPdf} ficha(s) pendiente(s)</span>` : ''}
+                            ${pendingDocs > 0 ? html`<span class="badge badge-soft-warning"><i class="bi bi-file-earmark-text" aria-hidden="true"></i> ${pendingDocs} documento(s) pendiente(s)</span>` : ''}
                         </div>
                     </div>
                     <div class="d-flex flex-wrap gap-2">
@@ -97,7 +98,7 @@ export default {
                 ${hasFolder ? '' : html`
                 <div class="alert alert-warning d-flex flex-wrap gap-2 align-items-center mt-3 mb-0" role="alert">
                     <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
-                    <div class="flex-grow-1">La carpeta del proyecto en Google Drive aún no está preparada. Es necesaria para la nómina (fichas PDF) y la documentación.</div>
+                    <div class="flex-grow-1">La carpeta del proyecto en Google Drive aún no está preparada. Es necesaria para la nómina (documentos de esterilización) y la documentación.</div>
                     <button type="button" class="btn btn-sm btn-primary" id="btnRetryFolder"><i class="bi bi-folder-plus" aria-hidden="true"></i> Crear carpeta en Drive</button>
                 </div>`}
             </section>
@@ -144,7 +145,7 @@ function notFound() {
 // ------------------------------------------------------------
 async function renderInfoTab(panel, { project, entries, hasFolder }) {
     const item = (label, value) => html`<div class="info-block"><dt>${label}</dt><dd>${displayText(value)}</dd></div>`;
-    const withPdf = entries.filter((e) => pdfStatus(e).exists).length;
+    const withDoc = entries.filter((e) => documentStatus(e).exists).length;
     render(panel, html`
         <dl class="info-grid">
             ${item('Estado', project.estado?.nombre)}
@@ -154,7 +155,7 @@ async function renderInfoTab(panel, { project, entries, hasFolder }) {
             ${item('Responsable', project.responsable)}
             ${item('Entidad financiante', project.entidad_financiante)}
             ${item('Animales en nómina', String(entries.length))}
-            ${item('Fichas PDF registradas', `${withPdf} de ${entries.length}`)}
+            ${item('Documentos de esterilización', `${withDoc} de ${entries.length}`)}
             ${item('Carpeta en Google Drive', hasFolder ? 'Preparada (Documentación y Animales)' : 'Pendiente')}
         </dl>
         <dl class="info-text">
@@ -170,11 +171,11 @@ async function renderInfoTab(panel, { project, entries, hasFolder }) {
 // Nómina
 // ------------------------------------------------------------
 async function renderNominaTab(panel, { project, entries, catalogs, hasFolder, reloadAll }) {
-    const categoriaPdf = catalogs.categoria_archivo.find((c) => c.nombre === PDF_CATEGORY && c.activo);
+    const categoriaDoc = catalogs.categoria_archivo.find((c) => c.nombre === DOC_CATEGORY && c.activo);
     const blockReason = !hasFolder
         ? 'Para agregar animales primero debe crearse la carpeta del proyecto en Google Drive (botón superior).'
-        : !categoriaPdf
-            ? `No se encontró la categoría de archivo activa "${PDF_CATEGORY}". Revísala en Configuración → Catálogos.`
+        : !categoriaDoc
+            ? `No se encontró la categoría de archivo activa "${DOC_CATEGORY}". Revísala en Configuración → Catálogos.`
             : null;
     let term = '';
 
@@ -202,7 +203,7 @@ async function renderNominaTab(panel, { project, entries, catalogs, hasFolder, r
         const visible = filterEntries(entries, term);
         if (entries.length === 0) {
             render(table, emptyState({ icon: 'bi-list-check', title: 'La nómina está vacía',
-                text: 'Agrega los animales esterilizados en este proyecto con su código, profesionales y ficha PDF.' }));
+                text: 'Agrega los animales esterilizados en este proyecto con su código, profesionales y documento de esterilización.' }));
             return;
         }
         if (visible.length === 0) {
@@ -218,7 +219,7 @@ async function renderNominaTab(panel, { project, entries, catalogs, hasFolder, r
                     <th scope="col"><span class="visually-hidden">Acciones</span></th>
                 </tr></thead>
                 <tbody>${visible.map((e) => {
-                    const pdf = pdfStatus(e);
+                    const doc = documentStatus(e);
                     return html`<tr>
                         <th scope="row" class="text-nowrap"><span class="badge badge-soft-info code-badge">${e.codigo}</span></th>
                         <td>${e.especie?.nombre ?? '—'}</td>
@@ -230,17 +231,16 @@ async function renderNominaTab(panel, { project, entries, catalogs, hasFolder, r
                         <td>${(e.profesionales ?? []).length
                             ? html`<ul class="list-unstyled mb-0 small">${e.profesionales.map((r) => html`<li>${r.profesional?.nombre ?? '—'} <span class="text-secondary">(${r.funcion})</span></li>`)}</ul>`
                             : html`<span class="small text-warning-emphasis">Sin profesional</span>`}</td>
-                        <td class="text-nowrap">${pdf.exists
-                            ? html`<button type="button" class="btn btn-sm btn-outline-primary" data-open-pdf="${pdf.latest.id_archivo}">
-                                <i class="bi bi-file-earmark-pdf" aria-hidden="true"></i> Abrir PDF</button>
-                                ${pdf.count > 1 ? html`<div class="small text-warning-emphasis">${pdf.count} fichas registradas</div>` : ''}`
+                        <td class="text-nowrap">${doc.exists
+                            ? html`<button type="button" class="btn btn-sm btn-outline-primary" data-open-doc="${doc.latest.id_archivo}">
+                                <i class="bi ${documentIcon(doc.latest.mime_type)}" aria-hidden="true"></i> Abrir documento</button>`
                             : html`<button type="button" class="btn btn-sm btn-warning" data-attach="${e.id_animal_esterilizacion}" ${blockReason ? 'disabled' : ''}>
-                                <i class="bi bi-paperclip" aria-hidden="true"></i> Adjuntar PDF</button>`}</td>
+                                <i class="bi bi-paperclip" aria-hidden="true"></i> Adjuntar documento</button>`}</td>
                         <td class="text-end text-nowrap">
                             <div class="btn-group btn-group-sm" role="group" aria-label="Acciones para ${e.codigo}">
                                 <button type="button" class="btn btn-outline-secondary" data-view="${e.id_animal_esterilizacion}" title="Ver detalle"><i class="bi bi-eye" aria-hidden="true"></i><span class="visually-hidden">Ver detalle de ${e.codigo}</span></button>
                                 <button type="button" class="btn btn-outline-secondary" data-edit="${e.id_animal_esterilizacion}" title="Editar datos"><i class="bi bi-pencil" aria-hidden="true"></i><span class="visually-hidden">Editar ${e.codigo}</span></button>
-                                <button type="button" class="btn btn-outline-secondary" data-add-prof="${e.id_animal_esterilizacion}" title="Agregar profesional"><i class="bi bi-person-plus" aria-hidden="true"></i><span class="visually-hidden">Agregar profesional a ${e.codigo}</span></button>
+                                <button type="button" class="btn btn-outline-secondary" data-add-prof="${e.id_animal_esterilizacion}" title="Profesionales (agregar o corregir función)"><i class="bi bi-person-gear" aria-hidden="true"></i><span class="visually-hidden">Profesionales de ${e.codigo}</span></button>
                             </div>
                         </td>
                     </tr>`;
@@ -255,8 +255,8 @@ async function renderNominaTab(panel, { project, entries, catalogs, hasFolder, r
     table.addEventListener('click', async (ev) => {
         const btn = ev.target.closest('button');
         if (!btn || btn.disabled) return;
-        if (btn.dataset.openPdf) return openFile(btn, Number(btn.dataset.openPdf));
-        if (btn.dataset.attach) return openAttachPdf({ entry: byId(btn.dataset.attach), idCategoriaPdf: categoriaPdf.id, onSaved: reloadAll });
+        if (btn.dataset.openDoc) return openFile(btn, Number(btn.dataset.openDoc));
+        if (btn.dataset.attach) return openAttachDocument({ entry: byId(btn.dataset.attach), idCategoriaDoc: categoriaDoc.id, onSaved: reloadAll });
         if (btn.dataset.view) return openEntryDetail({ entry: byId(btn.dataset.view) });
         if (btn.dataset.edit) {
             const entry = byId(btn.dataset.edit);
@@ -267,7 +267,7 @@ async function renderNominaTab(panel, { project, entries, catalogs, hasFolder, r
             try {
                 const all = await listProfessionals();
                 restore();
-                openAddProfessionals({ entry: byId(btn.dataset.addProf), professionals: all, onSaved: reloadAll });
+                openEntryProfessionals({ entry: byId(btn.dataset.addProf), professionals: all, onSaved: reloadAll });
             } catch (err) {
                 restore();
                 toast(await reportError(err, 'Profesionales'), 'error');
@@ -281,7 +281,7 @@ async function renderNominaTab(panel, { project, entries, catalogs, hasFolder, r
         try {
             const all = await listProfessionals();
             restore();
-            openAddEntry({ project, entries, catalogs, professionals: all, idCategoriaPdf: categoriaPdf.id, onDone: reloadAll });
+            openAddEntry({ project, entries, catalogs, professionals: all, idCategoriaDoc: categoriaDoc.id, onDone: reloadAll });
         } catch (err) {
             restore();
             toast(await reportError(err, 'Profesionales'), 'error');

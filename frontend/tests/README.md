@@ -36,7 +36,7 @@ node --test tests/session.test.mjs
 | `adoptions-logic.test.mjs` | Adoptantes (RUT normalizado y duplicado), adopción, seguimiento (`medio_contacto`) y devolución |
 | `expenses-logic.test.mjs` | Gastos: montos, total/asignado/no asignado, igualdad con el total, exceso y filas |
 | `files-logic.test.mjs` | Archivos (validación, 10 MB) y difusión (solo datos autorizados, prompt base) |
-| `sterilization-logic.test.mjs` | Proyectos, nómina (código/microchip por proyecto), profesionales N:M derivados, PDF obligatorio (tipo y firma), Adjuntar/Abrir sin reemplazo y exportación CSV |
+| `sterilization-logic.test.mjs` | Proyectos, nómina (código/microchip por proyecto), profesionales N:M derivados, documento de esterilización (PDF/JPG/PNG/WebP por firma), Adjuntar/Abrir sin reemplazo, reintentos sin duplicados, corrección de función y exportación CSV |
 | `documents-logic.test.mjs` | Documentos: contexto de cada archivo (incluida asociación 1:1 de Fundación), búsqueda, filtros y fechas |
 | `reports-definitions.test.mjs` | Informes: filtros contextuales, claves de URL, rango de fechas, totales desde las filas, profesional N:M y exportación |
 | `settings-logic.test.mjs` | Configuración: catálogos contra columnas reales de `schema.sql`, valores protegidos, rango etario, contraseña y reglas de activación/desactivación |
