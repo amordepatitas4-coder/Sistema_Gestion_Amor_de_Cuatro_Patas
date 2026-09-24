@@ -200,6 +200,59 @@ async function eliminarArchivoDrive(accessToken, fileId) {
   }
 }
 // ============================================================
+// TIPO REAL DEL DOCUMENTO DE ESTERILIZACIÓN (firma del contenido)
+// No se confía en la extensión ni en el tipo declarado.
+// ============================================================
+function detectarTipoDocumento(b) {
+  const es = (offset, bytes)=>bytes.every((v, i)=>b[offset + i] === v);
+  if (es(0, [
+    0x25,
+    0x50,
+    0x44,
+    0x46,
+    0x2d
+  ])) return {
+    mime: "application/pdf",
+    extension: ".pdf"
+  };
+  if (es(0, [
+    0xff,
+    0xd8,
+    0xff
+  ])) return {
+    mime: "image/jpeg",
+    extension: ".jpg"
+  };
+  if (es(0, [
+    0x89,
+    0x50,
+    0x4e,
+    0x47,
+    0x0d,
+    0x0a,
+    0x1a,
+    0x0a
+  ])) return {
+    mime: "image/png",
+    extension: ".png"
+  };
+  if (es(0, [
+    0x52,
+    0x49,
+    0x46,
+    0x46
+  ]) && es(8, [
+    0x57,
+    0x45,
+    0x42,
+    0x50
+  ])) return {
+    mime: "image/webp",
+    extension: ".webp"
+  };
+  return null;
+}
+// ============================================================
 // EDGE FUNCTION
 // ============================================================
 Deno.serve(async (req)=>{
@@ -353,6 +406,44 @@ Deno.serve(async (req)=>{
       }, 400);
     }
     // ========================================================
+    // 8.1 DOCUMENTO DE ESTERILIZACIÓN (2026-09-23)
+    //
+    // Documento principal único por animal de esterilización:
+    //   - tipo real verificado por contenido (PDF, JPG, PNG o WebP);
+    //   - rechazo anticipado si ya existe un documento (409);
+    //   - la unicidad definitiva la garantiza el índice
+    //     uq_esterilizacion_archivo_documento (carreras simultáneas),
+    //     con compensación en Drive si registrar_archivo falla.
+    // ========================================================
+    let archivoFinal = archivo;
+    let extensionFinal = null;
+    if (tipoContexto === "esterilizacion") {
+      const tipo = detectarTipoDocumento(new Uint8Array(await archivo.slice(0, 12).arrayBuffer()));
+      if (!tipo) {
+        return respuesta({
+          error: "El documento de esterilización debe ser PDF, JPG, PNG o WebP."
+        }, 400);
+      }
+      archivoFinal = new File([
+        archivo
+      ], archivo.name, {
+        type: tipo.mime
+      });
+      extensionFinal = tipo.extension;
+      const { count: documentosPrevios, error: previosError } = await supabaseAdmin.from("esterilizacion_archivo").select("id_esterilizacion_archivo", {
+        count: "exact",
+        head: true
+      }).eq("id_animal_esterilizacion", idContexto);
+      if (previosError) {
+        throw new Error("No fue posible verificar los documentos existentes.");
+      }
+      if ((documentosPrevios ?? 0) > 0) {
+        return respuesta({
+          error: "Esta esterilización ya tiene un documento registrado."
+        }, 409);
+      }
+    }
+    // ========================================================
     // 9. TOKEN GOOGLE
     // ========================================================
     const accessToken = await obtenerGoogleAccessToken(googleClientId, googleClientSecret, googleRefreshToken);
@@ -447,11 +538,9 @@ Deno.serve(async (req)=>{
       carpetaDestino = carpetaAnimales.id;
       // ------------------------------------------------------
       // El código identifica al animal dentro del proyecto.
-      // Conservamos la extensión original del documento.
+      // La extensión corresponde al tipo real detectado.
       // ------------------------------------------------------
-      const ultimoPunto = archivo.name.lastIndexOf(".");
-      const extension = ultimoPunto >= 0 ? archivo.name.substring(ultimoPunto) : "";
-      nombreDrive = `${animalEsterilizacion.codigo}${extension}`;
+      nombreDrive = `${animalEsterilizacion.codigo}${extensionFinal}`;
     } else if (tipoContexto === "fundacion") {
       carpetaDestino = carpetaFundacionId;
     }
@@ -464,7 +553,7 @@ Deno.serve(async (req)=>{
     // ========================================================
     // 12. SUBIR A GOOGLE DRIVE
     // ========================================================
-    const archivoDrive = await subirArchivoGoogleDrive(accessToken, carpetaDestino, archivo, nombreDrive, {
+    const archivoDrive = await subirArchivoGoogleDrive(accessToken, carpetaDestino, archivoFinal, nombreDrive, {
       tipo_contexto: tipoContexto,
       id_contexto: idContexto === null ? "fundacion" : String(idContexto)
     });
@@ -475,7 +564,7 @@ Deno.serve(async (req)=>{
       p_id_categoria_archivo: idCategoria,
       p_nombre_archivo: archivoDrive.name,
       p_nombre_original: archivo.name,
-      p_mime_type: archivo.type || "application/octet-stream",
+      p_mime_type: archivoFinal.type || "application/octet-stream",
       p_id_externo: archivoDrive.id,
       p_fecha_documento: fechaDocumento,
       p_descripcion: descripcion,
@@ -488,6 +577,13 @@ Deno.serve(async (req)=>{
     if (registrarError) {
       console.error("Error registrar_archivo:", registrarError);
       const eliminado = await eliminarArchivoDrive(accessToken, archivoDrive.id);
+      // Carrera con otra carga simultánea: el índice único rechazó el segundo documento.
+      if (tipoContexto === "esterilizacion" && registrarError.code === "23505") {
+        return respuesta({
+          error: "Esta esterilización ya tiene un documento registrado.",
+          archivo_drive_eliminado: eliminado
+        }, 409);
+      }
       return respuesta({
         error: "El archivo se alcanzó a subir a Google Drive, pero no pudo registrarse en la base de datos.",
         detalle: registrarError.message,
@@ -504,7 +600,7 @@ Deno.serve(async (req)=>{
         id_externo: archivoDrive.id,
         nombre: archivoDrive.name,
         nombre_original: archivo.name,
-        mime_type: archivo.type || "application/octet-stream",
+        mime_type: archivoFinal.type || "application/octet-stream",
         tamaño: archivo.size
       },
       contexto: {

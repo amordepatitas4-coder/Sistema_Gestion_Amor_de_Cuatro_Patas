@@ -2440,6 +2440,14 @@ CREATE UNIQUE INDEX "uq_adopcion_animal_activa" ON "public"."adopcion" USING "bt
 
 
 
+CREATE UNIQUE INDEX "uq_esterilizacion_archivo_documento" ON "public"."esterilizacion_archivo" USING "btree" ("id_animal_esterilizacion");
+
+
+
+COMMENT ON INDEX "public"."uq_esterilizacion_archivo_documento" IS 'Un único documento principal (PDF, JPG, PNG o WebP) por animal de esterilización.';
+
+
+
 CREATE UNIQUE INDEX "uq_historial_estado_abierto" ON "public"."historial_estado" USING "btree" ("id_animal") WHERE ("fecha_fin" IS NULL);
 
 
