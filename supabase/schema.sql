@@ -3471,14 +3471,14 @@ GRANT ALL ON FUNCTION "public"."registrar_seguimiento"("p_id_adopcion" bigint, "
 
 
 
-GRANT ALL ON TABLE "public"."adopcion" TO "anon";
-GRANT ALL ON TABLE "public"."adopcion" TO "authenticated";
+GRANT SELECT ON TABLE "public"."adopcion" TO "anon";
+GRANT SELECT ON TABLE "public"."adopcion" TO "authenticated";
 GRANT ALL ON TABLE "public"."adopcion" TO "service_role";
 
 
 
-GRANT ALL ON TABLE "public"."adopcion_archivo" TO "anon";
-GRANT ALL ON TABLE "public"."adopcion_archivo" TO "authenticated";
+GRANT SELECT ON TABLE "public"."adopcion_archivo" TO "anon";
+GRANT SELECT ON TABLE "public"."adopcion_archivo" TO "authenticated";
 GRANT ALL ON TABLE "public"."adopcion_archivo" TO "service_role";
 
 
@@ -3495,8 +3495,8 @@ GRANT ALL ON SEQUENCE "public"."adopcion_id_adopcion_seq" TO "service_role";
 
 
 
-GRANT ALL ON TABLE "public"."adoptante" TO "anon";
-GRANT ALL ON TABLE "public"."adoptante" TO "authenticated";
+GRANT SELECT ON TABLE "public"."adoptante" TO "anon";
+GRANT SELECT,INSERT,UPDATE ON TABLE "public"."adoptante" TO "authenticated";
 GRANT ALL ON TABLE "public"."adoptante" TO "service_role";
 
 
@@ -3507,14 +3507,15 @@ GRANT ALL ON SEQUENCE "public"."adoptante_id_adoptante_seq" TO "service_role";
 
 
 
-GRANT ALL ON TABLE "public"."animal" TO "anon";
-GRANT ALL ON TABLE "public"."animal" TO "authenticated";
+GRANT SELECT ON TABLE "public"."animal" TO "anon";
+GRANT SELECT ON TABLE "public"."animal" TO "authenticated";
+GRANT UPDATE(nombre, id_especie, id_rango_etario, sexo, "tamaño", fecha_nacimiento, fecha_rescate, lugar_rescate, caracteristicas, personalidad, historia_rescate, observaciones, microchip, estado_registro_nacional, foto_principal_path) ON TABLE "public"."animal" TO "authenticated";
 GRANT ALL ON TABLE "public"."animal" TO "service_role";
 
 
 
-GRANT ALL ON TABLE "public"."animal_archivo" TO "anon";
-GRANT ALL ON TABLE "public"."animal_archivo" TO "authenticated";
+GRANT SELECT ON TABLE "public"."animal_archivo" TO "anon";
+GRANT SELECT ON TABLE "public"."animal_archivo" TO "authenticated";
 GRANT ALL ON TABLE "public"."animal_archivo" TO "service_role";
 
 
@@ -3525,8 +3526,10 @@ GRANT ALL ON SEQUENCE "public"."animal_archivo_id_animal_archivo_seq" TO "servic
 
 
 
-GRANT ALL ON TABLE "public"."animal_esterilizacion" TO "anon";
-GRANT ALL ON TABLE "public"."animal_esterilizacion" TO "authenticated";
+GRANT SELECT ON TABLE "public"."animal_esterilizacion" TO "anon";
+GRANT SELECT ON TABLE "public"."animal_esterilizacion" TO "authenticated";
+GRANT INSERT(id_proyecto, codigo, id_especie, id_rango_etario, sexo, fecha_nacimiento, caracteristicas, sector_origen, fecha_esterilizacion, lugar_esterilizacion, microchip, estado_registro_nacional, observaciones) ON TABLE "public"."animal_esterilizacion" TO "authenticated";
+GRANT UPDATE(codigo, id_especie, id_rango_etario, sexo, fecha_nacimiento, caracteristicas, sector_origen, fecha_esterilizacion, lugar_esterilizacion, microchip, estado_registro_nacional, observaciones) ON TABLE "public"."animal_esterilizacion" TO "authenticated";
 GRANT ALL ON TABLE "public"."animal_esterilizacion" TO "service_role";
 
 
@@ -3537,8 +3540,8 @@ GRANT ALL ON SEQUENCE "public"."animal_esterilizacion_id_animal_esterilizacion_s
 
 
 
-GRANT ALL ON TABLE "public"."animal_gasto" TO "anon";
-GRANT ALL ON TABLE "public"."animal_gasto" TO "authenticated";
+GRANT SELECT ON TABLE "public"."animal_gasto" TO "anon";
+GRANT SELECT ON TABLE "public"."animal_gasto" TO "authenticated";
 GRANT ALL ON TABLE "public"."animal_gasto" TO "service_role";
 
 
@@ -3555,8 +3558,8 @@ GRANT ALL ON SEQUENCE "public"."animal_id_animal_seq" TO "service_role";
 
 
 
-GRANT ALL ON TABLE "public"."archivo" TO "anon";
-GRANT ALL ON TABLE "public"."archivo" TO "authenticated";
+GRANT SELECT ON TABLE "public"."archivo" TO "anon";
+GRANT SELECT ON TABLE "public"."archivo" TO "authenticated";
 GRANT ALL ON TABLE "public"."archivo" TO "service_role";
 
 
@@ -3567,8 +3570,8 @@ GRANT ALL ON SEQUENCE "public"."archivo_id_archivo_seq" TO "service_role";
 
 
 
-GRANT ALL ON TABLE "public"."atencion_sanitaria" TO "anon";
-GRANT ALL ON TABLE "public"."atencion_sanitaria" TO "authenticated";
+GRANT SELECT ON TABLE "public"."atencion_sanitaria" TO "anon";
+GRANT SELECT,INSERT,UPDATE ON TABLE "public"."atencion_sanitaria" TO "authenticated";
 GRANT ALL ON TABLE "public"."atencion_sanitaria" TO "service_role";
 
 
@@ -3579,8 +3582,8 @@ GRANT ALL ON SEQUENCE "public"."atencion_sanitaria_id_atencion_sanitaria_seq" TO
 
 
 
-GRANT ALL ON TABLE "public"."categoria_archivo" TO "anon";
-GRANT ALL ON TABLE "public"."categoria_archivo" TO "authenticated";
+GRANT SELECT ON TABLE "public"."categoria_archivo" TO "anon";
+GRANT SELECT,INSERT,UPDATE ON TABLE "public"."categoria_archivo" TO "authenticated";
 GRANT ALL ON TABLE "public"."categoria_archivo" TO "service_role";
 
 
@@ -3591,8 +3594,8 @@ GRANT ALL ON SEQUENCE "public"."categoria_archivo_id_categoria_archivo_seq" TO "
 
 
 
-GRANT ALL ON TABLE "public"."categoria_gasto" TO "anon";
-GRANT ALL ON TABLE "public"."categoria_gasto" TO "authenticated";
+GRANT SELECT ON TABLE "public"."categoria_gasto" TO "anon";
+GRANT SELECT,INSERT,UPDATE ON TABLE "public"."categoria_gasto" TO "authenticated";
 GRANT ALL ON TABLE "public"."categoria_gasto" TO "service_role";
 
 
@@ -3603,8 +3606,8 @@ GRANT ALL ON SEQUENCE "public"."categoria_gasto_id_categoria_gasto_seq" TO "serv
 
 
 
-GRANT ALL ON TABLE "public"."especie" TO "anon";
-GRANT ALL ON TABLE "public"."especie" TO "authenticated";
+GRANT SELECT ON TABLE "public"."especie" TO "anon";
+GRANT SELECT,INSERT,UPDATE ON TABLE "public"."especie" TO "authenticated";
 GRANT ALL ON TABLE "public"."especie" TO "service_role";
 
 
@@ -3615,14 +3618,16 @@ GRANT ALL ON SEQUENCE "public"."especie_id_especie_seq" TO "service_role";
 
 
 
-GRANT ALL ON TABLE "public"."estado" TO "anon";
-GRANT ALL ON TABLE "public"."estado" TO "authenticated";
+GRANT SELECT ON TABLE "public"."estado" TO "anon";
+GRANT SELECT ON TABLE "public"."estado" TO "authenticated";
+GRANT UPDATE(descripcion) ON TABLE "public"."estado" TO "authenticated";
 GRANT ALL ON TABLE "public"."estado" TO "service_role";
 
 
 
-GRANT ALL ON TABLE "public"."estado_adopcion" TO "anon";
-GRANT ALL ON TABLE "public"."estado_adopcion" TO "authenticated";
+GRANT SELECT ON TABLE "public"."estado_adopcion" TO "anon";
+GRANT SELECT ON TABLE "public"."estado_adopcion" TO "authenticated";
+GRANT UPDATE(descripcion) ON TABLE "public"."estado_adopcion" TO "authenticated";
 GRANT ALL ON TABLE "public"."estado_adopcion" TO "service_role";
 
 
@@ -3639,8 +3644,8 @@ GRANT ALL ON SEQUENCE "public"."estado_id_estado_seq" TO "service_role";
 
 
 
-GRANT ALL ON TABLE "public"."estado_proyecto" TO "anon";
-GRANT ALL ON TABLE "public"."estado_proyecto" TO "authenticated";
+GRANT SELECT ON TABLE "public"."estado_proyecto" TO "anon";
+GRANT SELECT,INSERT,UPDATE ON TABLE "public"."estado_proyecto" TO "authenticated";
 GRANT ALL ON TABLE "public"."estado_proyecto" TO "service_role";
 
 
@@ -3651,8 +3656,8 @@ GRANT ALL ON SEQUENCE "public"."estado_proyecto_id_estado_proyecto_seq" TO "serv
 
 
 
-GRANT ALL ON TABLE "public"."esterilizacion_archivo" TO "anon";
-GRANT ALL ON TABLE "public"."esterilizacion_archivo" TO "authenticated";
+GRANT SELECT ON TABLE "public"."esterilizacion_archivo" TO "anon";
+GRANT SELECT ON TABLE "public"."esterilizacion_archivo" TO "authenticated";
 GRANT ALL ON TABLE "public"."esterilizacion_archivo" TO "service_role";
 
 
@@ -3663,8 +3668,10 @@ GRANT ALL ON SEQUENCE "public"."esterilizacion_archivo_id_esterilizacion_archivo
 
 
 
-GRANT ALL ON TABLE "public"."esterilizacion_profesional" TO "anon";
-GRANT ALL ON TABLE "public"."esterilizacion_profesional" TO "authenticated";
+GRANT SELECT ON TABLE "public"."esterilizacion_profesional" TO "anon";
+GRANT SELECT ON TABLE "public"."esterilizacion_profesional" TO "authenticated";
+GRANT INSERT(id_animal_esterilizacion, id_profesional, funcion) ON TABLE "public"."esterilizacion_profesional" TO "authenticated";
+GRANT UPDATE(funcion) ON TABLE "public"."esterilizacion_profesional" TO "authenticated";
 GRANT ALL ON TABLE "public"."esterilizacion_profesional" TO "service_role";
 
 
@@ -3675,8 +3682,8 @@ GRANT ALL ON SEQUENCE "public"."esterilizacion_profesional_id_esterilizacion_pro
 
 
 
-GRANT ALL ON TABLE "public"."fundacion_archivo" TO "anon";
-GRANT ALL ON TABLE "public"."fundacion_archivo" TO "authenticated";
+GRANT SELECT ON TABLE "public"."fundacion_archivo" TO "anon";
+GRANT SELECT ON TABLE "public"."fundacion_archivo" TO "authenticated";
 GRANT ALL ON TABLE "public"."fundacion_archivo" TO "service_role";
 
 
@@ -3687,14 +3694,14 @@ GRANT ALL ON SEQUENCE "public"."fundacion_archivo_id_fundacion_archivo_seq" TO "
 
 
 
-GRANT ALL ON TABLE "public"."gasto" TO "anon";
-GRANT ALL ON TABLE "public"."gasto" TO "authenticated";
+GRANT SELECT ON TABLE "public"."gasto" TO "anon";
+GRANT SELECT,INSERT,UPDATE ON TABLE "public"."gasto" TO "authenticated";
 GRANT ALL ON TABLE "public"."gasto" TO "service_role";
 
 
 
-GRANT ALL ON TABLE "public"."gasto_archivo" TO "anon";
-GRANT ALL ON TABLE "public"."gasto_archivo" TO "authenticated";
+GRANT SELECT ON TABLE "public"."gasto_archivo" TO "anon";
+GRANT SELECT ON TABLE "public"."gasto_archivo" TO "authenticated";
 GRANT ALL ON TABLE "public"."gasto_archivo" TO "service_role";
 
 
@@ -3711,8 +3718,8 @@ GRANT ALL ON SEQUENCE "public"."gasto_id_gasto_seq" TO "service_role";
 
 
 
-GRANT ALL ON TABLE "public"."historial_estado" TO "anon";
-GRANT ALL ON TABLE "public"."historial_estado" TO "authenticated";
+GRANT SELECT ON TABLE "public"."historial_estado" TO "anon";
+GRANT SELECT ON TABLE "public"."historial_estado" TO "authenticated";
 GRANT ALL ON TABLE "public"."historial_estado" TO "service_role";
 
 
@@ -3723,8 +3730,8 @@ GRANT ALL ON SEQUENCE "public"."historial_estado_id_historial_estado_seq" TO "se
 
 
 
-GRANT ALL ON TABLE "public"."hogar_temporal" TO "anon";
-GRANT ALL ON TABLE "public"."hogar_temporal" TO "authenticated";
+GRANT SELECT ON TABLE "public"."hogar_temporal" TO "anon";
+GRANT SELECT,INSERT,UPDATE ON TABLE "public"."hogar_temporal" TO "authenticated";
 GRANT ALL ON TABLE "public"."hogar_temporal" TO "service_role";
 
 
@@ -3735,8 +3742,8 @@ GRANT ALL ON SEQUENCE "public"."hogar_temporal_id_hogar_seq" TO "service_role";
 
 
 
-GRANT ALL ON TABLE "public"."permanencia_animal_hogar" TO "anon";
-GRANT ALL ON TABLE "public"."permanencia_animal_hogar" TO "authenticated";
+GRANT SELECT ON TABLE "public"."permanencia_animal_hogar" TO "anon";
+GRANT SELECT ON TABLE "public"."permanencia_animal_hogar" TO "authenticated";
 GRANT ALL ON TABLE "public"."permanencia_animal_hogar" TO "service_role";
 
 
@@ -3747,8 +3754,8 @@ GRANT ALL ON SEQUENCE "public"."permanencia_animal_hogar_id_permanencia_seq" TO 
 
 
 
-GRANT ALL ON TABLE "public"."profesional" TO "anon";
-GRANT ALL ON TABLE "public"."profesional" TO "authenticated";
+GRANT SELECT ON TABLE "public"."profesional" TO "anon";
+GRANT SELECT,INSERT,UPDATE ON TABLE "public"."profesional" TO "authenticated";
 GRANT ALL ON TABLE "public"."profesional" TO "service_role";
 
 
@@ -3759,8 +3766,8 @@ GRANT ALL ON SEQUENCE "public"."profesional_id_profesional_seq" TO "service_role
 
 
 
-GRANT ALL ON TABLE "public"."proyecto_archivo" TO "anon";
-GRANT ALL ON TABLE "public"."proyecto_archivo" TO "authenticated";
+GRANT SELECT ON TABLE "public"."proyecto_archivo" TO "anon";
+GRANT SELECT ON TABLE "public"."proyecto_archivo" TO "authenticated";
 GRANT ALL ON TABLE "public"."proyecto_archivo" TO "service_role";
 
 
@@ -3771,8 +3778,10 @@ GRANT ALL ON SEQUENCE "public"."proyecto_archivo_id_proyecto_archivo_seq" TO "se
 
 
 
-GRANT ALL ON TABLE "public"."proyecto_esterilizacion" TO "anon";
-GRANT ALL ON TABLE "public"."proyecto_esterilizacion" TO "authenticated";
+GRANT SELECT ON TABLE "public"."proyecto_esterilizacion" TO "anon";
+GRANT SELECT ON TABLE "public"."proyecto_esterilizacion" TO "authenticated";
+GRANT INSERT(id_estado_proyecto, nombre, fecha_postulacion, fecha_inicio, fecha_fin, responsable, entidad_financiante, descripcion, observaciones) ON TABLE "public"."proyecto_esterilizacion" TO "authenticated";
+GRANT UPDATE(id_estado_proyecto, nombre, fecha_postulacion, fecha_inicio, fecha_fin, responsable, entidad_financiante, descripcion, observaciones) ON TABLE "public"."proyecto_esterilizacion" TO "authenticated";
 GRANT ALL ON TABLE "public"."proyecto_esterilizacion" TO "service_role";
 
 
@@ -3783,8 +3792,8 @@ GRANT ALL ON SEQUENCE "public"."proyecto_esterilizacion_id_proyecto_seq" TO "ser
 
 
 
-GRANT ALL ON TABLE "public"."rango_etario" TO "anon";
-GRANT ALL ON TABLE "public"."rango_etario" TO "authenticated";
+GRANT SELECT ON TABLE "public"."rango_etario" TO "anon";
+GRANT SELECT,INSERT,UPDATE ON TABLE "public"."rango_etario" TO "authenticated";
 GRANT ALL ON TABLE "public"."rango_etario" TO "service_role";
 
 
@@ -3795,8 +3804,8 @@ GRANT ALL ON SEQUENCE "public"."rango_etario_id_rango_etario_seq" TO "service_ro
 
 
 
-GRANT ALL ON TABLE "public"."seguimiento" TO "anon";
-GRANT ALL ON TABLE "public"."seguimiento" TO "authenticated";
+GRANT SELECT ON TABLE "public"."seguimiento" TO "anon";
+GRANT SELECT ON TABLE "public"."seguimiento" TO "authenticated";
 GRANT ALL ON TABLE "public"."seguimiento" TO "service_role";
 
 
@@ -3807,8 +3816,8 @@ GRANT ALL ON SEQUENCE "public"."seguimiento_id_seguimiento_seq" TO "service_role
 
 
 
-GRANT ALL ON TABLE "public"."tipo_atencion_sanitaria" TO "anon";
-GRANT ALL ON TABLE "public"."tipo_atencion_sanitaria" TO "authenticated";
+GRANT SELECT ON TABLE "public"."tipo_atencion_sanitaria" TO "anon";
+GRANT SELECT,INSERT,UPDATE ON TABLE "public"."tipo_atencion_sanitaria" TO "authenticated";
 GRANT ALL ON TABLE "public"."tipo_atencion_sanitaria" TO "service_role";
 
 
@@ -3819,8 +3828,8 @@ GRANT ALL ON SEQUENCE "public"."tipo_atencion_sanitaria_id_tipo_atencion_seq" TO
 
 
 
-GRANT ALL ON TABLE "public"."usuario" TO "anon";
-GRANT ALL ON TABLE "public"."usuario" TO "authenticated";
+GRANT SELECT ON TABLE "public"."usuario" TO "anon";
+GRANT SELECT ON TABLE "public"."usuario" TO "authenticated";
 GRANT ALL ON TABLE "public"."usuario" TO "service_role";
 
 
