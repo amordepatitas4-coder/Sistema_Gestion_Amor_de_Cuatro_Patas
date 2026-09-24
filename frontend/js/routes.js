@@ -40,6 +40,7 @@ const IMPLEMENTED = {
     '/esterilizacion': () => import('./views/sterilization/list.js'),
     '/documentos': () => import('./views/documents/list.js'),
     '/informes': () => import('./views/reports/list.js'),
+    '/configuracion': () => import('./views/settings/index.js'),
 };
 
 const nav = (path) => NAV_ITEMS.find((item) => item.path === path);
@@ -51,6 +52,7 @@ export const ROUTES = [
     { path: '/adopciones/adoptantes', load: () => import('./views/adoptions/list.js'), module: nav('/adopciones') },
     { path: '/adopciones/:id', load: () => import('./views/adoptions/detail.js'), module: nav('/adopciones') },
     { path: '/gastos/:id', load: () => import('./views/expenses/detail.js'), module: nav('/gastos') },
+    { path: '/configuracion/:section', load: () => import('./views/settings/index.js'), module: nav('/configuracion') },
     { path: '/esterilizacion/:id/:tab?', load: () => import('./views/sterilization/detail.js'), module: nav('/esterilizacion') },
     ...NAV_ITEMS.map((item) => ({ path: item.path, load: IMPLEMENTED[item.path] ?? placeholder, module: item })),
 ];

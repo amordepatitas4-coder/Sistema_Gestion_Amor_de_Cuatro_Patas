@@ -36,3 +36,13 @@ test('Ficha con pestañas y listado no se confunden (REG-09)', () => {
     assert.deepEqual(R.matchRoute(ROUTES, '/animales/12/historial').params, { id: '12', tab: 'historial' });
     assert.equal(R.matchRoute(ROUTES, '/hogares').route.path, '/hogares');
 });
+
+test('Rutas de Esterilización y Configuración (Etapas 8 y 11)', () => {
+    assert.equal(R.matchRoute(ROUTES, '/esterilizacion').route.path, '/esterilizacion');
+    assert.deepEqual(R.matchRoute(ROUTES, '/esterilizacion/2/nomina').params, { id: '2', tab: 'nomina' });
+    assert.equal(R.matchRoute(ROUTES, '/esterilizacion/2/nomina').route.module.path, '/esterilizacion');
+    assert.equal(R.matchRoute(ROUTES, '/configuracion').route.path, '/configuracion');
+    assert.deepEqual(R.matchRoute(ROUTES, '/configuracion/catalogos').params, { section: 'catalogos' });
+    assert.equal(R.matchRoute(ROUTES, '/configuracion/usuarios').route.module.path, '/configuracion');
+    assert.ok(!ROUTES.some((r) => r.load && String(r.load).includes('placeholder') && ['/esterilizacion', '/documentos', '/informes', '/configuracion'].includes(r.path)));
+});

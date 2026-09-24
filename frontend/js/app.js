@@ -102,11 +102,10 @@ function startApp() {
 
     function cleanAuthCallbackFromUrl(state) {
         if (!isAuthCallback(window.location.hash)) return;
-        const target = state.status === 'active' ? HOME_PATH : LOGIN_PATH;
+        // Tras aceptar una invitación (o recuperar acceso) se lleva a Mi cuenta para definir la contraseña.
+        const definePassword = state.status === 'active' && ['invite', 'recovery'].includes(authCallback?.type);
+        const target = state.status !== 'active' ? LOGIN_PATH : definePassword ? '/configuracion/cuenta?bienvenida=1' : HOME_PATH;
         history.replaceState(null, '', `#${target}`);
-        if (authCallback?.type === 'invite' && state.status === 'active') {
-            toast('Bienvenida al sistema. La definición de contraseña estará disponible en Configuración → Mi cuenta.', 'info', { delay: 9000 });
-        }
     }
 
     // --------------------------------------------------------

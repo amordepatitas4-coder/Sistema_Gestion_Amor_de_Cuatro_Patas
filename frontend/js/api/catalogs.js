@@ -95,3 +95,32 @@ export function findByName(list, nombre) {
 export function selectable(list, currentId = null) {
     return list.filter((row) => row.activo || String(row.id) === String(currentId));
 }
+
+// ------------------------------------------------------------
+// Administración de catálogos (Configuración → Catálogos).
+// Solo INSERT/UPDATE permitidos por RLS; nunca DELETE: se usa
+// activo = false. Las columnas escribibles se declaran de forma
+// explícita en la vista (views/settings/catalog-config.js).
+// ------------------------------------------------------------
+
+function pickColumns(values, columns) {
+    const out = {};
+    columns.forEach((c) => { if (Object.prototype.hasOwnProperty.call(values, c)) out[c] = values[c]; });
+    return out;
+}
+
+export async function createCatalogRow(name, values, columns) {
+    const meta = CATALOGS[name];
+    if (!meta) throw new Error(`Catálogo no definido: ${name}`);
+    const { error } = await supabase.from(meta.table).insert(pickColumns(values, columns));
+    if (error) throw error;
+    cache.delete(name);
+}
+
+export async function updateCatalogRow(name, id, values, columns) {
+    const meta = CATALOGS[name];
+    if (!meta) throw new Error(`Catálogo no definido: ${name}`);
+    const { error } = await supabase.from(meta.table).update(pickColumns(values, columns)).eq(meta.pk, id);
+    if (error) throw error;
+    cache.delete(name);
+}

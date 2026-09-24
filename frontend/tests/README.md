@@ -39,6 +39,7 @@ node --test tests/session.test.mjs
 | `sterilization-logic.test.mjs` | Proyectos, nómina (código/microchip por proyecto), profesionales N:M derivados, PDF obligatorio (tipo y firma), Adjuntar/Abrir sin reemplazo y exportación CSV |
 | `documents-logic.test.mjs` | Documentos: contexto de cada archivo (incluida asociación 1:1 de Fundación), búsqueda, filtros y fechas |
 | `reports-definitions.test.mjs` | Informes: filtros contextuales, claves de URL, rango de fechas, totales desde las filas, profesional N:M y exportación |
+| `settings-logic.test.mjs` | Configuración: catálogos contra columnas reales de `schema.sql`, valores protegidos, rango etario, contraseña y reglas de activación/desactivación |
 
 ## Alcance
 

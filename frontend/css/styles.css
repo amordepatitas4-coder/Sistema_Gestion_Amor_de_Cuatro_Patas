@@ -1250,3 +1250,17 @@ a.kpi-card:hover {
     .report-table { font-size: 9pt; }
     .report-table th, .report-table td { padding: .2rem .3rem; }
 }
+
+/* ------------------------------------------------------------
+   Configuración → Catálogos (Etapa 11)
+   ------------------------------------------------------------ */
+.catalog-layout { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 1rem; align-items: start; }
+.catalog-nav { padding: .6rem; }
+.catalog-nav .nav-link { color: var(--acp-text); display: flex; gap: .5rem; align-items: center; font-weight: 500; }
+.catalog-nav .nav-link.active { background: var(--acp-primary); color: #fff; }
+.catalog-panel { min-width: 0; }
+
+@media (max-width: 991.98px) {
+    .catalog-layout { grid-template-columns: 1fr; }
+    .catalog-nav .nav { flex-direction: row !important; flex-wrap: wrap; }
+}
