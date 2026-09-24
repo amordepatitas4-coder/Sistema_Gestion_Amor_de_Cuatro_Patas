@@ -200,6 +200,10 @@ export function openModal({ title, body, size = '', onHidden = null }) {
     const element = host.firstElementChild;
     const instance = new window.bootstrap.Modal(element, { backdrop: true, keyboard: true });
     let busy = false;
+    // Bootstrap ignora hide() mientras el modal aún se está mostrando:
+    // un cierre pedido en ese intervalo se aplica al terminar de mostrarse.
+    let shown = false;
+    let pendingClose = false;
 
     const api = {
         element,
@@ -212,6 +216,7 @@ export function openModal({ title, body, size = '', onHidden = null }) {
         close(force = false) {
             if (busy && !force) return;
             busy = false;
+            if (!shown && !force) { pendingClose = true; return; }
             instance.hide();
         },
     };
@@ -224,6 +229,8 @@ export function openModal({ title, body, size = '', onHidden = null }) {
     // Foco inicial razonable (§25): primer campo editable. Solo con puntero
     // preciso (mouse/teclado) para no abrir el teclado en celulares.
     element.addEventListener('shown.bs.modal', () => {
+        shown = true;
+        if (pendingClose) { instance.hide(); return; }
         if (!window.matchMedia?.('(pointer: fine)').matches) return;
         element.querySelector('.modal-body input:not([type=hidden]):not([readonly]):not([disabled]), .modal-body select:not([disabled]), .modal-body textarea:not([disabled])')
             ?.focus({ preventScroll: true });
