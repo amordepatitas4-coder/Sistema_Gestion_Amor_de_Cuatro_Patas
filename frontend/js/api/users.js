@@ -3,13 +3,16 @@
 //
 // - Identidad y credenciales: Supabase Auth (fuente de verdad).
 //   El correo NO se duplica en public.usuario (RN / Ficha §26.3).
-// - public.usuario solo tiene política SELECT: el nombre no es
-//   editable desde el cliente y activo solo cambia mediante las RPC
+// - public.usuario solo tiene política SELECT: el nombre cambia solo
+//   mediante actualizar_mi_nombre y activo solo mediante las RPC
 //   activar_usuario / desactivar_usuario (esta última impide la
 //   autodesactivación y dejar el sistema sin usuarias activas, RN-59).
+// - Listado con correo: RPC listar_usuarias (SECURITY DEFINER; lee el
+//   correo de auth.users en el servidor; solo usuarias activas; sin
+//   acceso anon). El correo es de solo lectura.
+// - Nombre propio: RPC actualizar_mi_nombre (solo la fila propia).
 // - Invitación: Edge Function invitar-usuario (service role solo en
-//   el servidor). El correo de otras usuarias no se consulta: no
-//   existe un flujo seguro para leerlo desde el navegador.
+//   el servidor).
 // ============================================================
 
 import { supabase } from '../supabase.js';
@@ -18,13 +21,17 @@ function raise(error) {
     if (error) throw error;
 }
 
+/** Usuarias con correo de Auth: [{ id_usuario, nombre, email, activo, fecha_registro }]. */
 export async function listUsers() {
-    const { data, error } = await supabase
-        .from('usuario')
-        .select('id_usuario, nombre, activo, fecha_registro')
-        .order('fecha_registro', { ascending: true });
+    const { data, error } = await supabase.rpc('listar_usuarias');
     raise(error);
-    return data;
+    return data ?? [];
+}
+
+/** Actualiza el nombre de la usuaria actual (el backend normaliza espacios). */
+export async function updateOwnName(nombre) {
+    const { error } = await supabase.rpc('actualizar_mi_nombre', { p_nombre: nombre });
+    raise(error);
 }
 
 export async function activateUser(idUsuario) {

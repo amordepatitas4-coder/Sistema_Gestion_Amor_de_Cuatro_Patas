@@ -1264,3 +1264,14 @@ a.kpi-card:hover {
     .catalog-layout { grid-template-columns: 1fr; }
     .catalog-nav .nav { flex-direction: row !important; flex-wrap: wrap; }
 }
+
+/* Confirmación en línea para quitar una asociación profesional */
+.remove-confirm:not([hidden]) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .5rem;
+    padding: .5rem .6rem;
+    background: var(--acp-danger-soft);
+    border-radius: var(--acp-radius-sm);
+}

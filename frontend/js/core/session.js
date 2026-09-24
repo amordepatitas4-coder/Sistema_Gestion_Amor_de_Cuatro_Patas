@@ -183,5 +183,15 @@ export function createSession(client) {
         },
 
         clearNotice() { if (state.notice) setState({ notice: null }); },
+
+        /**
+         * Actualiza el nombre del perfil tras actualizar_mi_nombre, sin volver a
+         * renderizar la vista; la barra superior se entera por el evento acp:profile.
+         */
+        setProfileName(nombre) {
+            if (!state.profile) return;
+            state = { ...state, profile: { ...state.profile, nombre } };
+            window.dispatchEvent(new CustomEvent('acp:profile', { detail: state.profile }));
+        },
     };
 }

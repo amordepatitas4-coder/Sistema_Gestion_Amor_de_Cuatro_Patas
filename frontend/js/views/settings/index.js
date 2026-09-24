@@ -8,7 +8,7 @@
 // ============================================================
 
 import { createCatalogRow, loadCatalog, updateCatalogRow } from '../../api/catalogs.js';
-import { activateUser, changeOwnPassword, deactivateUser, inviteUser, listUsers } from '../../api/users.js';
+import { activateUser, changeOwnPassword, deactivateUser, inviteUser, listUsers, updateOwnName } from '../../api/users.js';
 import { activeBadge } from '../../core/badges.js';
 import { AppError, reportError } from '../../core/errors.js';
 import { bindForm } from '../../core/forms.js';
@@ -71,13 +71,21 @@ async function renderAccount(body, { session, query }) {
                 <div class="card-panel h-100">
                     <h2 class="block-title"><i class="bi bi-person-circle" aria-hidden="true"></i> Datos de la cuenta</h2>
                     <dl class="info-grid mb-3">
-                        <div class="info-block"><dt>Nombre</dt><dd>${displayText(profile?.nombre)}</dd></div>
+                        <div class="info-block"><dt>Nombre</dt><dd data-own-name>${displayText(profile?.nombre)}</dd></div>
                         <div class="info-block"><dt>Correo (Supabase Auth)</dt><dd>${displayText(user?.email)}</dd></div>
                         <div class="info-block"><dt>Estado</dt><dd>${activeBadge(profile?.activo)}</dd></div>
                         <div class="info-block"><dt>Registrada el</dt><dd>${formatDateTime(profile?.fecha_registro)}</dd></div>
                     </dl>
-                    <p class="small text-secondary">El correo proviene de la autenticación y no se duplica en el perfil interno.
-                        El nombre del perfil no puede modificarse desde el sistema en esta versión.</p>
+                    <p class="small text-secondary">El correo proviene de la autenticación, no se duplica en el perfil interno y no se modifica
+                        desde el sistema: si necesitas otro correo, se invita una cuenta nueva y luego se desactiva la anterior.</p>
+                    <form id="nameForm" class="mb-3" novalidate>
+                        <div data-form-error hidden></div>
+                        <label class="form-label" for="ownName">Nombre ${req}</label>
+                        <div class="d-flex gap-2">
+                            <input class="form-control" id="ownName" name="nombre" maxlength="150" required autocomplete="name" value="${profile?.nombre ?? ''}">
+                            <button type="submit" class="btn btn-outline-primary text-nowrap"><i class="bi bi-check-lg" aria-hidden="true"></i> Guardar nombre</button>
+                        </div>
+                    </form>
                     <button type="button" class="btn btn-outline-danger" id="btnLogoutAccount"><i class="bi bi-box-arrow-right" aria-hidden="true"></i> Cerrar sesión</button>
                 </div>
             </section>
@@ -114,6 +122,24 @@ async function renderAccount(body, { session, query }) {
             restore();
             toast(await reportError(err, 'Cierre de sesión'), 'error');
         }
+    });
+
+    const nameForm = body.querySelector('#nameForm');
+    bindForm(nameForm, {
+        context: 'Actualizar nombre',
+        collect: (fd) => ({ nombre: String(fd.get('nombre') ?? '').replace(/\s+/g, ' ').trim() }),
+        validate: ({ nombre }) => {
+            if (nombre.length < 2) return { nombre: 'El nombre debe tener al menos 2 caracteres.' };
+            if (nombre.length > 150) return { nombre: 'Máximo 150 caracteres.' };
+            return null;
+        },
+        submit: ({ nombre }) => updateOwnName(nombre),
+        onSuccess: (_, { nombre }) => {
+            session.setProfileName(nombre);
+            body.querySelectorAll('[data-own-name]').forEach((el) => { el.textContent = nombre; });
+            nameForm.nombre.value = nombre;
+            toast('Nombre actualizado.', 'success');
+        },
     });
 
     const form = body.querySelector('#passwordForm');
@@ -165,7 +191,7 @@ async function renderUsers(body, { session, reload }) {
                         const a = userActions(u, { currentId, activeCount });
                         return html`<tr>
                             <td class="fw-semibold">${u.nombre} ${self ? html`<span class="badge badge-soft-info ms-1">Tú</span>` : ''}</td>
-                            <td class="small">${self ? session.state.user?.email : html`<span class="text-secondary">No disponible</span>`}</td>
+                            <td class="small text-break">${displayText(u.email)}</td>
                             <td>${activeBadge(u.activo)}</td>
                             <td class="small text-nowrap">${formatDateTime(u.fecha_registro)}</td>
                             <td class="text-end text-nowrap">
@@ -178,7 +204,7 @@ async function renderUsers(body, { session, reload }) {
                             </td>
                         </tr>`;
                     })}</tbody></table></div>
-                  <p class="small text-secondary mt-2 mb-0">El correo de otras usuarias se administra en Supabase Auth y no se muestra aquí.</p>`}
+                  <p class="small text-secondary mt-2 mb-0">El correo proviene de Supabase Auth y es de solo lectura. Para usar otro correo se invita una cuenta nueva y se desactiva la anterior.</p>`}
         </section>`);
 
     body.querySelector('#btnInvite').addEventListener('click', () => openInviteForm({ onSent: reload }));

@@ -203,3 +203,15 @@ test('CSV: separador ;, BOM, texto seguro y microchip como texto', () => {
     assert.ok(csv.includes(';Documento de esterilización;'));
     assert.equal(csvFileName('Nómina Proyecto QA', '2026-09-23'), 'nomina-proyecto-qa-2026-09-23.csv');
 });
+
+test('Proyecto con respuesta perdida: se recupera solo un proyecto idéntico y nuevo', () => {
+    const values = { id_estado_proyecto: 1, nombre: 'Proyecto QA', fecha_postulacion: null, fecha_inicio: '2026-10-01',
+        fecha_fin: null, responsable: null, entidad_financiante: null, descripcion: null, observaciones: null };
+    const nuevo = { id_proyecto: 12, ...values };
+    const antiguo = { id_proyecto: 3, ...values };           // mismo nombre y datos, ya existía
+    const distinto = { id_proyecto: 13, ...values, fecha_inicio: '2026-11-01' };
+    assert.equal(S.findRecoveredProject(values, [nuevo, antiguo, distinto], [3]).id_proyecto, 12);
+    assert.equal(S.findRecoveredProject(values, [antiguo], [3]), null);            // nombres repetidos siguen permitidos
+    assert.equal(S.findRecoveredProject(values, [distinto], [3]), null);
+    assert.equal(S.findRecoveredProject(values, [nuevo, { ...nuevo, id_proyecto: 14 }], [3]), null); // ambiguo: no se adivina
+});

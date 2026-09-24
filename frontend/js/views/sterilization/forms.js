@@ -3,7 +3,9 @@
 //
 // Proyecto (Prompt §17.2): INSERT proyecto → crear-carpeta-proyecto.
 //   Si Drive falla, el proyecto permanece creado y se ofrece
-//   reintento desde su detalle (PA-PRO-03).
+//   reintento desde su detalle (PA-PRO-03). Si el INSERT falla sin
+//   respuesta, se busca un proyecto idéntico creado después de abrir
+//   el formulario y se continúa con él (sin exigir nombres únicos).
 //
 // Alta en nómina (Prompt §18, flujo conceptual):
 //   1. capturar y validar TODO antes de bloquear (datos, filas de
@@ -33,7 +35,8 @@ import { selectable } from '../../api/catalogs.js';
 import { uploadFile } from '../../api/files.js';
 import {
     countEntryFiles, createEntry, createProfessional, createProject, createProjectFolder, findEntryByCode,
-    linkProfessional, listEntryLinks, listProfessionals, updateEntry, updateLinkFunction, updateProfessional, updateProject,
+    findRecoveredProject as queryRecoveredProject, linkProfessional, listEntryLinks, listProfessionals,
+    removeProfessionalLink, updateEntry, updateLinkFunction, updateProfessional, updateProject,
 } from '../../api/sterilization.js';
 import { AppError, reportError } from '../../core/errors.js';
 import { bindForm } from '../../core/forms.js';
@@ -42,7 +45,7 @@ import { html, openModal, options, render, setButtonBusy, toast } from '../../co
 import { openFile } from '../files/section.js';
 import {
     DOC_ACCEPT, DOC_MAX_BYTES, FUNCIONES_SUGERIDAS, REGISTRO_NACIONAL, SEXOS,
-    collectEntry, collectProfessional, collectProject, documentStatus, findSimilarProfessional, hasRowErrors,
+    collectEntry, collectProfessional, collectProject, documentStatus, findRecoveredProject, findSimilarProfessional, hasRowErrors,
     isSameEntry, pendingLinks, readDocumentType, suggestNextCode, validateDocumentFile, validateEntry,
     validateFunction, validateProfessional, validateProfessionalRows, validateProject,
 } from './logic.js';
@@ -146,7 +149,20 @@ function projectFields(v, estados) {
         </div>`;
 }
 
-export function openCreateProject({ estados, navigate, onCreated }) {
+/** INSERT del proyecto con recuperación segura ante una respuesta perdida. */
+async function createProjectSafely(values, knownIds) {
+    try {
+        return { id: await createProject(values), recovered: false };
+    } catch (err) {
+        let found = null;
+        try { found = findRecoveredProject(values, await queryRecoveredProject(values, knownIds), knownIds); } catch { /* error original */ }
+        if (found) return { id: found.id_proyecto, recovered: true };
+        throw err;
+    }
+}
+
+/** knownIds: proyectos existentes al abrir el formulario (para la recuperación). */
+export function openCreateProject({ estados, navigate, onCreated, knownIds = [] }) {
     let createdId = null;
     const defaultEstado = estados.find((e) => e.nombre === 'Postulado' && e.activo)?.id ?? '';
     const modal = openModal({
@@ -173,16 +189,17 @@ export function openCreateProject({ estados, navigate, onCreated }) {
         submit: async (values) => {
             modal.setBusy(true);
             try {
-                return await createProject(values);
+                return await createProjectSafely(values, knownIds);
             } catch (err) {
                 modal.setBusy(false);
                 throw err;
             }
         },
-        onSuccess: async (idProyecto, values) => {
+        onSuccess: async ({ id: idProyecto, recovered }, values) => {
             createdId = idProyecto;
             const steps = [
-                { label: 'Proyecto registrado', status: 'ok' },
+                { label: 'Proyecto registrado', status: 'ok',
+                    message: recovered ? 'El proyecto ya se había creado en un intento anterior: se continuó con él (sin duplicarlo).' : '' },
                 { label: 'Carpeta en Google Drive (Documentación y Animales)', status: 'running' },
             ];
             const draw = stepsPanel(modal, {
@@ -685,10 +702,12 @@ export function openEditEntry({ entry, others, catalogs, onSaved }) {
 }
 
 // ------------------------------------------------------------
-// Profesionales de una esterilización: corregir la función de las
-// asociaciones existentes (UPDATE permitido por RLS) y agregar otros.
-// Quitar una asociación queda pendiente de decisión de backend
-// (no existe política DELETE en esterilizacion_profesional).
+// Profesionales de una esterilización:
+//   - corregir la función (UPDATE permitido por RLS);
+//   - quitar una asociación ingresada por error (RPC
+//     quitar_profesional_esterilizacion: solo la relación, nunca el
+//     profesional; no permite dejar al animal sin profesionales);
+//   - agregar otros profesionales.
 // ------------------------------------------------------------
 export function openEntryProfessionals({ entry, professionals, onSaved }) {
     let changed = false;
@@ -702,8 +721,8 @@ export function openEntryProfessionals({ entry, professionals, onSaved }) {
             ${links.length ? html`
             <section class="mb-3" aria-labelledby="linksTitle">
                 <h3 class="h6 fw-bold" id="linksTitle">Asociados actualmente</h3>
-                <p class="small text-secondary mb-2">Puedes corregir la función de cada profesional en esta esterilización.
-                    El registro del profesional y sus demás participaciones no cambian.</p>
+                <p class="small text-secondary mb-2">Puedes corregir la función o quitar una asociación ingresada por error.
+                    El registro del profesional y sus demás participaciones no cambian. Siempre debe quedar al menos un profesional.</p>
                 <ul class="list-unstyled mb-0">${links.map((r) => html`
                     <li class="allocation-row" data-link="${r.id_esterilizacion_profesional}">
                         <div class="flex-grow-1">
@@ -717,6 +736,14 @@ export function openEntryProfessionals({ entry, professionals, onSaved }) {
                         </div>
                         <button type="button" class="btn btn-sm btn-outline-primary" data-save-link disabled>
                             <i class="bi bi-check-lg" aria-hidden="true"></i> Guardar</button>
+                        <button type="button" class="btn btn-sm btn-outline-danger" data-remove-link ${links.length <= 1 ? 'disabled' : ''}
+                            ${links.length <= 1 ? html`title="Agrega primero el profesional correcto: siempre debe quedar al menos uno."` : ''}>
+                            <i class="bi bi-person-x" aria-hidden="true"></i> Quitar</button>
+                        <div class="w-100 remove-confirm" data-remove-confirm hidden>
+                            <span class="small">¿Quitar a <strong>${r.profesional?.nombre ?? 'este profesional'}</strong> de ${entry.codigo}? El profesional seguirá registrado.</span>
+                            <button type="button" class="btn btn-sm btn-danger" data-remove-yes>Sí, quitar</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" data-remove-no>Cancelar</button>
+                        </div>
                         <div class="invalid-feedback d-block w-100" data-row-error></div>
                     </li>`)}</ul>
                 <datalist id="funcionesSugeridasEdit">${FUNCIONES_SUGERIDAS.map((f) => html`<option value="${f}"></option>`)}</datalist>
@@ -753,6 +780,30 @@ export function openEntryProfessionals({ entry, professionals, onSaved }) {
                 errorBox.textContent = await reportError(err, 'Corregir función');
             } finally {
                 modal.setBusy(false);
+            }
+        });
+    });
+
+    // --- Quitar asociación (confirmación en línea; sin modales anidados) ---
+    modal.body.querySelectorAll('[data-link]').forEach((row) => {
+        const removeBtn = row.querySelector('[data-remove-link]');
+        const confirmBox = row.querySelector('[data-remove-confirm]');
+        const errorBox = row.querySelector('[data-row-error]');
+        removeBtn.addEventListener('click', () => { confirmBox.hidden = false; row.querySelector('[data-remove-yes]').focus(); });
+        row.querySelector('[data-remove-no]').addEventListener('click', () => { confirmBox.hidden = true; removeBtn.focus(); });
+        row.querySelector('[data-remove-yes]').addEventListener('click', async (e) => {
+            const restore = setButtonBusy(e.currentTarget, 'Quitando…');
+            modal.setBusy(true);
+            try {
+                await removeProfessionalLink(Number(row.dataset.link));
+                changed = true;
+                modal.setBusy(false);
+                modal.close();
+                toast('Asociación quitada. El profesional sigue registrado.', 'success');
+            } catch (err) {
+                restore();
+                modal.setBusy(false);
+                errorBox.textContent = await reportError(err, 'Quitar asociación');
             }
         });
     });

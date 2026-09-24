@@ -46,7 +46,7 @@ export default {
 
         const newBtn = outlet.querySelector('#btnNewProject');
         newBtn.disabled = false;
-        const openNew = () => openCreateProject({ estados, navigate, onCreated: reload });
+        const openNew = () => openCreateProject({ estados, navigate, onCreated: reload, knownIds: projects.map((p) => p.id_proyecto) });
         newBtn.addEventListener('click', openNew);
 
         const hasFilters = () => Boolean(f.q || f.estado);

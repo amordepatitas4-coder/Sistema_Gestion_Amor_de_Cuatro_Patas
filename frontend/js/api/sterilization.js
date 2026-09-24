@@ -69,6 +69,20 @@ export async function getProject(id) {
     return data ? withCount(data) : null;
 }
 
+/**
+ * Busca un proyecto recién creado cuya respuesta se perdió: mismo contenido
+ * exacto y un id que no existía al abrir el formulario (knownIds).
+ * No exige nombres únicos: dos proyectos pueden llamarse igual.
+ */
+export async function findRecoveredProject(values, knownIds) {
+    let q = supabase.from('proyecto_esterilizacion').select(`id_proyecto, ${PROJECT_COLUMNS.join(', ')}`)
+        .eq('nombre', values.nombre);
+    if (knownIds.length) q = q.not('id_proyecto', 'in', `(${knownIds.join(',')})`);
+    const { data, error } = await q.order('id_proyecto', { ascending: false }).limit(20);
+    raise(error);
+    return data;
+}
+
 export async function createProject(values) {
     const { data, error } = await supabase
         .from('proyecto_esterilizacion')
@@ -223,6 +237,17 @@ export async function updateLinkFunction(idEsterilizacionProfesional, funcion) {
         .from('esterilizacion_profesional')
         .update({ funcion })
         .eq('id_esterilizacion_profesional', idEsterilizacionProfesional);
+    raise(error);
+}
+
+/**
+ * Quita una asociación ingresada por error (RPC quitar_profesional_esterilizacion):
+ * elimina solo la relación, nunca al profesional, y rechaza quitar al último.
+ */
+export async function removeProfessionalLink(idEsterilizacionProfesional) {
+    const { error } = await supabase.rpc('quitar_profesional_esterilizacion', {
+        p_id_esterilizacion_profesional: idEsterilizacionProfesional,
+    });
     raise(error);
 }
 

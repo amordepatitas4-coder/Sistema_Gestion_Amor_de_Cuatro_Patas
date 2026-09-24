@@ -285,6 +285,20 @@ export function isSameEntry(values, row) {
         .every((k) => norm(values[k]) === norm(row[k]));
 }
 
+/**
+ * Proyecto recuperable tras perder la respuesta del INSERT: mismo contenido
+ * exacto y creado después de abrir el formulario (id no conocido antes).
+ * Los nombres de proyecto pueden repetirse legítimamente: no se exige unicidad.
+ */
+export function findRecoveredProject(values, candidates, knownIds = []) {
+    const known = new Set(knownIds.map(String));
+    const fields = ['id_estado_proyecto', 'nombre', 'fecha_postulacion', 'fecha_inicio', 'fecha_fin',
+        'responsable', 'entidad_financiante', 'descripcion', 'observaciones'];
+    const matches = candidates.filter((p) => !known.has(String(p.id_proyecto))
+        && fields.every((k) => norm(values[k]) === norm(p[k])));
+    return matches.length === 1 ? matches[0] : null;   // ante ambigüedad no se adivina
+}
+
 /** Filas de profesionales que aún no están asociadas (evita duplicar relaciones). */
 export function pendingLinks(rows, existingIds) {
     const done = new Set(existingIds.map(String));

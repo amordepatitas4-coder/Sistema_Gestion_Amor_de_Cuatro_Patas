@@ -45,12 +45,12 @@ export function mountShell(root, { navItems, profile, email, onLogout }) {
                     <div class="dropdown ms-auto">
                         <button type="button" class="btn user-button dropdown-toggle" data-bs-toggle="dropdown"
                                 aria-expanded="false" id="userMenuButton">
-                            <span class="user-avatar" aria-hidden="true">${initials(profile.nombre)}</span>
-                            <span class="user-name">${profile.nombre}</span>
+                            <span class="user-avatar" aria-hidden="true" data-profile-initials>${initials(profile.nombre)}</span>
+                            <span class="user-name" data-profile-name>${profile.nombre}</span>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="userMenuButton">
                             <li class="px-3 py-2">
-                                <div class="fw-semibold">${profile.nombre}</div>
+                                <div class="fw-semibold" data-profile-name>${profile.nombre}</div>
                                 <div class="small text-secondary text-break">${email}</div>
                             </li>
                             <li><hr class="dropdown-divider"></li>
@@ -78,6 +78,14 @@ export function mountShell(root, { navItems, profile, email, onLogout }) {
     });
 
     logoutButton.addEventListener('click', () => onLogout(logoutButton));
+
+    // Nombre editado desde Configuración → Mi cuenta.
+    const onProfile = (event) => {
+        if (!root.contains(logoutButton)) { window.removeEventListener('acp:profile', onProfile); return; }
+        root.querySelectorAll('[data-profile-name]').forEach((el) => { el.textContent = event.detail.nombre; });
+        root.querySelectorAll('[data-profile-initials]').forEach((el) => { el.textContent = initials(event.detail.nombre); });
+    };
+    window.addEventListener('acp:profile', onProfile);
 
     return {
         outlet,
