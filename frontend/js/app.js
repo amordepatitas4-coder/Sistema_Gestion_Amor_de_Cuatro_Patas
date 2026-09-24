@@ -21,6 +21,8 @@ import { notFoundView, renderConfigProblem, renderSplash, renderVerifyError } fr
 import { mountShell } from './views/shell.js';
 
 const APP_NAME = 'Amor de Cuatro Patas';
+// Destino al volver desde un enlace de recuperación de contraseña.
+const RECOVERY_PATH = '/configuracion/cuenta?recuperacion=1';
 const root = document.getElementById('app');
 
 if (configProblem) {
@@ -87,6 +89,8 @@ function startApp() {
             case 'active':
                 if (state.status === 'anonymous') clearCatalogCache();
                 cleanAuthCallbackFromUrl(state);
+                // Evento nativo PASSWORD_RECOVERY (aunque supabase-js ya haya limpiado la URL).
+                if (session.consumePasswordRecovery()) history.replaceState(null, '', `#${RECOVERY_PATH}`);
                 if (!routerStarted) {
                     routerStarted = true;
                     router.start();
@@ -102,9 +106,13 @@ function startApp() {
 
     function cleanAuthCallbackFromUrl(state) {
         if (!isAuthCallback(window.location.hash)) return;
-        // Tras aceptar una invitación (o recuperar acceso) se lleva a Mi cuenta para definir la contraseña.
-        const definePassword = state.status === 'active' && ['invite', 'recovery'].includes(authCallback?.type);
-        const target = state.status !== 'active' ? LOGIN_PATH : definePassword ? '/configuracion/cuenta?bienvenida=1' : HOME_PATH;
+        // Tras aceptar una invitación o abrir un enlace de recuperación se lleva a
+        // Mi cuenta para definir la contraseña.
+        const type = state.status === 'active' ? authCallback?.type : null;
+        const target = state.status !== 'active' ? LOGIN_PATH
+            : type === 'recovery' ? RECOVERY_PATH
+                : type === 'invite' ? '/configuracion/cuenta?bienvenida=1' : HOME_PATH;
+        if (type === 'recovery') session.consumePasswordRecovery();
         history.replaceState(null, '', `#${target}`);
     }
 
@@ -152,7 +160,7 @@ function startApp() {
 
     async function showLogin(route) {
         const notice = authCallback?.error
-            ? { type: 'warning', text: 'El enlace de acceso no es válido o ya expiró. Solicita una nueva invitación o ingresa con tu correo y contraseña.' }
+            ? { type: 'warning', text: 'El enlace no es válido o ya expiró. Usa "¿Olvidaste tu contraseña?" para recibir uno nuevo, solicita una nueva invitación o ingresa con tu correo y contraseña.' }
             : session.state.notice;
         if (screen === 'login' && loginNotice === notice) return;
 

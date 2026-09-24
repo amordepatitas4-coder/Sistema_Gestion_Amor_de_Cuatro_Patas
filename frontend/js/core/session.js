@@ -15,6 +15,12 @@
 //   anonymous → sin sesión (con aviso opcional: 'inactive', 'signedOut', 'expired')
 //   active    → sesión válida y usuaria activa
 //   error     → no se pudo verificar (p. ej. sin red); la sesión se conserva
+//
+// Recuperación de contraseña (mecanismo nativo de Supabase Auth):
+//   requestPasswordReset(email, redirectTo) → resetPasswordForEmail; el
+//   correo trae un enlace de un solo uso que vuelve a la aplicación con
+//   una sesión de recuperación (evento PASSWORD_RECOVERY). La aplicación
+//   no guarda contraseñas ni tokens: los maneja supabase-js.
 // ============================================================
 
 import { AppError, MESSAGES } from './errors.js';
@@ -26,6 +32,8 @@ export function createSession(client) {
     let verifiedAt = 0;
     let inflight = null;           // { userId, promise }
     let signingIn = false;
+    let resetting = null;          // solicitud de recuperación en curso
+    let recoveryPending = false;   // volvió desde un enlace de recuperación
     const listeners = new Set();
 
     function setState(patch) {
@@ -105,6 +113,11 @@ export function createSession(client) {
                 // Durante signIn() la verificación la conduce el propio signIn.
                 if (!signingIn) verify(session);
                 break;
+            case 'PASSWORD_RECOVERY':
+                // Enlace de recuperación: sesión temporal para definir la nueva contraseña.
+                recoveryPending = true;
+                verify(session);
+                break;
             case 'TOKEN_REFRESHED':
                 // Oportunidad periódica (≈ cada hora) para detectar desactivación.
                 verify(session, { force: true });
@@ -183,6 +196,31 @@ export function createSession(client) {
         },
 
         clearNotice() { if (state.notice) setState({ notice: null }); },
+
+        /**
+         * Solicita el correo de recuperación. No revela si el correo existe:
+         * quien llama muestra siempre el mismo mensaje. Evita envíos simultáneos.
+         */
+        requestPasswordReset(email, redirectTo) {
+            if (resetting) return resetting;
+            resetting = (async () => {
+                const { error } = await client.auth.resetPasswordForEmail(email, { redirectTo });
+                if (error) throw error;
+            })().finally(() => { resetting = null; });
+            return resetting;
+        },
+
+        /** true (una sola vez) si la sesión activa proviene de un enlace de recuperación. */
+        consumePasswordRecovery() {
+            if (state.status !== 'active') {
+                // Enlace de una cuenta no habilitada: la marca no debe afectar a otra sesión.
+                if (state.status === 'anonymous') recoveryPending = false;
+                return false;
+            }
+            const pending = recoveryPending;
+            recoveryPending = false;
+            return pending;
+        },
 
         /**
          * Actualiza el nombre del perfil tras actualizar_mi_nombre, sin volver a

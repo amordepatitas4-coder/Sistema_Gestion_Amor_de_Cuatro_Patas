@@ -55,6 +55,35 @@ Authentication → URL Configuration:
 No se requieren cambios en Edge Functions (CORS ya permite cualquier origen),
 RLS, Storage ni Google Drive.
 
+## 3.1 Recuperación de contraseña ("¿Olvidaste tu contraseña?")
+
+Usa el mecanismo nativo de Supabase Auth (`resetPasswordForEmail`). La
+aplicación no guarda contraseñas ni tokens y no usa `service_role`.
+
+Flujo: login → "¿Olvidaste tu contraseña?" → correo → Supabase envía un
+enlace de un solo uso → el enlace vuelve a la URL del sitio con
+`#access_token=…&type=recovery` → la aplicación abre **Configuración → Mi
+cuenta** con el aviso "Recuperación de contraseña" → la usuaria define la
+nueva contraseña (`supabase.auth.updateUser`).
+
+Requisitos en Supabase (Authentication → URL Configuration), los realiza la
+usuaria:
+
+1. **Redirect URLs**: debe incluir exactamente la URL del sitio,
+   `https://sistema-gestion-amor-de-cuatro-patas-frontend-v1.pages.dev/`
+   (puede agregarse también con comodín `…pages.dev/**`). Si no está en la
+   lista, Supabase usa la *Site URL* en su lugar.
+2. **Site URL**: recomendable la misma URL del sitio (también es el destino
+   por defecto de invitaciones).
+3. Opcional: Authentication → Emails → *Reset Password* para traducir el
+   correo al español. Debe conservar `{{ .ConfirmationURL }}`.
+4. El envío de correos de Supabase sin SMTP propio tiene un límite bajo por
+   hora; si se excede, la pantalla lo informa ("Demasiados intentos…").
+
+Prueba real: solicitar el enlace para la cuenta de la Fundación, abrirlo
+desde el correo en el mismo navegador donde se probará, definir la nueva
+contraseña y cerrar sesión / volver a ingresar con ella.
+
 ## 4. Alternativa manual sin vincular GitHub: Netlify Drop (gratuito)
 
 Arrastrar la carpeta `frontend/` (con el `config.js` local) a

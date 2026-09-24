@@ -53,3 +53,11 @@ test('Anclas internas ("#main") no son rutas (enlace Saltar al contenido, Etapa 
     assert.equal(R.isRouteHash(''), true);
     assert.equal(R.isRouteHash('#'), true);
 });
+
+test('URL de retorno de Supabase Auth: origen + ruta, sin hash ni query (recuperación)', () => {
+    assert.equal(R.authRedirectUrl({ origin: 'https://sistema.pages.dev', pathname: '/', hash: '#/login', search: '?x=1' }), 'https://sistema.pages.dev/');
+    assert.equal(R.authRedirectUrl({ origin: 'http://127.0.0.1:5500', pathname: '/index.html' }), 'http://127.0.0.1:5500/index.html');
+    assert.ok(R.isAuthCallback('#access_token=abc&expires_in=3600&refresh_token=r&token_type=bearer&type=recovery'));
+    assert.equal(R.parseAuthCallback('#access_token=abc&type=recovery').get('type'), 'recovery');
+    assert.ok(R.isAuthCallback('#error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid'));
+});

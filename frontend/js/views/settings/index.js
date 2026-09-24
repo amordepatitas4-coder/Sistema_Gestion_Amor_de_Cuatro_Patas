@@ -60,12 +60,16 @@ export default {
 // ------------------------------------------------------------
 // Mi cuenta
 // ------------------------------------------------------------
-async function renderAccount(body, { session, query }) {
+async function renderAccount(body, { session, query, navigate }) {
     const { profile, user } = session.state;
     const fromInvite = query?.get('bienvenida') === '1';
+    const fromRecovery = query?.get('recuperacion') === '1';
     render(body, html`
         ${fromInvite ? html`<div class="alert alert-info d-flex gap-2" role="status"><i class="bi bi-envelope-open-heart" aria-hidden="true"></i>
             <div>Bienvenida al sistema. Define ahora tu contraseña para ingresar las próximas veces con tu correo.</div></div>` : ''}
+        ${fromRecovery ? html`<div class="alert alert-warning d-flex gap-2" role="status"><i class="bi bi-key" aria-hidden="true"></i>
+            <div><strong>Recuperación de contraseña.</strong> Ingresaste con el enlace enviado a tu correo. Define ahora tu nueva contraseña;
+                la anterior dejará de funcionar.</div></div>` : ''}
         <div class="row g-3">
             <section class="col-lg-5">
                 <div class="card-panel h-100">
@@ -143,6 +147,8 @@ async function renderAccount(body, { session, query }) {
     });
 
     const form = body.querySelector('#passwordForm');
+    // Tras el render, app.js lleva el foco al título; en recuperación se prefiere el campo de contraseña.
+    if (fromRecovery) setTimeout(() => form.querySelector('#pwNew')?.focus(), 0);
     bindForm(form, {
         context: 'Cambio de contraseña',
         collect: (fd) => ({ password: String(fd.get('password') ?? ''), confirm: String(fd.get('confirm') ?? '') }),
@@ -159,7 +165,8 @@ async function renderAccount(body, { session, query }) {
         },
         onSuccess: () => {
             form.reset();
-            toast('Contraseña actualizada.', 'success');
+            toast('Contraseña actualizada. Úsala la próxima vez que ingreses.', 'success');
+            if (fromRecovery) navigate('/configuracion/cuenta', {}, { replace: true });
         },
     });
 }

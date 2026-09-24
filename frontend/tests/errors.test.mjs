@@ -43,3 +43,8 @@ test('Edge Functions: detalles técnicos se reemplazan por mensajes comprensible
     const sinCuerpo = { name: 'FunctionsHttpError', context: new Response('no json', { status: 502 }) };
     assert.equal(await E.describeError(sinCuerpo), M.service);
 });
+
+test('Recuperación: límite de envío de correos y correo inválido con mensajes claros', async () => {
+    assert.equal(await describeError({ __isAuthError: true, name: 'AuthApiError', status: 429, code: 'over_email_send_rate_limit' }), MESSAGES.rateLimit);
+    assert.match(await describeError({ __isAuthError: true, name: 'AuthApiError', status: 400, code: 'email_address_invalid' }), /formato válido/);
+});

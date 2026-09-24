@@ -16,6 +16,16 @@ export function isAuthCallback(hash) {
     return AUTH_FRAGMENT.test(value);
 }
 
+/**
+ * Dirección a la que Supabase Auth devuelve a la usuaria desde un correo
+ * (recuperación / invitación): origen + ruta del sitio, sin hash ni query,
+ * para que Supabase agregue su propio fragmento (#access_token=…&type=…).
+ * Debe estar autorizada en Supabase → Authentication → URL Configuration.
+ */
+export function authRedirectUrl(loc) {
+    return `${loc.origin}${loc.pathname}`;
+}
+
 /** Lee los parámetros de una respuesta de Auth (#error_description=…). */
 export function parseAuthCallback(hash) {
     return new URLSearchParams(String(hash ?? '').replace(/^#\/?/, ''));

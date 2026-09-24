@@ -6,9 +6,10 @@ export function mockClient({
     profileError = null,
     signInError = null,
     signOutError = null,
+    resetError = null,
     delay = 5,
 } = {}) {
-    const calls = { select: 0, signIn: 0, signOut: 0 };
+    const calls = { select: 0, signIn: 0, signOut: 0, reset: [] };
     let authCallback = null;
     const session = { user: { id: 'u1', email: 'qa@example.invalid' } };
     const wait = () => new Promise((r) => setTimeout(r, delay));
@@ -32,6 +33,11 @@ export function mockClient({
                 calls.signOut++;
                 await wait();
                 return { error: signOutError };
+            },
+            async resetPasswordForEmail(email, options) {
+                calls.reset.push({ email, options });
+                await wait();
+                return { data: {}, error: resetError };
             },
             async getSession() {
                 return { data: { session } };

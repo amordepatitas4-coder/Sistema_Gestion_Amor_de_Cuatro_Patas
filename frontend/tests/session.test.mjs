@@ -87,3 +87,47 @@ test('Revalidación con fallo de red no expulsa a una usuaria activa', async (t)
     c.emit('TOKEN_REFRESHED'); await tick(60);
     assert.equal(s.state.status, 'active');
 });
+
+test('Recuperación: solicita el correo nativo de Supabase con la URL de retorno; sin envíos simultáneos', async () => {
+    const c = mockClient();
+    const s = createSession(c);
+    const p1 = s.requestPasswordReset('qa@example.invalid', 'https://sitio.pages.dev/');
+    const p2 = s.requestPasswordReset('qa@example.invalid', 'https://sitio.pages.dev/');
+    assert.equal(p1, p2);
+    await p1;
+    assert.deepEqual(c.calls.reset, [{ email: 'qa@example.invalid', options: { redirectTo: 'https://sitio.pages.dev/' } }]);
+    await s.requestPasswordReset('qa@example.invalid', 'https://sitio.pages.dev/');
+    assert.equal(c.calls.reset.length, 2);
+});
+
+test('Recuperación: un error de Supabase (p. ej. límite de envíos) se propaga', async () => {
+    const c = mockClient({ resetError: { name: 'AuthApiError', status: 429, code: 'over_email_send_rate_limit' } });
+    const s = createSession(c);
+    await assert.rejects(() => s.requestPasswordReset('qa@example.invalid', 'https://x/'), (e) => e.code === 'over_email_send_rate_limit');
+});
+
+test('Evento PASSWORD_RECOVERY → sesión activa y aviso de recuperación una sola vez', async () => {
+    const c = mockClient();
+    const s = createSession(c);
+    s.start();
+    c.emit('PASSWORD_RECOVERY');
+    await tick(60);
+    assert.equal(s.state.status, 'active');
+    assert.equal(s.consumePasswordRecovery(), true);
+    assert.equal(s.consumePasswordRecovery(), false);
+});
+
+test('Recuperación de una cuenta inactiva: no queda marca pendiente para otra sesión', async () => {
+    const c = mockClient({ profile: null });
+    const s = createSession(c);
+    s.start();
+    c.emit('PASSWORD_RECOVERY');
+    await tick(60);
+    assert.equal(s.state.status, 'anonymous');
+    assert.equal(s.consumePasswordRecovery(), false);
+    c.profile = { id_usuario: 'u1', nombre: 'Usuaria QA', activo: true };
+    c.emit('SIGNED_IN');
+    await tick(60);
+    assert.equal(s.state.status, 'active');
+    assert.equal(s.consumePasswordRecovery(), false);
+});

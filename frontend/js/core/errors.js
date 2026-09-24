@@ -89,7 +89,8 @@ function describeAuthError(err) {
     if (code === 'invalid_credentials' || /invalid login credentials/i.test(err?.message ?? '')) {
         return MESSAGES.invalidCredentials;
     }
-    if (err?.status === 429 || code === 'over_request_rate_limit') return MESSAGES.rateLimit;
+    if (err?.status === 429 || code === 'over_request_rate_limit' || code === 'over_email_send_rate_limit') return MESSAGES.rateLimit;
+    if (code === 'email_address_invalid') return 'El correo electrónico no tiene un formato válido.';
     if (code === 'user_banned') return MESSAGES.inactive;
     if (code === 'email_not_confirmed') return 'El correo de la cuenta aún no ha sido confirmado.';
     if (code === 'session_not_found' || code === 'refresh_token_not_found' || err?.status === 401) {
