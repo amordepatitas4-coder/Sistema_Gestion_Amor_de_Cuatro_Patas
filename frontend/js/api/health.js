@@ -46,11 +46,11 @@ export async function createAttention(values) {
 
 /** Próximos controles desde hoy (Dashboard). Solo animales con registro activo. */
 export async function upcomingControls(fromISO, limit = 8) {
+    // !inner convierte el embebido en un JOIN: así el filtro animal.activo descarta atenciones de animales inactivos.
     const { data, error } = await supabase
         .from('atencion_sanitaria')
         .select(`id_atencion_sanitaria, proximo_control, fecha,
             tipo:tipo_atencion_sanitaria!fk_atencion_sanitaria_tipo(nombre),
-            // !inner convierte el embebido en un JOIN: así el filtro animal.activo descarta atenciones de animales inactivos.
             animal:animal!fk_atencion_sanitaria_animal!inner(id_animal, nombre, activo)`)
         .gte('proximo_control', fromISO)
         .eq('animal.activo', true)

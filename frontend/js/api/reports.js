@@ -43,12 +43,12 @@ export async function fetchAnimalsReport(f) {
 }
 
 export async function fetchAdoptionsReport(f) {
+    // seguimientos(count) pide a PostgREST solo la cantidad de seguimientos, sin descargar las filas.
     let q = supabase.from('adopcion').select(`
         id_adopcion, fecha_adopcion, fecha_finalizacion, motivo_finalizacion, id_estado_adopcion,
         estado:estado_adopcion!fk_adopcion_estado(nombre),
         animal:animal!fk_adopcion_animal(id_animal, nombre, id_especie, sexo, especie:especie!fk_animal_especie(nombre)),
         adoptante:adoptante!fk_adopcion_adoptante(nombre),
-        // (count) pide a PostgREST solo la cantidad de seguimientos, sin descargar las filas.
         seguimientos:seguimiento!fk_seguimiento_adopcion(count)`);
     q = dateRange(q, 'fecha_adopcion', f);
     if (f.estado_adopcion) q = q.eq('id_estado_adopcion', f.estado_adopcion);

@@ -1416,12 +1416,22 @@ a.kpi-card:hover {
     .table-responsive > .table:not(.table-keep) > tbody > tr > *:last-child:not(:first-child) { justify-content: flex-end; }
     .table-responsive > .table:not(.table-keep) > tbody > tr > * > ul { text-align: right; }
     .table-responsive > .table:not(.table-keep) > tbody > tr > * .btn { white-space: nowrap; }
+    /* Celdas con botones: los botones pueden pasar a otra línea en vez de desbordar la tarjeta. */
+    .table-responsive > .table:not(.table-keep) > tbody > tr > *:has(> .btn) {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: .4rem;
+    }
+    /* Con dos o más botones, la etiqueta ocupa su propia línea y los botones quedan debajo. */
+    .table-responsive > .table:not(.table-keep) > tbody > tr > *:has(> .btn ~ .btn)::before { flex-basis: 100%; }
 }
 
 /* Informes en celular: tarjetas de tipo compactas en dos columnas. */
 @media (max-width: 575.98px) {
     .report-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; }
-    .report-card { padding: .6rem .65rem; gap: .5rem; }
+    /* Ícono sobre el texto: deja todo el ancho de la tarjeta para nombres largos como "Esterilizaciones". */
+    .report-card { flex-direction: column; padding: .6rem .65rem; gap: .4rem; }
+    .report-card-text { min-width: 0; max-width: 100%; font-size: .95rem; overflow-wrap: anywhere; }
     .report-card-icon { width: 32px; height: 32px; font-size: 1rem; }
     .report-card-text span { display: none; }
     .report-card-check { top: .35rem; right: .4rem; }
