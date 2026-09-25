@@ -1,92 +1,86 @@
-# Sistema Web de Gestión de Rescate y Adopción Animal
+# Sistema Fundación Amor de Cuatro Patas
 
-**Fundación Amor de Cuatro Patas** · Proyecto de Arquitectura de Software en modalidad Aprendizaje + Servicio
-
-Sistema web interno que centraliza la información de los animales rescatados por la Fundación y de sus proyectos de esterilización masiva, conservando la trazabilidad de cada caso desde el rescate hasta la adopción y el seguimiento posterior.
+Sistema web de gestión de rescate y adopción animal, desarrollado para la **Fundación Amor de Cuatro Patas** como proyecto de Arquitectura de Software en modalidad Aprendizaje + Servicio.
 
 **Sistema desplegado:** <https://sistema-gestion-amor-de-cuatro-patas-frontend-v1.pages.dev/> (acceso solo para usuarias autorizadas de la Fundación).
 
-## Contexto y propósito
+## El proyecto en pocas palabras
 
-La Fundación registraba su información en teléfonos, correos, formularios físicos y redes sociales, lo que dificultaba consultar la situación de cada animal, conservar su historia, controlar gastos y preparar informes. El sistema reúne esa información en un solo lugar, aplica las reglas de sus procesos y protege los datos personales de adoptantes y hogares temporales.
+La Fundación registraba la información de sus animales en teléfonos, correos, formularios físicos y redes sociales. Este sistema la reúne en un solo lugar: cada animal tiene una ficha con su estado, salud, hogares temporales, adopción, gastos, archivos e historial completo, y nada se borra, para conservar la trazabilidad de cada caso. Además, gestiona de forma independiente los proyectos de esterilización masiva en los que participa la Fundación.
 
-## Funcionalidades principales
+## Funcionalidades
 
-- **Panel principal** con indicadores que llevan a los animales filtrados.
-- **Animales:** ficha integral con fotografía, estado e historial, salud, hogares temporales, adopción, gastos, archivos y difusión.
-- **Hogares temporales, adopciones, seguimientos y devoluciones**, conservando toda la historia.
-- **Gastos** generales o asignados total o parcialmente a uno o varios animales.
-- **Proyectos de esterilización:** nómina de animales, profesionales participantes y documentación.
-- **Documentos** almacenados en Google Drive, con un buscador transversal.
-- **Informes** configurables con exportación a Excel (CSV) e impresión.
-- **Difusión:** texto base y prompt editable para herramientas externas, sin integración con IA.
-- **Configuración:** cuenta, usuarias por invitación y catálogos.
-
-## Arquitectura
-
-Arquitectura **Cliente-Servidor** organizada en **tres capas**:
-
-```
-Navegador ── SPA (HTML, CSS, JavaScript) ── presentación y lógica de interfaz
-    │  HTTPS + JWT
-Supabase ── Auth · API de datos · PostgreSQL (RLS + RPC) · Storage · Edge Functions
-    │  OAuth 2.0
-Google Drive ── carpetas y documentos de la Fundación
-```
-
-Las reglas de negocio que involucran varias tablas se implementan como funciones transaccionales en PostgreSQL (RPC), y las operaciones que requieren credenciales se ejecutan en Edge Functions, de modo que el navegador nunca maneja secretos.
-
-## Tecnologías
-
-| Capa | Tecnologías |
+| Módulo | Qué permite |
 |---|---|
-| Frontend | HTML5, CSS3, JavaScript (módulos ES), Bootstrap 5.3, Bootstrap Icons, supabase-js |
-| Backend | Supabase: PostgreSQL, Auth, API de datos, Storage y Edge Functions (Deno/TypeScript) |
-| Archivos | Google Drive API con OAuth 2.0 |
-| Despliegue | Cloudflare Pages |
-| Pruebas | `node:test` y scripts SQL de verificación |
+| Panel principal | Indicadores que llevan a los animales filtrados, próximos controles y hogares ocupados. |
+| Animales | Ficha integral: resumen, salud, hogares, adopción, gastos, archivos, historial y difusión. |
+| Hogares temporales | Hogares, animales alojados y cambios de hogar con su historial. |
+| Adopciones | Adoptantes, adopciones, seguimientos y devoluciones. |
+| Gastos | Gastos generales o asignados a uno o varios animales. |
+| Proyectos de esterilización | Nómina de animales, profesionales participantes y documentación. |
+| Documentos | Buscador de todos los archivos guardados en Google Drive. |
+| Informes | Seis informes con filtros, exportación a Excel (CSV) e impresión. |
+| Configuración | Cuenta, usuarias (por invitación) y catálogos. |
+
+## Arquitectura y tecnologías
+
+Arquitectura **Cliente-Servidor** organizada en **tres capas** (presentación, lógica de negocio y acceso a datos).
+
+```
+Navegador  ── aplicación web: HTML, CSS (Bootstrap) y JavaScript
+   │ HTTPS
+Supabase   ── autenticación · base de datos PostgreSQL · almacenamiento · funciones del servidor
+   │ OAuth 2.0
+Google Drive ── documentos de la Fundación
+```
+
+- **Frontend:** HTML5, CSS3, JavaScript (módulos ES), Bootstrap 5.3 y supabase-js. Sin framework ni compilación.
+- **Backend:** Supabase (PostgreSQL, Auth, Storage y Edge Functions en Deno/TypeScript).
+- **Despliegue:** Cloudflare Pages.
+- **Pruebas:** `node:test` y scripts SQL de verificación.
+
+Las reglas de negocio que modifican varias tablas se ejecutan como funciones transaccionales en la base de datos (RPC), y las operaciones que requieren credenciales se ejecutan en el servidor, por lo que el navegador nunca maneja secretos.
 
 ## Estructura del repositorio
 
 ```
-docs/        Documentación académica y técnica
-frontend/    Aplicación web (sitio estático) y sus pruebas
-supabase/    Esquema de base de datos, seguridad, Edge Functions
+docs/        Documentación del proyecto (Ficha Maestra, pruebas y despliegue)
+frontend/    Aplicación web y sus pruebas automáticas
+supabase/    Base de datos, seguridad y funciones del servidor
 ```
+
+## Cómo guiarse
+
+| Si quieres conocer… | Revisa |
+|---|---|
+| El proyecto completo (problema, requerimientos, arquitectura, modelo de datos, seguridad, módulos y pruebas) | `docs/Ficha_Maestra_Sistema_Fundacion_Amor_de_Cuatro_Patas` (versión `.md` para leer aquí y versión `.docx`) |
+| El código de la aplicación web | `frontend/README.md`; se recomienda comenzar por `frontend/js/app.js` y luego un módulo completo, como `frontend/js/views/animals/` |
+| La base de datos y la seguridad | `supabase/README.md` y `supabase/schema.sql` |
+| La integración con Google Drive | `supabase/functions/` |
+| Cómo se probó el sistema | `docs/PRUEBAS_Y_VALIDACION.md` |
+| Cómo instalarlo y publicarlo | `docs/DESPLIEGUE.md` |
 
 ## Seguridad
 
-- Autenticación con Supabase Auth; cuentas solo por invitación y verificación de que la usuaria esté activa.
-- Row Level Security en todas las tablas; el rol anónimo no accede a datos.
-- Privilegios mínimos: el navegador solo escribe las tablas y columnas necesarias; los procesos se ejecutan mediante RPC.
-- Sin eliminación física de registros históricos.
-- Secretos únicamente en el servidor; el frontend solo usa la clave pública.
-- Archivos privados: bucket de Storage con URLs firmadas y documentos de Drive sin enlaces públicos.
+- Acceso con Supabase Auth; las cuentas se crean solo por invitación y deben estar activas.
+- Row Level Security en todas las tablas y privilegios mínimos por tabla y columna.
+- Sin eliminación de registros históricos.
+- Credenciales y claves de servicio solo en el servidor; archivos privados en Storage y en Drive.
 
-## Cómo recorrer el proyecto
-
-1. **`docs/FICHA_MAESTRA_v8.md`** (también en `.docx`): documento principal con problema, requerimientos, reglas de negocio, arquitectura, modelo de datos, seguridad, módulos, pruebas y limitaciones.
-2. **`supabase/README.md`** y **`supabase/schema.sql`**: modelo de datos, RPC y políticas de seguridad.
-3. **`frontend/README.md`**: organización del código del cliente. Un buen punto de partida es `frontend/js/app.js`, luego `js/core/session.js` y un módulo completo como `js/views/animals/`.
-4. **`supabase/functions/`**: integración con Google Drive e invitación de usuarias.
-5. **`docs/PRUEBAS_Y_VALIDACION.md`**: estrategia de pruebas y resultados.
-6. **`docs/DESPLIEGUE.md`**: instalación y publicación del sistema.
-
-## Ejecutar localmente
+## Ejecución local
 
 ```
 cd frontend
-cp js/config.example.js js/config.js   # completar URL y clave pública de Supabase
+cp js/config.example.js js/config.js     # completar la URL y la clave pública de Supabase
 python -m http.server 5500 --bind 127.0.0.1
 ```
 
-Pruebas automáticas (Node.js 20 o superior):
+Pruebas automáticas (Node.js 20 o superior), desde `frontend/`:
 
 ```
-cd frontend
 node --test "tests/*.test.mjs"
 ```
 
-## Estado del proyecto
+## Estado
 
-MVP implementado, desplegado y validado. Quedan registrados como trabajo pendiente los últimos requerimientos solicitados por la Fundación (estado de esterilización de los animales, actualización de la identidad visual e importación de la ficha del adoptante). Ver la sección 23 de la Ficha Maestra.
+MVP implementado, desplegado y validado. Quedan pendientes los últimos requerimientos solicitados por la Fundación: estado de esterilización de los animales, actualización de la identidad visual e importación de la ficha del adoptante (sección 23 de la Ficha Maestra).

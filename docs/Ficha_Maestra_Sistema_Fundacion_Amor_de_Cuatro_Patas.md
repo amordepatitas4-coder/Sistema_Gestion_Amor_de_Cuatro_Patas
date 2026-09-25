@@ -389,8 +389,6 @@ Los catálogos se administran desde Configuración. Los valores que usan los pro
 | RN-64 | Cada usuaria puede modificar solo su propio nombre; el correo y la contraseña se administran en Supabase Auth. | RPC `actualizar_mi_nombre`; Auth. |
 | RN-65 | Desde el navegador solo se escriben directamente las tablas y columnas necesarias; los procesos solo se ejecutan mediante RPC. | Privilegios por tabla y columna (script de seguridad 09). |
 
-RN-63 a RN-65 se incorporaron en esta versión como resultado del desarrollo y de la revisión de seguridad.
-
 ## 15. Autenticación y gestión de usuarias
 
 - **Identidad.** Supabase Auth es la única fuente de identidad y credenciales. La tabla `public.usuario` guarda solo el perfil necesario para autorizar (nombre, activo, fecha de registro); el correo se lee desde Auth.
@@ -551,25 +549,3 @@ Con posterioridad a la implementación, la Fundación solicitó tres mejoras. A 
 | Estado de esterilización de los animales | Pendiente. Requiere definir con la Fundación cómo se registra y si modifica el modelo de datos. |
 | Actualización de la identidad visual (logo y colores oficiales) | Pendiente. La interfaz ya dispone de un espacio reemplazable para el logo oficial. |
 | Importación de la ficha del adoptante | Pendiente. Requiere definir el formato de origen de la ficha. |
-
-## 24. Limitaciones y trabajo futuro
-
-- Algunos procesos de varios pasos no tienen una única transacción en el backend; la interfaz informa resultados parciales y evita duplicados, pero una RPC transaccional por proceso sería más robusta.
-- El documento de esterilización no puede reemplazarse desde la interfaz (decisión del MVP).
-- La exportación se realiza en CSV compatible con Excel, no en formato `.xlsx`.
-- No existen roles diferenciados: todas las usuarias activas tienen los mismos permisos.
-- La configuración OAuth de Google debe revisarse antes de un uso productivo prolongado, ya que las aplicaciones en modo de prueba tienen restricciones de vigencia de tokens.
-- El envío de correos de Supabase sin servidor SMTP propio tiene un límite bajo por hora.
-- Mejoras posibles: los tres requerimientos pendientes, portal público de adopción, capacidad de hogares si se valida, roles diferenciados y RPC transaccionales para los procesos de varios pasos.
-
-## 25. Control de versiones de la ficha
-
-| Versión | Fecha | Cambios principales |
-|---|---|---|
-| v1–v2 | Septiembre 2026 | Levantamiento, requerimientos, reglas de negocio, BPMN, arquitectura y DER. |
-| v3 | 21/09/2026 | Terminología definitiva del módulo de esterilización; secuencia de modelo relacional, diseño físico e implementación. |
-| v4 | 22/09/2026 | Backend v1.0: catálogos, RLS, Auth, RPC, Storage, OAuth con Google Drive, Edge Functions y gestión de usuarias. |
-| v5 | 22/09/2026 | Estado real tras el backend v1.0; reorganización del frontend y mapa funcional. |
-| v6 | 22/09/2026 | Microchip y Registro Nacional en ambos módulos (backend v1.1). |
-| v7 | 22/09/2026 | Especificación consolidada del frontend y criterios de aceptación. |
-| v8 | 25/09/2026 | Versión final del MVP: documenta la implementación real (frontend, seguridad, refuerzos del backend, despliegue y pruebas), actualiza reglas y requerimientos (RF-20 a RF-23, RN-61, RN-63 a RN-65), incorpora las decisiones de arquitectura y registra el estado de los requerimientos recientes de la Fundación. |
