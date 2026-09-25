@@ -44,6 +44,7 @@ export default {
             return;
         }
 
+        // Agrupa las permanencias activas por hogar para mostrar qué animales aloja cada uno.
         const byHome = new Map();
         stays.forEach((s) => {
             if (!byHome.has(s.id_hogar)) byHome.set(s.id_hogar, []);
@@ -87,6 +88,7 @@ export default {
         q.addEventListener('change', () => navigate('/hogares', { ...(showInactive ? { inactivos: 1 } : {}), ...(q.value.trim() ? { q: q.value.trim() } : {}) }, { replace: true }));
         body.querySelector('#homeFilters').addEventListener('submit', (e) => { e.preventDefault(); q.dispatchEvent(new Event('change')); });
 
+        // Delegación de eventos: un solo listener atiende los botones de todas las tarjetas (data-action).
         body.addEventListener('click', async (event) => {
             const btn = event.target.closest('[data-action]');
             if (!btn) return;
@@ -101,6 +103,7 @@ export default {
                 try {
                     const animals = await listAnimals();
                     const withStay = new Set(stays.map((s) => s.id_animal));
+                    // Solo se ofrecen animales que pueden ingresar a un hogar (sin permanencia activa y no adoptados); la RPC lo vuelve a validar.
                     const eligible = animals.filter((a) => canEnterHome(a.estado?.nombre_estado, withStay.has(a.id_animal)));
                     restore();
                     openAssignAnimal({ home, animals: eligible, onSaved: reload });

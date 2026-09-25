@@ -95,6 +95,7 @@ export async function getAdoption(id) {
 }
 
 export async function registerAdoption({ idAnimal, idAdoptante, fecha, observaciones }) {
+    // La RPC rechaza animales inactivos o con adopción activa, cierra su permanencia en hogar y lo deja en estado Adoptado.
     const { data, error } = await supabase.rpc('registrar_adopcion', {
         p_id_animal: idAnimal,
         p_id_adoptante: idAdoptante,
@@ -106,6 +107,7 @@ export async function registerAdoption({ idAnimal, idAdoptante, fecha, observaci
 }
 
 export async function registerReturn({ idAdopcion, fecha, idNuevoEstado, motivo, observaciones }) {
+    // La devolución finaliza la adopción (se conserva como historial) y devuelve el animal al estado elegido.
     const { error } = await supabase.rpc('registrar_devolucion', {
         p_id_adopcion: idAdopcion,
         p_fecha_devolucion: fecha,
@@ -131,6 +133,7 @@ export async function listFollowUps(idAdopcion) {
 }
 
 export async function registerFollowUp({ idAdopcion, fecha, medio, situacion, observaciones }) {
+    // La RPC verifica usuaria activa y que la fecha no sea anterior a la adopción.
     const { data, error } = await supabase.rpc('registrar_seguimiento', {
         p_id_adopcion: idAdopcion,
         p_fecha: fecha,

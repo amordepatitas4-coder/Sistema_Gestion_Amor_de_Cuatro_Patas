@@ -40,6 +40,7 @@ const fold = (text) => String(text ?? '')
 /** Aplica los filtros sobre la lista cargada. adoptadoId: id_estado de "Adoptado". */
 export function applyFilters(list, filters, { adoptadoId = null } = {}) {
     const term = fold(filters.q).trim();
+    // La búsqueda también acepta el microchip: se comparan solo los dígitos escritos.
     const digits = term.replace(/\D/g, '');
     return list.filter((a) => {
         if (term) {
@@ -56,6 +57,7 @@ export function applyFilters(list, filters, { adoptadoId = null } = {}) {
         }
         if (filters.especie && String(a.id_especie) !== filters.especie) return false;
         if (filters.sexo && a.sexo !== filters.sexo) return false;
+        // Las fechas "YYYY-MM-DD" se pueden comparar como texto: el orden alfabético coincide con el cronológico.
         if (filters.desde && (!a.fecha_rescate || a.fecha_rescate < filters.desde)) return false;
         if (filters.hasta && (!a.fecha_rescate || a.fecha_rescate > filters.hasta)) return false;
         return true;
@@ -70,6 +72,7 @@ export const SEXOS = ['Macho', 'Hembra', 'Desconocido'];
 export const TAMANOS = ['Pequeño', 'Mediano', 'Grande'];
 export const REGISTRO_NACIONAL = ['Inscrito', 'No inscrito', 'No verificado'];
 
+// Convierte el valor de un <select> en id numérico; cualquier otro valor se trata como vacío.
 const toId = (value) => {
     const text = String(value ?? '').trim();
     return /^\d+$/.test(text) ? Number(text) : null;
@@ -84,6 +87,7 @@ export function collectAnimal(formData) {
         id_especie: toId(formData.get('id_especie')),
         id_rango_etario: toId(formData.get('id_rango_etario')),
         sexo: text('sexo'),
+        // El input se llama "tamano" (sin ñ) pero la columna real de la BD es "tamaño".
         tamaño: text('tamano'),
         fecha_nacimiento: text('fecha_nacimiento'),
         fecha_rescate: text('fecha_rescate'),
@@ -92,6 +96,7 @@ export function collectAnimal(formData) {
         personalidad: text('personalidad'),
         historia_rescate: text('historia_rescate'),
         observaciones: text('observaciones'),
+        // Microchip vacío se envía como null: la restricción única del backend admite varios null pero no varios "".
         microchip: chip === '' ? null : chip,
         estado_registro_nacional: text('estado_registro_nacional'),
     };
@@ -173,6 +178,7 @@ export function animalName(animal) {
 export function controlStatus(proximoControl, today = todayISO()) {
     if (!proximoControl) return null;
     if (proximoControl < today) return 'pasado';
+    // Controles dentro de los próximos 7 días se destacan como "próximos".
     const diffDays = Math.round((parseISODate(proximoControl) - parseISODate(today)) / 86400000);
     return diffDays <= 7 ? 'proximo' : 'programado';
 }

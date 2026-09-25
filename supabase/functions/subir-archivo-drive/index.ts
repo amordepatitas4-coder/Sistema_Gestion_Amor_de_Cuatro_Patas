@@ -22,6 +22,7 @@ function respuesta(contenido, status = 200) {
 // ============================================================
 // ESCAPAR VALORES PARA CONSULTAS DE GOOGLE DRIVE
 // ============================================================
+// Escapa \ y comillas simples antes de usar el valor en la consulta "q" de la API de Drive (evita búsquedas mal formadas o inyectadas).
 function escaparDrive(valor) {
   return valor.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
 }
@@ -29,6 +30,7 @@ function escaparDrive(valor) {
 // OBTENER ACCESS TOKEN DE GOOGLE
 // ============================================================
 async function obtenerGoogleAccessToken(clientId, clientSecret, refreshToken) {
+  // OAuth 2.0: el refresh token guardado como secreto se canjea por un access token de corta duración para llamar a Drive.
   const response = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
     headers: {
@@ -276,6 +278,7 @@ Deno.serve(async (req)=>{
     // ========================================================
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
+    // Secretos: existen solo en el servidor (variables de la Edge Function) y nunca se envían al navegador.
     const supabaseServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const googleClientId = Deno.env.get("GOOGLE_CLIENT_ID");
     const googleClientSecret = Deno.env.get("GOOGLE_CLIENT_SECRET");
@@ -294,6 +297,7 @@ Deno.serve(async (req)=>{
       }, 401);
     }
     const token = authHeader.replace(/^Bearer\s+/i, "");
+    // Cliente "como la usuaria": reenvía su JWT, por lo que sus consultas respetan RLS.
     const supabaseUsuario = createClient(supabaseUrl, supabaseAnonKey, {
       global: {
         headers: {
@@ -301,6 +305,7 @@ Deno.serve(async (req)=>{
         }
       }
     });
+    // Valida el JWT contra Supabase Auth (firma y vigencia); sin sesión válida se responde 401.
     const { data: { user }, error: authError } = await supabaseUsuario.auth.getUser(token);
     if (authError || !user) {
       return respuesta({

@@ -14,6 +14,7 @@ import { emptyState, errorState, html, loadingState, options, pageHeader, render
 import { openCreateProject } from './forms.js';
 import { projectPeriod } from './logic.js';
 
+// Normaliza texto para buscar sin distinguir tildes ni mayúsculas ("Nuñoa" = "nunoa").
 const plain = (t) => String(t ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
 export default {
@@ -46,6 +47,7 @@ export default {
 
         const newBtn = outlet.querySelector('#btnNewProject');
         newBtn.disabled = false;
+        // knownIds permite reconocer el proyecto recién creado si la respuesta del servidor se pierde (evita duplicados).
         const openNew = () => openCreateProject({ estados, navigate, onCreated: reload, knownIds: projects.map((p) => p.id_proyecto) });
         newBtn.addEventListener('click', openNew);
 
@@ -71,6 +73,7 @@ export default {
         const results = body.querySelector('#projResults');
         const clearBox = body.querySelector('#clearProjBox');
 
+        // Filtrado en el navegador sobre la lista ya cargada: la búsqueda responde al instante mientras se escribe.
         const draw = () => {
             const term = plain(f.q);
             const visible = projects.filter((p) => (!f.estado || String(p.id_estado_proyecto) === f.estado)

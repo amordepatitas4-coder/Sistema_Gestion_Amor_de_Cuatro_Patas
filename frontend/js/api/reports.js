@@ -10,12 +10,14 @@
 
 import { supabase } from '../supabase.js';
 
+// Límite amplio para informes: la Fundación maneja volúmenes pequeños y así se evita paginar.
 const LIMIT = 5000;
 
 function raise(error) {
     if (error) throw error;
 }
 
+// Aplica el rango "desde/hasta" solo con los extremos que la usuaria completó.
 function dateRange(q, column, f) {
     let out = q;
     if (f.desde) out = out.gte(column, f.desde);
@@ -46,6 +48,7 @@ export async function fetchAdoptionsReport(f) {
         estado:estado_adopcion!fk_adopcion_estado(nombre),
         animal:animal!fk_adopcion_animal(id_animal, nombre, id_especie, sexo, especie:especie!fk_animal_especie(nombre)),
         adoptante:adoptante!fk_adopcion_adoptante(nombre),
+        // (count) pide a PostgREST solo la cantidad de seguimientos, sin descargar las filas.
         seguimientos:seguimiento!fk_seguimiento_adopcion(count)`);
     q = dateRange(q, 'fecha_adopcion', f);
     if (f.estado_adopcion) q = q.eq('id_estado_adopcion', f.estado_adopcion);
@@ -76,6 +79,7 @@ export async function fetchStaysReport(f) {
     q = dateRange(q, 'fecha_ingreso', f);
     if (f.hogar) q = q.eq('id_hogar', f.hogar);
     if (f.animal) q = q.eq('id_animal', f.animal);
+    // Una permanencia sin fecha de salida es la estadía vigente del animal en ese hogar.
     if (f.situacion === 'activa') q = q.is('fecha_salida', null);
     if (f.situacion === 'finalizada') q = q.not('fecha_salida', 'is', null);
     const { data, error } = await q.order('fecha_ingreso', { ascending: false }).limit(LIMIT);

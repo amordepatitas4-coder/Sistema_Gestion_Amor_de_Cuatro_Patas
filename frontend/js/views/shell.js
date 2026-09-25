@@ -88,6 +88,7 @@ export function mountShell(root, { navItems, profile, email, onLogout }) {
 
     // Nombre editado desde Configuración → Mi cuenta.
     const onProfile = (event) => {
+        // Si el shell ya no está en pantalla (se cerró sesión), el listener se elimina a sí mismo.
         if (!root.contains(logoutButton)) { window.removeEventListener('acp:profile', onProfile); return; }
         root.querySelectorAll('[data-profile-name]').forEach((el) => { el.textContent = event.detail.nombre; });
         root.querySelectorAll('[data-profile-initials]').forEach((el) => { el.textContent = initials(event.detail.nombre); });
@@ -101,6 +102,7 @@ export function mountShell(root, { navItems, profile, email, onLogout }) {
             let label = '';
             root.querySelectorAll('[data-nav]').forEach((link) => {
                 const base = link.dataset.nav;
+                // Las subrutas (p. ej. /animales/12) mantienen marcada la opción de su módulo.
                 const active = path === base || path.startsWith(`${base}/`);
                 link.classList.toggle('active', active);
                 if (active) {

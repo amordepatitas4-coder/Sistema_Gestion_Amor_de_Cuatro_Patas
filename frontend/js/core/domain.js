@@ -3,6 +3,7 @@
 // ============================================================
 
 /** Nombres formales de ESTADO con significado de proceso en las RPC. */
+// Se comparan por nombre porque los id dependen de los datos cargados en cada instalación.
 export const ESTADOS = {
     RESCATADO: 'Rescatado',
     EN_TRATAMIENTO: 'En tratamiento',

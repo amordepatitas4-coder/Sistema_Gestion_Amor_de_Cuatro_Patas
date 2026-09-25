@@ -12,8 +12,10 @@ import { canEnterHome } from '../logic.js';
 
 export async function renderHomesTab(container, { animal, catalogs, reloadAll }) {
     const [stays, homes] = await Promise.all([listStaysByAnimal(animal.id_animal), listHomes()]);
+    // La permanencia sin fecha de salida es el hogar actual del animal.
     const current = stays.find((s) => !s.fecha_salida) ?? null;
     const estadoActual = animal.estado?.nombre_estado;
+    // Caso anómalo (p. ej. datos antiguos): se avisa en vez de ocultarlo, para que la usuaria lo regularice.
     const inconsistent = current && estadoActual !== ESTADOS.EN_HOGAR;
 
     render(container, html`

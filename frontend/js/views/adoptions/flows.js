@@ -27,6 +27,7 @@ const actions = (label, icon, cls = 'btn-primary') => html`
         <button type="submit" class="btn ${cls}"><i class="bi ${icon}" aria-hidden="true"></i> ${label}</button>
     </div>`;
 
+// Reutiliza el modal abierto para pasar de un formulario a otro (adopción → nuevo adoptante) sin anidar modales.
 function reuse(modal, title, body) {
     modal.element.querySelector('.modal-title').textContent = title;
     render(modal.body, body);
@@ -90,6 +91,7 @@ export function openAdopterForm({ adopter = null, existing = [], onSaved, modal 
             m.setBusy(true);
             try {
                 const values = { ...v };
+                // rutValido es un dato auxiliar de la validación; no es una columna de la tabla adoptante.
                 delete values.rutValido;
                 return adopter ? await updateAdopter(adopter.id_adoptante, values) : await createAdopter(values);
             } finally { m.setBusy(false); }
@@ -158,18 +160,21 @@ export function openAdoptionForm({ animal = null, animals = [], adopters, onSave
         if (!idAnimal) return;
         try {
             const stay = await getActiveStay(idAnimal);
+            // Se descarta la respuesta si la usuaria ya eligió otro animal mientras se consultaba.
             if (stay && String(form.animal.value) === String(idAnimal)) {
                 fechaIngresoHogar = stay.fecha_ingreso;
                 form.fecha.min = stay.fecha_ingreso;
                 stayInfo.textContent = `Está en el hogar temporal de ${stay.hogar?.nombre_responsable ?? '—'} desde ${formatDate(stay.fecha_ingreso)}; la adopción finalizará esa permanencia.`;
             }
         } catch (err) {
+            // Consulta solo informativa: si falla, el formulario sigue disponible y la RPC valida las fechas igual.
             console.warn('[Adopción] No fue posible consultar el hogar activo', err);
         }
     };
     if (!animal) form.animal.addEventListener('change', () => loadStay(form.animal.value));
     loadStay(animal?.id_animal ?? form.animal.value);
 
+    // Crear un adoptante sin perder lo ya escrito: se guardan los valores y se restauran al volver.
     m.body.querySelector('#aoNuevoAdoptante').addEventListener('click', () => {
         const kept = {
             idAnimal: form.animal.value,
@@ -196,6 +201,7 @@ export function openAdoptionForm({ animal = null, animals = [], adopters, onSave
         validate: (v) => validateAdoption(v, { fechaIngresoHogar }),
         submit: async (v) => {
             m.setBusy(true);
+            // La RPC hace todo en una transacción: adopción, cierre de hogar y cambio de estado del animal.
             try { return await registerAdoption(v); } finally { m.setBusy(false); }
         },
         onSuccess: async (idAdopcion) => {
@@ -313,6 +319,7 @@ export function openReturnForm({ adoption, estados, onSaved }) {
         validate: (v) => validateReturn(v, adoption.fecha_adopcion),
         submit: async (v) => {
             modal.setBusy(true);
+            // La adopción no se borra: queda como "Devuelto" en el historial.
             try { await registerReturn(v); } finally { modal.setBusy(false); }
         },
         onSuccess: async () => {

@@ -9,6 +9,7 @@
 
 import { supabase } from '../supabase.js';
 
+// Embebidos de PostgREST: el alias "nombre:tabla!fk(...)" indica qué clave foránea seguir cuando hay más de una relación posible.
 const DOCUMENT_SELECT = `
     id_archivo, id_categoria_archivo, nombre_archivo, nombre_original, mime_type,
     fecha_documento, fecha_carga, descripcion,
@@ -32,6 +33,7 @@ export async function listDocuments() {
         .from('archivo')
         .select(DOCUMENT_SELECT)
         .order('fecha_carga', { ascending: false })
+        // Tope de seguridad: el filtrado del buscador se hace en el navegador sobre este resultado.
         .limit(2000);
     if (error) throw error;
     return data;

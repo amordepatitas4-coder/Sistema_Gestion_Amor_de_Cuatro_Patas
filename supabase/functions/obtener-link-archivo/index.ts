@@ -34,6 +34,7 @@ async function obtenerGoogleAccessToken() {
   parametros.set("client_secret", clientSecret);
   parametros.set("refresh_token", refreshToken);
   parametros.set("grant_type", "refresh_token");
+  // OAuth 2.0: el refresh token guardado como secreto se canjea por un access token de corta duración para llamar a Drive.
   const respuestaGoogle = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
     headers: {
@@ -75,6 +76,7 @@ Deno.serve(async (req)=>{
     // ========================================================
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
+    // Secretos: existen solo en el servidor (variables de la Edge Function) y nunca se envían al navegador.
     const supabaseServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceRoleKey) {
       throw new Error("Faltan variables de entorno de Supabase.");

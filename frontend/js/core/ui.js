@@ -10,6 +10,7 @@
 // Para insertar HTML ya construido usar raw() o anidar html``.
 // ------------------------------------------------------------
 
+// Marca el HTML que ya fue escapado, para no escaparlo dos veces al anidar plantillas.
 class SafeHtml {
     constructor(value) { this.value = value; }
     toString() { return this.value; }
@@ -17,6 +18,7 @@ class SafeHtml {
 
 const ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 
+// Protección contra XSS: todo dato proveniente de la BD se escapa antes de insertarse en el DOM.
 export function escapeHtml(value) {
     return String(value ?? '').replace(/[&<>"']/g, (c) => ESCAPES[c]);
 }
@@ -183,6 +185,7 @@ export function openModal({ title, body, size = '', onHidden = null }) {
     if (activeModal) activeModal.close(true);
 
     const host = document.getElementById('modalHost');
+    // Id único para vincular el título con aria-labelledby (lectores de pantalla).
     const titleId = `modalTitle${Date.now()}`;
     render(host, html`
         <div class="modal fade" tabindex="-1" aria-labelledby="${titleId}" aria-modal="true" role="dialog">
@@ -316,6 +319,7 @@ export function labelTableCells(root) {
 export function observeTables(root) {
     let scheduled = false;
     const run = () => { scheduled = false; labelTableCells(root); };
+    // Observa cambios en el DOM y agrupa las actualizaciones en una sola ejecución (queueMicrotask).
     const observer = new MutationObserver(() => {
         if (!scheduled) { scheduled = true; queueMicrotask(run); }
     });

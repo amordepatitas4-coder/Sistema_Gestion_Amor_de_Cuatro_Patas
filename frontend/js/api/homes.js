@@ -11,6 +11,7 @@
 import { supabase } from '../supabase.js';
 
 const HOME_COLUMNS = 'id_hogar, nombre_responsable, telefono, email, direccion, observaciones, activo';
+// Lista blanca de columnas: pick() evita enviar campos no permitidos en INSERT/UPDATE.
 export const HOME_EDITABLE = ['nombre_responsable', 'telefono', 'email', 'direccion', 'observaciones', 'activo'];
 
 const STAY_COLUMNS = `
@@ -87,6 +88,7 @@ export async function listStaysByHome(idHogar) {
     return data;
 }
 
+// Las RPC de hogar validan fechas, cierran la permanencia anterior y registran el cambio de estado en una sola transacción.
 export async function enterHome({ idAnimal, idHogar, fecha, observaciones }) {
     const { data, error } = await supabase.rpc('ingresar_hogar_temporal', {
         p_id_animal: idAnimal,

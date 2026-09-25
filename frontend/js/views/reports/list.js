@@ -29,6 +29,7 @@ import {
     describeFilters, findReport, readReportFilters, validateReportFilters,
 } from './definitions.js';
 
+// Cada tipo de informe tiene su consulta en api/reports.js; la definición (filtros, columnas) está en definitions.js.
 const FETCHERS = {
     animales: fetchAnimalsReport,
     adopciones: fetchAdoptionsReport,
@@ -154,6 +155,7 @@ export default {
         body.querySelector('#btnClearReport').addEventListener('click', () => navigate('/informes', { tipo: report.key }, { replace: true }));
 
         const result = body.querySelector('#reportResult');
+        // Los filtros también se validan al leerlos de la URL (alguien podría editar el enlace a mano).
         const invalid = validateReportFilters(f);
         if (Object.keys(invalid).length) {
             render(result, errorState({ title: 'Revisa los filtros', text: Object.values(invalid).join(' ') }));
@@ -162,6 +164,7 @@ export default {
 
         let rows;
         try {
+            // Dos pasos: la consulta filtra en Supabase y clientFilter aplica los filtros sobre datos relacionados.
             rows = report.clientFilter(await FETCHERS[report.key](f), f);
         } catch (err) {
             render(result, errorState({ text: await reportError(err, `Informe ${report.label}`), retryId: 'retryReport' }));
@@ -206,6 +209,7 @@ export default {
             downloadCSV(csvFileName(`informe ${report.label}`, todayISO()), toCSV(report.columns, rows));
             toast(`Informe exportado (${rows.length} ${rows.length === 1 ? 'registro' : 'registros'}).`, 'success');
         });
+        // Impresión nativa del navegador; los estilos @media print ocultan menú y botones.
         result.querySelector('#btnPrintReport')?.addEventListener('click', () => window.print());
     },
 };

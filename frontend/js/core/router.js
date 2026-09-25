@@ -50,6 +50,7 @@ export function parseHash(hash) {
     return { path, query: new URLSearchParams(rawQuery) };
 }
 
+// Un segmento mal codificado (%E0) no debe romper la navegación: se usa tal cual.
 function safeDecode(segment) {
     try { return decodeURIComponent(segment); } catch { return segment; }
 }
@@ -74,6 +75,7 @@ export function compilePattern(pattern) {
 /** Busca la primera ruta que coincide. Devuelve { route, params } o null. */
 export function matchRoute(routes, path) {
     for (const route of routes) {
+        // El patrón se compila una sola vez por ruta y queda guardado.
         route._compiled ??= compilePattern(route.path);
         const match = route._compiled.regex.exec(path);
         if (match) {

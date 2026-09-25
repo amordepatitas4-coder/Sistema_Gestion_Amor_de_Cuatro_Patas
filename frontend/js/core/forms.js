@@ -45,6 +45,7 @@ export function bindForm(form, {
 
     async function handleSubmit(event) {
         event.preventDefault();
+        // Evita el doble envío (doble clic o Enter repetido) mientras la operación sigue en curso.
         if (busy) return;
 
         clearFormErrors(form);

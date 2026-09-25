@@ -48,6 +48,7 @@ const PROJECT_SELECT = `
     estado:estado_proyecto!fk_proyecto_estado(nombre),
     animales:animal_esterilizacion!fk_animal_esterilizacion_proyecto(count)`;
 
+// PostgREST devuelve el conteo embebido como [{ count }]; se aplana a un número.
 const withCount = (p) => ({ ...p, total_animales: p.animales?.[0]?.count ?? 0 });
 
 export async function listProjects() {
@@ -78,6 +79,7 @@ export async function getProject(id) {
 export async function findRecoveredProject(values, knownIds) {
     let q = supabase.from('proyecto_esterilizacion').select(`id_proyecto, ${PROJECT_COLUMNS.join(', ')}`)
         .eq('nombre', values.nombre);
+    // Excluye proyectos que ya existían, para no confundir un proyecto antiguo con el recién creado.
     if (knownIds.length) q = q.not('id_proyecto', 'in', `(${knownIds.join(',')})`);
     const { data, error } = await q.order('id_proyecto', { ascending: false }).limit(20);
     raise(error);
@@ -148,6 +150,7 @@ export async function listEntries(idProyecto) {
 export async function createEntry(idProyecto, values) {
     const { data, error } = await supabase
         .from('animal_esterilizacion')
+        // id_proyecto solo se fija al crear: después la entrada no puede cambiar de proyecto.
         .insert({ ...pick(values, ENTRY_COLUMNS), id_proyecto: idProyecto })
         .select('id_animal_esterilizacion')
         .single();

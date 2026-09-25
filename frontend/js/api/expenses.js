@@ -17,6 +17,7 @@ const EXPENSE_COLUMNS = `
     categoria:categoria_gasto!fk_gasto_categoria(nombre),
     asignaciones:animal_gasto(id_animal_gasto, id_animal, monto_asignado,
         animal:animal!fk_animal_gasto_animal(id_animal, nombre))`;
+// Columnas permitidas en INSERT/UPDATE directo; las asignaciones a animales van por RPC.
 const EDITABLE = ['fecha', 'id_categoria_gasto', 'descripcion', 'monto', 'observaciones'];
 
 function pick(values) {
@@ -53,6 +54,7 @@ export async function updateExpense(id, values) {
 }
 
 export async function assignExpense(idGasto, idAnimal, monto) {
+    // La RPC rechaza la asignación si la suma de montos superaría el total del gasto (RN-57).
     const { data, error } = await supabase.rpc('asignar_gasto_animal', {
         p_id_gasto: idGasto,
         p_id_animal: idAnimal,

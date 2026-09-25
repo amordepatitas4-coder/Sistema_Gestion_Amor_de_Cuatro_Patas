@@ -8,6 +8,7 @@ const LOCALE = 'es-CL';
 const dateFormatter = new Intl.DateTimeFormat(LOCALE, { dateStyle: 'medium' });
 const longDateFormatter = new Intl.DateTimeFormat(LOCALE, { dateStyle: 'full' });
 const dateTimeFormatter = new Intl.DateTimeFormat(LOCALE, { dateStyle: 'medium', timeStyle: 'short' });
+// Los formateadores Intl se crean una sola vez porque construirlos es costoso.
 const clpFormatter = new Intl.NumberFormat(LOCALE, { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 });
 
 const EMPTY = '—';
@@ -29,6 +30,7 @@ export function parseISODate(value) {
     if (!match) return null;
     const [, y, m, d] = match.map(Number);
     const date = new Date(y, m - 1, d);
+    // Date "corrige" fechas imposibles (31-02 → 03-03); si cambió algún componente, la fecha no era válida.
     if (date.getFullYear() !== y || date.getMonth() !== m - 1 || date.getDate() !== d) return null;
     return date;
 }
@@ -119,6 +121,7 @@ export function isValidMicrochip(value) {
 // sin puntos, con guion, K mayúscula y dígito verificador válido.
 // ------------------------------------------------------------
 
+// Algoritmo módulo 11: multiplica los dígitos de derecha a izquierda por 2..7 y calcula el verificador.
 export function computeRutDv(body) {
     let sum = 0;
     let factor = 2;
@@ -140,6 +143,7 @@ export function normalizeRut(value) {
     const clean = String(value ?? '').replace(/[.\s-]/g, '').toUpperCase();
     const match = /^(\d{1,8})([0-9K])$/.exec(clean);
     if (!match) return null;
+    // Quita ceros a la izquierda para que "012345678-5" y "12345678-5" se guarden igual.
     const body = match[1].replace(/^0+(?=\d)/, '');
     const dv = match[2];
     return computeRutDv(body) === dv ? `${body}-${dv}` : null;

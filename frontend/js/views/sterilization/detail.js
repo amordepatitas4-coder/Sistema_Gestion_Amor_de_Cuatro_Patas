@@ -71,6 +71,7 @@ export default {
         }
         document.title = `${project.nombre} · Amor de Cuatro Patas`;
 
+        // No existe FK proyecto → profesional: se derivan recorriendo la nómina y sus relaciones.
         const professionals = deriveProjectProfessionals(entries);
         const pendingDocs = entries.filter((e) => !documentStatus(e).exists).length;
         const hasFolder = Boolean(project.id_carpeta_drive);
@@ -171,6 +172,7 @@ async function renderInfoTab(panel, { project, entries, hasFolder }) {
 // Nómina
 // ------------------------------------------------------------
 async function renderNominaTab(panel, { project, entries, catalogs, hasFolder, reloadAll }) {
+    // La categoría del documento se busca por nombre en el catálogo real (su id puede variar entre instalaciones).
     const categoriaDoc = catalogs.categoria_archivo.find((c) => c.nombre === DOC_CATEGORY && c.activo);
     const blockReason = !hasFolder
         ? 'Para agregar animales primero debe crearse la carpeta del proyecto en Google Drive (botón superior).'
@@ -252,6 +254,7 @@ async function renderNominaTab(panel, { project, entries, catalogs, hasFolder, r
     const byId = (id) => entries.find((e) => String(e.id_animal_esterilizacion) === String(id));
     panel.querySelector('#nomQ').addEventListener('input', (ev) => { term = ev.target.value; draw(); });
 
+    // Delegación de eventos: un solo listener atiende todos los botones de la tabla según su atributo data-*.
     table.addEventListener('click', async (ev) => {
         const btn = ev.target.closest('button');
         if (!btn || btn.disabled) return;
@@ -289,6 +292,7 @@ async function renderNominaTab(panel, { project, entries, catalogs, hasFolder, r
     });
 
     panel.querySelector('#btnExportNomina').addEventListener('click', () => {
+        // Se exporta exactamente lo que la usuaria ve filtrado en pantalla.
         const rows = filterEntries(entries, term);
         downloadCSV(csvFileName(`nomina ${project.nombre}`, todayISO()), toCSV(NOMINA_EXPORT_COLUMNS, rows));
         toast(`Nómina exportada (${rows.length} ${rows.length === 1 ? 'animal' : 'animales'}).`, 'success');

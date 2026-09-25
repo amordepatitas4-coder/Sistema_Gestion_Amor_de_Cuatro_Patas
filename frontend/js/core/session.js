@@ -36,6 +36,7 @@ export function createSession(client) {
     let recoveryPending = false;   // volvió desde un enlace de recuperación
     const listeners = new Set();
 
+    // Patrón observador: cada cambio de estado se notifica a los suscriptores (app.js decide qué pantalla mostrar).
     function setState(patch) {
         state = { ...state, ...patch };
         listeners.forEach((fn) => fn(state));
@@ -63,6 +64,7 @@ export function createSession(client) {
                 setState({ status: 'checking', error: null });
             }
             const { data, error } = await client
+                // Consulta protegida por RLS: si la usuaria está inactiva, la fila no es visible y data llega vacío.
                 .from('usuario')
                 .select('id_usuario, nombre, activo, fecha_registro')
                 .eq('id_usuario', userId)
@@ -83,6 +85,7 @@ export function createSession(client) {
             }
 
             if (!data || data.activo !== true) {
+                // Cuenta desactivada: se cierra la sesión solo en este navegador y se informa en el login.
                 await client.auth.signOut({ scope: 'local' }).catch(() => {});
                 setState({ status: 'anonymous', user: null, profile: null, notice: 'inactive', error: null });
                 return state;
@@ -97,6 +100,7 @@ export function createSession(client) {
         return promise;
     }
 
+    // Traduce los eventos de Supabase Auth a los estados de la aplicación.
     function handleAuthEvent(event, session) {
         switch (event) {
             case 'SIGNED_OUT':

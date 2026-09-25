@@ -17,6 +17,7 @@ export const MEDIOS_CONTACTO = [
     { value: 'Otro', label: 'Otro' },
 ];
 
+// Traduce el valor guardado en la BD a su etiqueta visible con tildes.
 export const medioLabel = (value) => MEDIOS_CONTACTO.find((m) => m.value === value)?.label ?? value;
 
 export const ESTADOS_ADOPCION = { ACTIVA: 'Activa', DEVUELTO: 'Devuelto', FINALIZADA: 'Finalizada' };
@@ -30,6 +31,7 @@ export function collectAdopter(formData) {
     const rutRaw = text('rut');
     return {
         nombre: text('nombre'),
+        // Normalización: cualquier formato válido ("12.345.678-5") se guarda como "12345678-5".
         rut: rutRaw ? (normalizeRut(rutRaw) ?? rutRaw) : null,
         rutValido: rutRaw ? normalizeRut(rutRaw) !== null : false,
         telefono: text('telefono'),
@@ -50,6 +52,7 @@ export function validateAdopter(v, existing = [], currentId = null) {
     if (!v.rut) e.rut = 'Ingresa el RUT.';
     else if (!v.rutValido) e.rut = 'El RUT no es válido. Revisa el número y el dígito verificador.';
     else {
+        // Detecta duplicados antes de enviar; al editar se excluye el propio adoptante.
         const dup = existing.find((a) => String(a.id_adoptante) !== String(currentId) && normalizeRut(a.rut) === v.rut);
         if (dup) e.rut = `Ya existe un adoptante con ese RUT (${dup.nombre}).`;
     }

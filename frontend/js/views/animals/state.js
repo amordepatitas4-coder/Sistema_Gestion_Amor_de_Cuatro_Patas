@@ -5,8 +5,9 @@
 //   (En hogar temporal, Adoptado) ni el estado actual.
 // - Guarda de interfaz: si el animal está En hogar temporal o
 //   Adoptado, la salida de esa situación corresponde a su proceso
-//   (Finalizar permanencia / Registrar devolución). La RPC no lo
-//   impide por sí sola; ver informe de Etapa 0 (hueco de proceso).
+//   (Finalizar permanencia / Registrar devolución). Desde el script
+//   de seguridad 03 la RPC también lo rechaza; la guarda de interfaz
+//   explica el motivo y lleva a la pestaña del proceso.
 // ============================================================
 
 import { changeState } from '../../api/animals.js';
@@ -16,6 +17,7 @@ import { html, openModal, options, toast } from '../../core/ui.js';
 import { manualChangeBlock, manualStateOptions } from './logic.js';
 
 export function openChangeState({ animal, estados, hasActiveStay, navigate, onSaved }) {
+    // Si el estado depende de un proceso (hogar o adopción), se explica y se ofrece ir a su pestaña en lugar del formulario.
     const block = manualChangeBlock(animal.estado?.nombre_estado, hasActiveStay);
     if (block) {
         const modal = openModal({
@@ -36,6 +38,7 @@ export function openChangeState({ animal, estados, hasActiveStay, navigate, onSa
         return;
     }
 
+    // Solo estados manuales: se excluyen los reservados a procesos y el estado actual.
     const allowed = manualStateOptions(estados, animal.id_estado_actual);
     const modal = openModal({
         title: 'Cambiar estado',

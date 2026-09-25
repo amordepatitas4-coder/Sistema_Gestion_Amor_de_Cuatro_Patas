@@ -16,6 +16,7 @@ const FILE_COLUMNS = `id_archivo, nombre_archivo, nombre_original, mime_type, fe
     categoria:categoria_archivo!fk_archivo_categoria(nombre)`;
 
 /** Tabla de asociación por contexto (debe coincidir con registrar_archivo). */
+// Cada contexto usa una tabla intermedia distinta; el alias !fk indica qué relación seguir hacia ARCHIVO.
 const CONTEXTS = {
     animal: { table: 'animal_archivo', fk: 'id_animal', rel: 'fk_animal_archivo_archivo' },
     adopcion: { table: 'adopcion_archivo', fk: 'id_adopcion', rel: 'fk_adopcion_archivo_archivo' },
@@ -41,6 +42,7 @@ export async function listFiles(context, idContext) {
  * El FormData se construye con valores ya capturados (no desde el formulario).
  */
 export async function uploadFile(context, idContext, values) {
+    // multipart/form-data: permite enviar el archivo binario junto con sus metadatos a la Edge Function.
     const body = new FormData();
     body.append('archivo', values.archivo, values.archivo.name);
     body.append('id_categoria_archivo', String(values.idCategoria));
@@ -49,6 +51,7 @@ export async function uploadFile(context, idContext, values) {
     if (values.fechaDocumento) body.append('fecha_documento', values.fechaDocumento);
     if (values.descripcion) body.append('descripcion', values.descripcion);
 
+    // functions.invoke adjunta automáticamente el JWT de la sesión; la función verifica que la usuaria esté activa.
     const { data, error } = await supabase.functions.invoke('subir-archivo-drive', { body });
     if (error) throw error;
     if (data?.error) throw new AppError(functionMessage(data.error));

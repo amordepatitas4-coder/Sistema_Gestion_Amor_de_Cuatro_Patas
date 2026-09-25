@@ -47,6 +47,7 @@ export const CATALOGS = {
 
 export { ESTADOS, ESTADOS_RESERVADOS } from '../core/domain.js';
 
+// Caché en memoria de la sesión: se guarda la promesa para que cargas simultáneas compartan una sola consulta.
 const cache = new Map();
 
 /**
@@ -71,6 +72,7 @@ export async function loadCatalog(name, { refresh = false } = {}) {
     cache.set(name, promise);
     try {
         return await promise;
+    // Si la carga falla se descarta la promesa, para reintentar en la próxima llamada.
     } catch (err) {
         cache.delete(name);
         throw err;
@@ -109,6 +111,7 @@ function pickColumns(values, columns) {
     return out;
 }
 
+// Tras escribir se invalida el caché para que los formularios vean el cambio.
 export async function createCatalogRow(name, values, columns) {
     const meta = CATALOGS[name];
     if (!meta) throw new Error(`Catálogo no definido: ${name}`);

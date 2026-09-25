@@ -1,9 +1,9 @@
 // ============================================================
 // Mapa de navegación y rutas de la aplicación.
 //
-// Punto de extensión: cada etapa reemplaza el loader de su módulo
-// (hoy apunta a la vista provisional) y agrega sus subrutas,
-// por ejemplo '/animales/:id/:tab?' para la ficha.
+// Cada módulo del menú tiene su loader en IMPLEMENTED; un módulo sin
+// loader usaría la vista provisional (placeholder.js). Las subrutas
+// con parámetros, como '/animales/:id/:tab?', se declaran en ROUTES.
 //
 // Contrato de una vista (módulo ES):
 //   export default {
@@ -31,6 +31,7 @@ export const NAV_ITEMS = [
 export const HOME_PATH = '/panel';
 export const LOGIN_PATH = '/login';
 
+// Carga diferida: cada módulo se descarga solo cuando la usuaria entra a él.
 const IMPLEMENTED = {
     '/panel': () => import('./views/panel.js'),
     '/animales': () => import('./views/animals/list.js'),

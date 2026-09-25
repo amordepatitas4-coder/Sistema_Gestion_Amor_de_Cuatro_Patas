@@ -17,6 +17,7 @@ export function renderSplash(root, text = 'Verificando tu sesión…') {
         </div>`);
 }
 
+// Mensajes según el problema detectado en supabase.js; nunca muestran la URL ni la clave configuradas.
 const CONFIG_TEXT = {
     missing: 'Falta la configuración pública del proyecto. Copia js/config.example.js como js/config.js y completa la URL y la clave pública (anon/publishable) de Supabase.',
     invalid: 'La URL de Supabase configurada en js/config.js no es válida.',

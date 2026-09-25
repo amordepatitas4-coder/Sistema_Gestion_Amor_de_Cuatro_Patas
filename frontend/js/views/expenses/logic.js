@@ -10,6 +10,7 @@ import { emptyToNull, formatCLP, parseISODate } from '../../core/format.js';
 
 /** Monto en pesos: acepta "50000", "50.000" o "$ 50.000". Devuelve entero > 0 o null. */
 export function parseAmount(value) {
+    // Se quitan "$", espacios y puntos de miles; los pesos chilenos no usan decimales.
     const text = String(value ?? '').replace(/[$\s.]/g, '');
     if (!/^\d+$/.test(text)) return null;
     const n = Number(text);
@@ -52,6 +53,7 @@ export function validateExpense(v, { minimoAsignado = 0 } = {}) {
  */
 export function validateAllocations(total, rows, yaAsignado = 0) {
     const errors = { rows: {}, general: null };
+    // Un mismo animal no puede aparecer en dos filas de asignación.
     const seen = new Set();
     rows.forEach((r, i) => {
         if (!r.idAnimal) errors.rows[i] = 'Selecciona el animal.';

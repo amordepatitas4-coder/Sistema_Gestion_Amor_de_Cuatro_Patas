@@ -49,6 +49,7 @@ export async function deactivateUser(idUsuario) {
 export async function inviteUser({ nombre, email }) {
     const { data, error } = await supabase.functions.invoke('invitar-usuario', { body: { nombre, email } });
     raise(error);
+    // La Edge Function puede responder 200 con { error }; se traduce a un mensaje seguro para la usuaria.
     if (data?.error) throw new AppError(functionMessage(data.error));
     return data;
 }

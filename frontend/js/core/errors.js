@@ -70,11 +70,13 @@ const CHECK_MESSAGES = {
     chk_rango_edad_min: 'La edad mínima no puede ser negativa.',
 };
 
+// Busca el nombre de la restricción de la BD dentro del error para mostrar un mensaje específico.
 function findConstraint(err, catalog) {
     const text = `${err?.message ?? ''} ${err?.details ?? ''}`;
     return Object.keys(catalog).find((name) => text.includes(name));
 }
 
+// Cada librería (fetch, Auth, Functions) informa la falta de red de forma distinta; aquí se unifican.
 function isNetworkError(err) {
     const name = err?.name ?? '';
     const msg = String(err?.message ?? '');
@@ -140,6 +142,7 @@ function describePostgrestError(err) {
 export function functionMessage(text) {
     const msg = String(text ?? '').trim();
     if (!msg) return MESSAGES.service;
+    // Detalles internos del servidor no se muestran a la usuaria (podrían exponer configuración).
     if (/variables de entorno|^error interno|service.?role|\bundefined\b|\bnull\b|TypeError|ReferenceError/i.test(msg)) return MESSAGES.service;
     if (/Google Drive respondió \d|Google Drive rechazó el archivo: |autenticar con Google|invalid_grant|oauth/i.test(msg)) return MESSAGES.drive;
     return msg;
@@ -173,6 +176,7 @@ export async function describeError(err) {
     return MESSAGES.generic;
 }
 
+// clone() permite leer el cuerpo aunque otra parte del código ya lo haya consumido.
 async function readFunctionErrorBody(err) {
     const response = err?.context;
     if (!response || typeof response.clone !== 'function') return null;

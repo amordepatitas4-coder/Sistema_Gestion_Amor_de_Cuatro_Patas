@@ -59,6 +59,7 @@ Deno.serve(async (req)=>{
     // ========================================================
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
+    // Secretos: existen solo en el servidor (variables de la Edge Function) y nunca se envían al navegador.
     const supabaseServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceRoleKey) {
       throw new Error("Faltan variables de entorno de Supabase.");

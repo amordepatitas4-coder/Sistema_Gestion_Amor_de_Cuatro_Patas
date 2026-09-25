@@ -28,6 +28,7 @@ export default {
         let followUps;
         let estados;
         try {
+            // Primero la adopción (para saber si existe y quién es el adoptante); luego el resto en paralelo.
             adoption = await getAdoption(id);
             if (!adoption) {
                 render(outlet, html`<section class="card-panel">${emptyState({
@@ -45,6 +46,7 @@ export default {
             return;
         }
 
+        // Seguimiento y devolución solo se ofrecen en adopciones vigentes.
         const activa = !adoption.fecha_finalizacion && adoption.estado?.nombre === ESTADOS_ADOPCION.ACTIVA;
         const name = animalName(adoption.animal ?? { id_animal: adoption.id_animal });
         document.title = `Adopción de ${name} · Amor de Cuatro Patas`;
@@ -104,6 +106,7 @@ export default {
             idContext: id,
             title: 'Documentos de la adopción',
             emptyText: 'Contratos u otros documentos del proceso. Se guardan en la carpeta Drive del animal.',
+            // Los documentos de la adopción se guardan en la carpeta Drive del animal; sin carpeta no se permite subir.
             uploadBlocked: adoption.animal?.id_carpeta_drive ? null
                 : 'El animal aún no tiene carpeta en Google Drive. Créala desde la pestaña Archivos de su ficha.',
         });

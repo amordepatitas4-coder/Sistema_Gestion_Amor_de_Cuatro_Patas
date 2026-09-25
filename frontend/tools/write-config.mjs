@@ -37,12 +37,14 @@ export function buildConfig(env) {
     if (key.startsWith('sb_secret_') || jwtRole(key) === 'service_role') {
         throw new Error('La clave indicada es secreta (service_role / sb_secret_). Usa la clave anon o publishable.');
     }
+    // Evita que un valor con comillas o saltos de línea rompa (o inyecte código en) el archivo generado.
     if (/['"\\\n\r]/.test(url + key)) throw new Error('La configuración contiene caracteres no válidos.');
     return `// Generado en el despliegue por tools/write-config.mjs. No versionar.\n`
         + `export const SUPABASE_URL = '${url.replace(/\/$/, '')}';\n`
         + `export const SUPABASE_ANON_KEY = '${key}';\n`;
 }
 
+// Solo escribe el archivo al ejecutarse como comando; los tests importan buildConfig sin efectos secundarios.
 const isMain = process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1];
 if (isMain) {
     const target = join(dirname(fileURLToPath(import.meta.url)), '..', 'js', 'config.js');

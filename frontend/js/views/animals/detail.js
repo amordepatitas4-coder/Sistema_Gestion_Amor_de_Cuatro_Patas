@@ -22,6 +22,7 @@ import { renderHealthTab } from './tabs/health.js';
 import { renderHomesTab } from './tabs/homes.js';
 import { renderAdoptionTab, renderDiffusionTab, renderExpensesTab, renderFilesTab } from './tabs/processes.js';
 
+// Cada pestaña es un módulo con su propia función render; el slug forma parte de la URL.
 export const TABS = [
     { slug: 'resumen', label: 'Resumen', icon: 'bi-card-text', render: renderSummaryTab },
     { slug: 'salud', label: 'Salud', icon: 'bi-clipboard2-pulse', render: renderHealthTab },
@@ -62,11 +63,13 @@ export default {
             outlet.querySelector('#retryDetail')?.addEventListener('click', () => navigate(`/animales/${id}/${tab.slug}`, {}, { replace: true }));
             return;
         }
+        // Un animal con registro inactivo se trata como no encontrado (activo no es el estado del proceso).
         if (!animal || !animal.activo) {
             render(outlet, notFound(backHref));
             return;
         }
 
+        // El bucket es privado: la foto se muestra con una URL firmada que expira.
         const photoUrl = (await signedPhotoUrls([animal.foto_principal_path])).get(animal.foto_principal_path);
         const hasActiveStay = stays.some((s) => !s.fecha_salida);
         const name = animalName(animal);
@@ -118,6 +121,7 @@ export default {
         }));
 
         const panel = outlet.querySelector('#tabPanel');
+        // Solo se recarga el panel de la pestaña; si falla, el encabezado de la ficha sigue visible.
         const renderTab = async () => {
             render(panel, loadingState());
             try {

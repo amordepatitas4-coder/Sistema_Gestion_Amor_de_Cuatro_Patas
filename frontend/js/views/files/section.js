@@ -37,6 +37,7 @@ const fileIcon = (mime = '') => Object.entries(ICONS).find(([k]) => String(mime)
  *   uploadBlocked: texto si no se puede subir (p. ej. falta carpeta Drive) o null
  */
 export async function renderFilesSection(container, { context, idContext, title = 'Archivos', emptyText = '', uploadBlocked = null }) {
+    // Recargar solo esta sección (no toda la vista) después de subir un archivo.
     const reload = () => renderFilesSection(container, { context, idContext, title, emptyText, uploadBlocked });
     render(container, loadingState('Cargando archivos…'));
     let files;
@@ -88,6 +89,7 @@ export async function openFile(button, idArchivo) {
     try {
         const url = await getFileLink(idArchivo);
         if (tab) {
+            // Seguridad: la pestaña de Drive no puede acceder a esta aplicación mediante window.opener.
             tab.opener = null;
             tab.location.replace(url);
         } else {
@@ -112,6 +114,7 @@ export async function openUploadForm({ context, idContext, onSaved }) {
         toast(await reportError(err, 'Categorías de archivo'), 'error');
         return;
     }
+    // Se preselecciona la categoría más probable según el contexto; la usuaria puede cambiarla.
     const suggested = categorias.find((c) => c.nombre === SUGGESTED_CATEGORY[context])?.id ?? '';
     const modal = openModal({
         title: 'Subir archivo a Google Drive',

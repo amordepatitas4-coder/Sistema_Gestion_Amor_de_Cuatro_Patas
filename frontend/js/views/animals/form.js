@@ -23,6 +23,7 @@ const req = html`<span class="text-danger" aria-hidden="true">*</span>`;
 
 /** Campos del formulario de ANIMAL (sin estado, código interno ni URL de Drive). */
 function animalFields(v, catalogs, { withPhoto = false } = {}) {
+    // selectable: solo opciones activas, conservando la ya elegida aunque se haya desactivado.
     const especies = selectable(catalogs.especie, v.id_especie).map((r) => ({ value: r.id, label: r.nombre }));
     const rangos = selectable(catalogs.rango_etario, v.id_rango_etario).map((r) => ({ value: r.id, label: r.nombre }));
     return html`
@@ -160,6 +161,7 @@ export function openRegisterAnimal({ catalogs, navigate, onCreated }) {
         submit: async ({ values }) => {
             modal.setBusy(true);
             try {
+                // Si la RPC falla se libera el modal; si tiene éxito, sigue ocupado durante los pasos siguientes.
                 return await registerAnimal(values);
             } catch (err) {
                 modal.setBusy(false);
@@ -177,6 +179,7 @@ export function openRegisterAnimal({ catalogs, navigate, onCreated }) {
     });
 }
 
+// Pasos secundarios tras crear el animal: cada uno informa su propio resultado y un fallo no deshace el registro.
 async function runPostRegistration(modal, { idAnimal, nombre, foto, goToAnimal }) {
     const hasPhoto = foto instanceof File && foto.size > 0;
     const steps = [
@@ -227,6 +230,7 @@ async function runPostRegistration(modal, { idAnimal, nombre, foto, goToAnimal }
 
     // Foto principal
     if (hasPhoto) {
+        // La foto se comprime a WebP en el navegador antes de subirla, para respetar el límite del bucket.
         setStep('photo', 'running');
         try {
             const webp = await optimizeToWebp(foto, { maxSide: PHOTO_MAX_SIDE, maxBytes: PHOTO_MAX_BYTES });

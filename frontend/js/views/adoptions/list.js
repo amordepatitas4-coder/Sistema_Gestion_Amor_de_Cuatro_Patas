@@ -21,6 +21,7 @@ export default {
     title: 'Adopciones',
 
     async render({ outlet, route, query, navigate }) {
+        // Un mismo módulo atiende dos subsecciones; la ruta decide cuál se muestra.
         const view = route.path === '/adopciones/adoptantes' ? 'adoptantes' : 'adopciones';
         const term = (query.get('q') ?? '').trim();
         const estadoFiltro = query.get('estado') ?? '';
@@ -66,6 +67,7 @@ async function renderAdoptions(outlet, body, { term, estadoFiltro, navigate, rel
         try {
             const animals = await listAnimals();
             const active = new Set(adoptions.filter((a) => !a.fecha_finalizacion).map((a) => a.id_animal));
+            // Solo animales adoptables y sin adopción vigente; la RPC registrar_adopcion lo vuelve a validar.
             const eligible = animals.filter((a) => canAdopt(a.estado?.nombre_estado, active.has(a.id_animal)));
             restore();
             openAdoptionForm({ animals: eligible, adopters, onSaved: (id) => navigate(`/adopciones/${id}`) });
@@ -125,6 +127,7 @@ async function renderAdopters(outlet, body, { term, navigate, reload }) {
     const adopters = await listAdopters();
     outlet.querySelector('#btnNewAdopter').addEventListener('click', () => openAdopterForm({ existing: adopters, onSaved: reload }));
 
+    // El RUT se compara sin puntos ni guion, para encontrarlo como sea que se escriba.
     const visible = adopters.filter((a) => !term || fold(a.nombre).includes(fold(term)) || fold(a.rut).replace(/[.-]/g, '').includes(fold(term).replace(/[.-]/g, '')));
     render(body, html`
         <section class="card-panel mb-3">

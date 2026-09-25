@@ -19,8 +19,10 @@ export default {
     title: 'Gastos',
 
     async render({ outlet, query, navigate }) {
+        // Los filtros se leen de la URL: así un filtro aplicado se puede compartir o recuperar con el botón Atrás.
         const f = Object.fromEntries(KEYS.map((k) => [k, (query.get(k) ?? '').trim()]));
         const currentQuery = () => Object.fromEntries(KEYS.filter((k) => f[k]).map((k) => [k, f[k]]));
+        // Recargar = volver a navegar con los filtros actuales; replace evita llenar el historial.
         const reload = () => navigate('/gastos', currentQuery(), { replace: true });
 
         render(outlet, html`
@@ -37,6 +39,7 @@ export default {
         let animals;
         let expenses;
         try {
+            // Catálogo, animales y gastos se piden en paralelo; si uno falla se muestra un error con opción de reintentar.
             [categorias, animals, expenses] = await Promise.all([
                 loadCatalog('categoria_gasto'),
                 listAnimals(),
@@ -52,9 +55,11 @@ export default {
         newBtn.disabled = false;
         newBtn.addEventListener('click', () => openExpenseForm({ categorias, animals, navigate, onDone: reload }));
 
+        // El filtro por animal se aplica en el navegador porque depende de las asignaciones embebidas.
         const visible = f.animal
             ? expenses.filter((g) => (g.asignaciones ?? []).some((a) => String(a.id_animal) === f.animal))
             : expenses;
+        // Totales del período: lo asignado a animales y el resto como gasto general.
         const totals = visible.reduce((acc, g) => {
             const s = summarize(g.monto, (g.asignaciones ?? []).map((a) => a.monto_asignado));
             acc.total += s.total; acc.asignado += s.asignado; return acc;

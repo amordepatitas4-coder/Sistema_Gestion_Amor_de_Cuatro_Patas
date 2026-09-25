@@ -50,6 +50,7 @@ export async function upcomingControls(fromISO, limit = 8) {
         .from('atencion_sanitaria')
         .select(`id_atencion_sanitaria, proximo_control, fecha,
             tipo:tipo_atencion_sanitaria!fk_atencion_sanitaria_tipo(nombre),
+            // !inner convierte el embebido en un JOIN: así el filtro animal.activo descarta atenciones de animales inactivos.
             animal:animal!fk_atencion_sanitaria_animal!inner(id_animal, nombre, activo)`)
         .gte('proximo_control', fromISO)
         .eq('animal.activo', true)

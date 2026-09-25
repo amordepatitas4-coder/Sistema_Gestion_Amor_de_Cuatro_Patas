@@ -79,6 +79,7 @@ export function isProtected(cfg, row) {
 }
 
 /** Columnas que pueden escribirse para esa fila (o para una fila nueva). */
+// Coincide con los permisos del backend: en estado y estado_adopcion solo "descripcion" tiene GRANT UPDATE.
 export function writableColumns(cfg, row = null) {
     if (isProtected(cfg, row)) return ['descripcion'];
     return [...cfg.fields.map((f) => f.name), 'activo'];
@@ -87,6 +88,7 @@ export function writableColumns(cfg, row = null) {
 function parseIntField(value) {
     const t = String(value ?? '').trim();
     if (t === '') return null;
+    // NaN marca un valor no numérico, para distinguirlo de un campo vacío (null).
     return /^\d+$/.test(t) ? Number(t) : Number.NaN;
 }
 
@@ -127,6 +129,7 @@ export function validateCatalogRow(cfg, v, { existing = [], currentId = null } =
 // Usuarias y cuenta
 // ------------------------------------------------------------
 
+// Mínimo propio de la interfaz; el tope de 72 corresponde al límite de bcrypt que usa Supabase Auth.
 export const PASSWORD_MIN = 8;
 
 export function validatePasswordChange({ password, confirm }) {
@@ -139,6 +142,7 @@ export function validatePasswordChange({ password, confirm }) {
 }
 
 /** Reglas de interfaz para las acciones sobre una usuaria (el backend las vuelve a validar). */
+// Estas reglas solo guían la interfaz; desactivar_usuario las aplica de nuevo en el servidor (RN-59).
 export function userActions(user, { currentId, activeCount }) {
     const self = String(user.id_usuario) === String(currentId);
     if (!user.activo) return { canActivate: true, canDeactivate: false, reason: null };

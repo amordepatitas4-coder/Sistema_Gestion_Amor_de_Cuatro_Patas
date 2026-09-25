@@ -56,6 +56,7 @@ export function approximateAge(fechaNacimiento, today = new Date()) {
     if (!birth) return null;
     let months = (today.getFullYear() - birth.getFullYear()) * 12 + (today.getMonth() - birth.getMonth());
     if (today.getDate() < birth.getDate()) months -= 1;
+    // Fecha de nacimiento futura: no se calcula una edad.
     if (months < 0) return null;
     if (months < 12) return `${months} ${months === 1 ? 'mes' : 'meses'}`;
     const years = Math.floor(months / 12);
@@ -77,6 +78,7 @@ export function diffusionData(animal, today = new Date()) {
     };
 }
 
+// Campos que conviene completar en la ficha para que el texto de difusión quede más completo.
 export function missingDiffusionFields(d) {
     const labels = { nombre: 'nombre', personalidad: 'personalidad', historia: 'historia del rescate', caracteristicas: 'características' };
     return Object.entries(labels).filter(([k]) => !d[k]).map(([, l]) => l);

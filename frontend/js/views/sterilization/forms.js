@@ -155,6 +155,7 @@ async function createProjectSafely(values, knownIds) {
         return { id: await createProject(values), recovered: false };
     } catch (err) {
         let found = null;
+        // Si la búsqueda de recuperación también falla, se informa el error del INSERT (el más útil para la usuaria).
         try { found = findRecoveredProject(values, await queryRecoveredProject(values, knownIds), knownIds); } catch { /* error original */ }
         if (found) return { id: found.id_proyecto, recovered: true };
         throw err;
@@ -164,6 +165,7 @@ async function createProjectSafely(values, knownIds) {
 /** knownIds: proyectos existentes al abrir el formulario (para la recuperación). */
 export function openCreateProject({ estados, navigate, onCreated, knownIds = [] }) {
     let createdId = null;
+    // Un proyecto nuevo parte normalmente en "Postulado"; la usuaria puede elegir otro estado.
     const defaultEstado = estados.find((e) => e.nombre === 'Postulado' && e.activo)?.id ?? '';
     const modal = openModal({
         title: 'Nuevo proyecto de esterilización',
@@ -200,6 +202,7 @@ export function openCreateProject({ estados, navigate, onCreated, knownIds = [] 
             const steps = [
                 { label: 'Proyecto registrado', status: 'ok',
                     message: recovered ? 'El proyecto ya se había creado en un intento anterior: se continuó con él (sin duplicarlo).' : '' },
+                // El proyecto ya existe: si Drive falla se informa como tarea pendiente, sin deshacer el registro.
                 { label: 'Carpeta en Google Drive (Documentación y Animales)', status: 'running' },
             ];
             const draw = stepsPanel(modal, {
@@ -276,6 +279,7 @@ export async function retryProjectFolder(button, idProyecto, onDone) {
 // valores mientras se crea el profesional (Prompt §25).
 // ============================================================
 
+// Filas dinámicas "profesional + función"; excludeIds oculta profesionales ya asociados a la esterilización.
 function professionalPicker(form, { professionals, excludeIds = [] }) {
     const root = form.querySelector('[data-prof-picker]');
     const rowsBox = root.querySelector('[data-prof-rows]');
@@ -573,6 +577,7 @@ export function openAddEntry({ project, entries, catalogs, professionals, idCate
             modal.setBusy(true);
             try {
                 // Verificación de contenido ANTES de crear cualquier registro.
+                // Lee los primeros bytes del archivo para confirmar su tipo real antes de crear registros.
                 data.prepared = await prepareDocument(data.documento);
                 return await createEntrySafely(project.id_proyecto, data.values);
             } catch (err) {
@@ -651,6 +656,7 @@ async function runEntryCompletion({ idEntry, steps, draw, prepared, idCategoriaD
     docStep.status = 'running';
     draw();
     try {
+        // Un documento por animal: si un intento anterior ya lo subió, no se vuelve a subir.
         if ((await countEntryFiles(idEntry)) > 0) {
             docStep.message = 'Ya existía un documento registrado: no se volvió a subir.';
         } else {

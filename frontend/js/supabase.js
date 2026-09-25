@@ -14,6 +14,7 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 
 let config = {};
 try {
+    // Importación dinámica: si config.js no existe, la app muestra un aviso en vez de fallar al cargar.
     config = await import('./config.js');
 } catch {
     config = {};
@@ -22,6 +23,7 @@ try {
 const url = typeof config.SUPABASE_URL === 'string' ? config.SUPABASE_URL.trim() : '';
 const key = typeof config.SUPABASE_ANON_KEY === 'string' ? config.SUPABASE_ANON_KEY.trim() : '';
 
+// Lee el rol dentro del JWT (sin validarlo) solo para rechazar claves de servidor por error.
 function jwtRole(token) {
     try {
         const payload = token.split('.')[1];
@@ -52,6 +54,7 @@ export const supabase = configProblem
     ? null
     : createClient(url, key, {
         auth: {
+            // La sesión se guarda en el navegador y el token se renueva solo; detectSessionInUrl procesa los enlaces de invitación y recuperación.
             persistSession: true,
             autoRefreshToken: true,
             detectSessionInUrl: true,

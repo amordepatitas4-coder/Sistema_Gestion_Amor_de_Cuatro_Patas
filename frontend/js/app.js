@@ -77,6 +77,7 @@ function startApp() {
                 teardownShell();
                 screen = 'verify-error';
                 reportError(state.error, 'Verificación de cuenta').then((message) => {
+                    // El mensaje se resuelve de forma asíncrona; si la sesión cambió mientras tanto, ya no se muestra.
                     if (session.state.status !== 'error') return;
                     renderVerifyError(root, message, {
                         onRetry: () => { renderSplash(root); screen = 'splash'; session.retry(); },
@@ -141,6 +142,7 @@ function startApp() {
         // Rutas internas
         if (status !== 'active') {
             if (route && !['signedOut', 'inactive'].includes(session.state.notice)) {
+                // Recuerda la ruta pedida sin sesión para volver a ella después del login.
                 pendingPath = window.location.hash.replace(/^#/, '');
             }
             router.navigate(LOGIN_PATH, {}, { replace: true });
@@ -197,6 +199,7 @@ function startApp() {
         renderToken++;
     }
 
+    // Cada vista puede devolver una función de limpieza (listeners, temporizadores) que se ejecuta al salir.
     function runCleanup() {
         if (typeof viewCleanup === 'function') {
             try { viewCleanup(); } catch (err) { console.error('[Vista] Error al limpiar', err); }
@@ -205,6 +208,7 @@ function startApp() {
     }
 
     async function showView(route, { params, query, path }) {
+        // Token de render: si la usuaria navega de nuevo antes de que termine la carga, la vista anterior ya no escribe en pantalla.
         const token = ++renderToken;
         runCleanup();
         const outlet = shell.outlet;

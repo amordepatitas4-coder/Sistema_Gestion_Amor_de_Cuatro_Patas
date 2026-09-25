@@ -34,6 +34,7 @@ const DETAIL_COLUMNS = `
     rango:rango_etario!fk_animal_rango_etario(nombre)`;
 
 /** Columnas que el formulario genérico puede modificar. */
+// Debe coincidir con los GRANT UPDATE por columna del script de seguridad 09 (lo verifica tests/permissions.test.mjs).
 export const EDITABLE_COLUMNS = [
     'nombre', 'id_especie', 'id_rango_etario', 'sexo', 'tamaño',
     'fecha_nacimiento', 'fecha_rescate', 'lugar_rescate',
@@ -88,6 +89,7 @@ export async function registerAnimal(values) {
         p_microchip: values.microchip,
         p_estado_registro_nacional: values.estado_registro_nacional,
     };
+    // La RPC crea el animal y su primer historial de estado en una misma transacción.
     const { data, error } = await supabase.rpc('registrar_animal', params);
     raise(error);
     return data; // id_animal
@@ -104,6 +106,7 @@ export async function updateAnimal(id, values) {
 }
 
 export async function changeState(idAnimal, idNuevoEstado, motivo, observaciones) {
+    // La RPC cierra el historial vigente y abre uno nuevo; por eso el estado nunca se actualiza directamente.
     const { error } = await supabase.rpc('cambiar_estado_animal', {
         p_id_animal: idAnimal,
         p_id_nuevo_estado: idNuevoEstado,
@@ -148,8 +151,10 @@ export async function uploadPhoto(idAnimal, webpBlob) {
     const path = photoPath(idAnimal);
     const { error: uploadError } = await supabase.storage
         .from(PHOTO_BUCKET)
+        // upsert reemplaza la foto anterior en la misma ruta; el caché corto evita mostrar una imagen vieja.
         .upload(path, webpBlob, { contentType: 'image/webp', upsert: true, cacheControl: '60' });
     raise(uploadError);
+    // En la BD solo se guarda la ruta; la imagen se muestra con URLs firmadas temporales (bucket privado).
     const { error } = await supabase.from('animal').update({ foto_principal_path: path }).eq('id_animal', idAnimal);
     raise(error);
     return path;

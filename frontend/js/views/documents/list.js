@@ -55,6 +55,7 @@ export default {
         uploadBtn.disabled = false;
         uploadBtn.addEventListener('click', () => openUploadForm({ context: 'fundacion', idContext: null, onSaved: reload }));
 
+        // Las opciones de los filtros (animales, proyectos) se construyen a partir de los propios documentos cargados.
         const opts = filterOptions(files);
         render(body, html`
             <section class="card-panel mb-3">
@@ -97,6 +98,7 @@ export default {
         const clearBox = body.querySelector('#clearDocsBox');
 
         const draw = () => {
+            // Filtrado en lógica pura (logic.js), probado con tests automáticos.
             const visible = filterDocuments(files, f);
             const hasFilters = FILTER_KEYS.some((k) => f[k]);
             render(clearBox, hasFilters ? html`<button type="button" class="btn btn-sm btn-link px-0" id="clearDocs">
@@ -151,6 +153,7 @@ export default {
         form.addEventListener('change', onChange);
         results.addEventListener('click', (e) => {
             const btn = e.target.closest('[data-open]');
+            // Abrir un archivo pide a la Edge Function un enlace de Drive en el momento (no se guardan enlaces en la página).
             if (btn) openFile(btn, Number(btn.dataset.open));
         });
         draw();

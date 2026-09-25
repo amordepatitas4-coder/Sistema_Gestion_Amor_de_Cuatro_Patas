@@ -51,6 +51,7 @@ export function fileContexts(file) {
 }
 
 /** Fecha de referencia: la del documento o, si no existe, la fecha local de carga. */
+// Los filtros por fecha usan la fecha del documento; si no se indicó, la de carga.
 export function effectiveDate(file) {
     if (file.fecha_documento) return file.fecha_documento;
     const d = new Date(file.fecha_carga);
@@ -65,6 +66,7 @@ export function filterDocuments(files, f) {
     return files.filter((file) => {
         const ctx = fileContexts(file);
         if (term) {
+            // El texto buscado se compara contra nombre, descripción, categoría y contexto del archivo.
             const haystack = [file.nombre_original, file.nombre_archivo, file.descripcion, file.categoria?.nombre, ...ctx.map((c) => c.label)]
                 .map(plain).join(' ');
             if (!haystack.includes(term)) return false;

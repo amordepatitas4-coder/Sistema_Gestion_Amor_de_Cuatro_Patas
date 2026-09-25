@@ -68,6 +68,7 @@ function collectHome(fd) {
         email: emptyToNull(fd.get('email')),
         direccion: emptyToNull(fd.get('direccion')),
         observaciones: emptyToNull(fd.get('observaciones')),
+        // Un checkbox desmarcado no aparece en FormData: el campo oculto activo_presente indica que el formulario sí lo incluía.
         ...(fd.has('activo') || fd.has('activo_presente') ? { activo: fd.get('activo') === 'on' } : {}),
     };
 }
@@ -105,6 +106,7 @@ export function openHomeForm({ home = null, occupiedCount = 0, onSaved, modal = 
 
     const m = modal ?? openModal({ title: home ? 'Editar hogar temporal' : 'Nuevo hogar temporal', body });
     if (modal) {
+        // Modal reutilizado: se reemplaza su contenido en vez de abrir otro encima.
         m.element.querySelector('.modal-title').textContent = 'Nuevo hogar temporal';
         m.body.innerHTML = String(body);
     }
@@ -192,6 +194,7 @@ export function openEnterHome({ animal, homes, onSaved, preset = {}, modal = nul
         },
         submit: async (v) => {
             m.setBusy(true);
+            // La RPC crea la permanencia y deja al animal En hogar temporal en una sola transacción.
             try { await enterHome({ idAnimal: animal.id_animal, ...v }); } finally { m.setBusy(false); }
         },
         onSuccess: async () => {
@@ -303,6 +306,7 @@ export function openChangeHome({ animal, currentStay, homes, onSaved }) {
             if (!v.idNuevoHogar) e.hogar = 'Selecciona el nuevo hogar.';
             const d = validDateField(v.fecha, 'fecha del cambio');
             if (d) e.fecha = d;
+            // Validación de interfaz para avisar antes de enviar; la RPC aplica la misma regla.
             else if (v.fecha < currentStay.fecha_ingreso) e.fecha = 'La fecha no puede ser anterior al ingreso al hogar actual.';
             return e;
         },
@@ -367,6 +371,7 @@ export function openFinishHome({ animal, currentStay, estados, onSaved }) {
         },
         submit: async (v) => {
             modal.setBusy(true);
+            // La RPC cierra la permanencia y registra el nuevo estado elegido en el historial.
             try { await finishHome({ idAnimal: animal.id_animal, ...v }); } finally { modal.setBusy(false); }
         },
         onSuccess: async () => {

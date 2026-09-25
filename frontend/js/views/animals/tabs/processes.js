@@ -23,6 +23,7 @@ import { renderFilesSection } from '../../files/section.js';
 // ------------------------------------------------------------
 export async function renderAdoptionTab(container, { animal, catalogs, navigate, reloadAll }) {
     const adoptions = await listAdoptionsByAnimal(animal.id_animal);
+    // Una adopción sin fecha de finalización es la adopción vigente del animal.
     const active = adoptions.find((a) => !a.fecha_finalizacion) ?? null;
     const puedeAdoptar = canAdopt(animal.estado?.nombre_estado, Boolean(active));
 
@@ -134,6 +135,7 @@ export async function renderFilesTab(container, { animal, reloadAll }) {
     retry?.addEventListener('click', async () => {
         const restore = setButtonBusy(retry, 'Creando carpeta…');
         try {
+            // Reintento manual: la Edge Function es idempotente, así que no crea carpetas duplicadas.
             await createDriveFolder(animal.id_animal);
             toast('Carpeta de Google Drive creada.', 'success');
             await reloadAll();
@@ -195,6 +197,7 @@ export async function renderDiffusionTab(container, { animal }) {
     container.querySelectorAll('[data-copy]').forEach((btn) => btn.addEventListener('click', async () => {
         const text = container.querySelector(`#${btn.dataset.copy}`).value;
         try {
+            // La API del portapapeles puede no estar disponible (permisos o HTTP); en ese caso se selecciona el texto para copiarlo a mano.
             await navigator.clipboard.writeText(text);
             toast(btn.dataset.copy === 'difTexto' ? 'Texto copiado.' : 'Prompt copiado.', 'success');
         } catch {

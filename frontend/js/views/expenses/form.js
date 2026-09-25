@@ -123,12 +123,14 @@ export function openExpenseForm({ categorias, animals, presetAnimalId = null, na
     const container = form.querySelector('#allocations');
     let rowIndex = 0;
 
+    // Recalcula en vivo total, asignado y saldo mientras la usuaria escribe.
     const refreshSummary = () => {
         const total = parseAmount(form.monto.value) ?? 0;
         const asignado = readRows(form).reduce((s, r) => s + (r.monto ?? 0), 0);
         render(form.querySelector('#expenseSummary'), summaryBox(total, asignado));
     };
     const addRow = (preset) => {
+        // Agrega una fila sin redibujar las anteriores, para no perder lo ya escrito.
         container.insertAdjacentHTML('beforeend', String(allocationRow(animals, rowIndex++, preset)));
         refreshSummary();
     };
@@ -164,6 +166,7 @@ export function openExpenseForm({ categorias, animals, presetAnimalId = null, na
             modal.setBusy(true);
             try { return await createExpense(values); } finally { modal.setBusy(false); }
         },
+        // El gasto ya existe: las asignaciones se ejecutan después y cada una informa su resultado.
         onSuccess: async (idGasto, { values, rows }) => {
             createdId = idGasto;
             await runAllocations(modal, { idGasto, values, rows, animals, navigate, onGoTo: () => { createdId = null; } });
@@ -197,6 +200,7 @@ async function runAllocations(modal, { idGasto, values, rows, animals, navigate,
 
     modal.setBusy(true);
     draw();
+    // Asignaciones en secuencia (no en paralelo): así la validación RN-57 de cada RPC considera las anteriores.
     for (const step of steps.slice(1)) {
         step.status = 'running';
         draw();
@@ -272,6 +276,7 @@ export function openEditExpense({ expense, categorias, onSaved }) {
 export function openAssignExpense({ expense, animals, onSaved }) {
     const ya = new Set((expense.asignaciones ?? []).map((a) => a.id_animal));
     const asignado = (expense.asignaciones ?? []).reduce((s, a) => s + Number(a.monto_asignado), 0);
+    // Saldo sin asignar; la RPC vuelve a verificarlo en el servidor.
     const disponible = Number(expense.monto) - asignado;
     const candidates = animals.filter((a) => !ya.has(a.id_animal));
     const modal = openModal({

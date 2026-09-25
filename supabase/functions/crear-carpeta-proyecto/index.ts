@@ -164,6 +164,7 @@ Deno.serve(async (req)=>{
     // ========================================================
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
+    // Secretos: existen solo en el servidor (variables de la Edge Function) y nunca se envían al navegador.
     const supabaseServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const googleClientId = Deno.env.get("GOOGLE_CLIENT_ID");
     const googleClientSecret = Deno.env.get("GOOGLE_CLIENT_SECRET");
@@ -182,6 +183,7 @@ Deno.serve(async (req)=>{
         error: "No se encontró una sesión válida."
       }, 401);
     }
+    // Cliente "como la usuaria": reenvía su JWT, por lo que sus consultas respetan RLS.
     const supabaseUsuario = createClient(supabaseUrl, supabaseAnonKey, {
       global: {
         headers: {
@@ -190,6 +192,7 @@ Deno.serve(async (req)=>{
       }
     });
     const token = authHeader.replace(/^Bearer\s+/i, "");
+    // Valida el JWT contra Supabase Auth (firma y vigencia); sin sesión válida se responde 401.
     const { data: { user }, error: authError } = await supabaseUsuario.auth.getUser(token);
     if (authError || !user) {
       console.error("Error autenticación Supabase:", authError);
@@ -258,6 +261,7 @@ Deno.serve(async (req)=>{
     // 9. OBTENER ACCESS TOKEN DE GOOGLE
     // ========================================================
     console.log("Solicitando access token a Google...");
+    // OAuth 2.0: el refresh token guardado como secreto se canjea por un access token de corta duración para llamar a Drive.
     const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
       headers: {

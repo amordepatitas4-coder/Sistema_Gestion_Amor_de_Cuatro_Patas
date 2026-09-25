@@ -131,6 +131,7 @@ async function renderAccount(body, { session, query, navigate }) {
     const nameForm = body.querySelector('#nameForm');
     bindForm(nameForm, {
         context: 'Actualizar nombre',
+        // Espacios repetidos se reducen a uno, igual que lo hace la RPC actualizar_mi_nombre.
         collect: (fd) => ({ nombre: String(fd.get('nombre') ?? '').replace(/\s+/g, ' ').trim() }),
         validate: ({ nombre }) => {
             if (nombre.length < 2) return { nombre: 'El nombre debe tener al menos 2 caracteres.' };
@@ -139,6 +140,7 @@ async function renderAccount(body, { session, query, navigate }) {
         },
         submit: ({ nombre }) => updateOwnName(nombre),
         onSuccess: (_, { nombre }) => {
+            // Actualiza el nombre en la sesión y en la barra superior sin recargar la vista.
             session.setProfileName(nombre);
             body.querySelectorAll('[data-own-name]').forEach((el) => { el.textContent = nombre; });
             nameForm.nombre.value = nombre;
@@ -157,6 +159,7 @@ async function renderAccount(body, { session, query, navigate }) {
             try {
                 await changeOwnPassword(password);
             } catch (err) {
+                // Códigos de Supabase Auth traducidos a mensajes claros; el error original se conserva en cause.
                 if (err?.code === 'same_password') throw new AppError('La nueva contraseña debe ser distinta de la actual.', { cause: err });
                 if (err?.code === 'weak_password') throw new AppError('La contraseña es demasiado débil. Usa una más larga o combina letras y números.', { cause: err });
                 if (err?.code === 'reauthentication_needed') throw new AppError('Por seguridad, cierra sesión, vuelve a ingresar e intenta nuevamente.', { cause: err });
@@ -166,6 +169,7 @@ async function renderAccount(body, { session, query, navigate }) {
         onSuccess: () => {
             form.reset();
             toast('Contraseña actualizada. Úsala la próxima vez que ingreses.', 'success');
+            // Tras recuperar la contraseña se quita el parámetro de la URL para no volver a mostrar el aviso.
             if (fromRecovery) navigate('/configuracion/cuenta', {}, { replace: true });
         },
     });
@@ -316,6 +320,7 @@ function openInviteForm({ onSent }) {
 // ------------------------------------------------------------
 async function renderCatalogs(body, { query, navigate }) {
     const cfg = findCatalogUI(query?.get('catalogo') ?? '') ?? CATALOG_UI[0];
+    // refresh: siempre datos frescos en la administración de catálogos (sin caché).
     const rows = await loadCatalog(cfg.name, { refresh: true });
     const nameKey = labelField(cfg);
     const allowAdd = cfg.allowAdd !== false;

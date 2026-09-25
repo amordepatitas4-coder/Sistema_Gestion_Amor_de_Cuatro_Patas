@@ -7,6 +7,7 @@ import { stateBadge } from '../../../core/badges.js';
 import { displayText, formatDate, formatDateTime } from '../../../core/format.js';
 import { emptyState, html, render } from '../../../core/ui.js';
 
+// Bloque "título: valor"; displayText muestra "—" cuando el dato está vacío.
 const block = (title, value) => html`<div class="info-block"><dt>${title}</dt><dd class="pre-line">${displayText(value)}</dd></div>`;
 
 // ------------------------------------------------------------
@@ -39,6 +40,7 @@ export async function renderSummaryTab(container, { animal }) {
 // Historial de estados (HISTORIAL_ESTADO)
 // ------------------------------------------------------------
 export async function renderHistoryTab(container, { animal }) {
+    // El historial lo escribe solo el backend (RPC); aquí únicamente se lee. Sin fecha_fin = estado vigente.
     const rows = await getStateHistory(animal.id_animal);
     render(container, html`
         <div class="tab-toolbar"><div>

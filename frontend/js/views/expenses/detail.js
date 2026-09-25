@@ -41,6 +41,7 @@ export default {
         }
 
         const asignaciones = expense.asignaciones ?? [];
+        // El botón "Asignar" se habilita solo si queda saldo sin asignar (RN-57 lo valida además el backend).
         const s = summarize(expense.monto, asignaciones.map((a) => a.monto_asignado));
 
         render(outlet, html`
@@ -87,6 +88,7 @@ export default {
         outlet.querySelector('#btnAssign').addEventListener('click', async (e) => {
             const restore = setButtonBusy(e.currentTarget, 'Cargando…');
             try {
+                // Los animales se cargan recién al abrir el formulario, para no retrasar la vista del detalle.
                 const animals = await listAnimals();
                 restore();
                 openAssignExpense({ expense, animals, onSaved: reload });
@@ -96,6 +98,7 @@ export default {
             }
         });
 
+        // Sección reutilizable de archivos: sube y lista comprobantes asociados a este gasto (gasto_archivo).
         await renderFilesSection(outlet.querySelector('#expenseFiles'), {
             context: 'gasto',
             idContext: id,

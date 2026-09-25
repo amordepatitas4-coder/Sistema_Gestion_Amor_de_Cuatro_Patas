@@ -17,6 +17,7 @@ export function fitWithin(width, height, maxSide) {
 export function validateImageFile(file) {
     if (!(file instanceof File) || file.size === 0) return 'Selecciona una fotografía.';
     if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) return 'La fotografía debe ser JPG, PNG o WebP.';
+    // Límite del archivo original (antes de optimizar) para no saturar la memoria del navegador, sobre todo en celulares.
     if (file.size > 25 * 1024 * 1024) return 'La fotografía original supera 25 MB. Utiliza una imagen más liviana.';
     return null;
 }
@@ -41,6 +42,7 @@ export async function optimizeToWebp(file, { maxSide = 1400, maxBytes = 2 * 1024
 
     let side = maxSide;
     try {
+        // Estrategia: primero baja la calidad; si no alcanza, reduce el tamaño un 25 % y vuelve a intentar.
         for (let attempt = 0; attempt < 4; attempt++) {
             const { width, height } = fitWithin(bitmap.width, bitmap.height, side);
             const canvas = document.createElement('canvas');
@@ -57,6 +59,7 @@ export async function optimizeToWebp(file, { maxSide = 1400, maxBytes = 2 * 1024
             side = Math.round(side * 0.75);
         }
     } finally {
+        // Libera la memoria de la imagen decodificada aunque ocurra un error.
         bitmap.close?.();
     }
     throw new AppError('No fue posible reducir la fotografía por debajo de 2 MB. Prueba con otra imagen.');

@@ -71,6 +71,7 @@ export default {
                 </section></div>
             </div>`);
 
+        // Las tres secciones cargan en paralelo y cada una maneja su propio error: si una falla, las demás se muestran igual.
         await Promise.all([
             renderKpis(outlet.querySelector('#kpiArea'), month, monthLabel),
             renderControls(outlet.querySelector('#controlsArea')),
@@ -83,6 +84,7 @@ async function renderKpis(area, month, monthLabel) {
     try {
         const estados = await loadCatalog('estado');
         const id = (nombre) => findByName(estados, nombre)?.id ?? null;
+        // Los id de estado se obtienen por nombre desde el catálogo (no se escriben fijos en el código).
         const ids = { adoptado: id(ESTADOS.ADOPTADO), enTratamiento: id(ESTADOS.EN_TRATAMIENTO), enHogar: id(ESTADOS.EN_HOGAR) };
         const values = await loadKpis(ids, month);
         const defs = kpiDefinitions(ids, month, monthLabel);

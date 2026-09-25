@@ -20,6 +20,7 @@ export function csvCell(value, { text = false } = {}) {
     if (value === null || value === undefined) return '';
     if (typeof value === 'number') return Number.isFinite(value) ? String(value) : '';
     let s = String(value);
+    // Fórmula ="000123": Excel la muestra como texto y conserva los ceros a la izquierda.
     if (text && /^\d+$/.test(s)) return `="${s}"`;
     if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
     return quote(s);
@@ -32,6 +33,7 @@ export function csvCell(value, { text = false } = {}) {
 export function toCSV(columns, rows) {
     const header = columns.map((c) => csvCell(c.label)).join(SEPARATOR);
     const body = rows.map((row) => columns.map((c) => csvCell(c.value(row), { text: c.text })).join(SEPARATOR));
+    // El carácter invisible inicial es el BOM UTF-8, necesario para que Excel reconozca las tildes.
     return `﻿${[header, ...body].join('\r\n')}`;
 }
 
@@ -54,5 +56,6 @@ export function downloadCSV(fileName, content) {
     document.body.appendChild(link);
     link.click();
     link.remove();
+    // Se libera la URL temporal después de iniciar la descarga.
     setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

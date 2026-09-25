@@ -17,6 +17,7 @@ const req = html`<span class="text-danger" aria-hidden="true">*</span>`;
 
 export async function renderHealthTab(container, { animal, catalogs, reloadTab }) {
     const rows = await listAttentions(animal.id_animal);
+    // Próximo control pendiente más cercano, destacado sobre el historial.
     const upcoming = rows
         .filter((r) => controlStatus(r.proximo_control) && controlStatus(r.proximo_control) !== 'pasado')
         .sort((a, b) => a.proximo_control.localeCompare(b.proximo_control))[0];
@@ -121,6 +122,7 @@ function openAttentionForm({ animal, catalogs, onSaved }) {
         }),
         validate: validateAttention,
         submit: async (v) => {
+            // Mientras se guarda, el modal no se puede cerrar (evita perder la respuesta o reenviar).
             modal.setBusy(true);
             try { await createAttention(v); } finally { modal.setBusy(false); }
         },

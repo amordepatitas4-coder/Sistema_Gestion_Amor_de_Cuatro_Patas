@@ -86,6 +86,7 @@ export function projectPeriod(p, format) {
 
 /** Siguiente código sugerido EST-001, EST-002… (editable por la usuaria). */
 export function suggestNextCode(codes) {
+    // Toma el mayor número EST-### existente (ignora códigos con otro formato) y sugiere el siguiente.
     const max = codes.reduce((acc, c) => {
         const m = /^EST-(\d+)$/i.exec(String(c ?? '').trim());
         return m ? Math.max(acc, Number(m[1])) : acc;
@@ -199,6 +200,7 @@ export const hasRowErrors = (r) => Boolean(r.general) || Object.keys(r.rows).len
  * PROYECTO → ANIMAL_ESTERILIZACION → ESTERILIZACION_PROFESIONAL → PROFESIONAL.
  */
 export function deriveProjectProfessionals(entries) {
+    // Un profesional puede participar en varias esterilizaciones: el Map lo agrupa una sola vez y acumula funciones y códigos.
     const map = new Map();
     entries.forEach((entry) => {
         (entry.profesionales ?? []).forEach((rel) => {
@@ -241,6 +243,7 @@ const extensionOf = (name) => (/\.([a-z0-9]+)$/i.exec(String(name ?? ''))?.[1] ?
 export function validateDocumentFile(file) {
     if (!(file instanceof File) || file.size === 0) return 'Selecciona el documento de esterilización (PDF o fotografía).';
     const type = DOC_TYPES.find((t) => t.extensions.includes(extensionOf(file.name)));
+    // Algunos navegadores o celulares no informan el tipo (""), o usan application/x-pdf para PDF.
     const declaredOk = type && (file.type === '' || file.type === type.mime || (type.mime === 'application/pdf' && file.type === 'application/x-pdf'));
     if (!declaredOk) return 'El documento debe ser PDF, JPG, PNG o WebP.';
     if (file.size > DOC_MAX_BYTES) return 'El archivo supera el límite de 10 MB.';
@@ -249,6 +252,7 @@ export function validateDocumentFile(file) {
 
 /** Tipo real según la firma del contenido (mismos criterios que la Edge Function). */
 export function detectDocumentType(bytes) {
+    // "Números mágicos": los primeros bytes identifican el formato real (%PDF-, JPEG FFD8FF, PNG, RIFF…WEBP), aunque la extensión mienta.
     const is = (offset, sig) => sig.every((v, i) => bytes[offset + i] === v);
     if (is(0, [0x25, 0x50, 0x44, 0x46, 0x2d])) return DOC_TYPES[0];
     if (is(0, [0xff, 0xd8, 0xff])) return DOC_TYPES[1];

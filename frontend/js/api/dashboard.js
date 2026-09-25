@@ -10,6 +10,7 @@
 import { supabase } from '../supabase.js';
 
 async function countAnimals(apply) {
+    // head: true hace que PostgREST devuelva solo el conteo (sin filas).
     const query = supabase.from('animal').select('id_animal', { count: 'exact', head: true }).eq('activo', true);
     const { count, error } = await apply(query);
     if (error) throw error;
@@ -23,6 +24,7 @@ async function countAnimals(apply) {
  */
 export async function loadKpis(ids, month) {
     const byState = (id) => (id == null ? Promise.resolve(null) : countAnimals((q) => q.eq('id_estado_actual', id)));
+    // Las cinco consultas se ejecutan en paralelo para que el panel cargue más rápido.
     const [activos, enTratamiento, enHogar, adoptados, rescatadosMes] = await Promise.all([
         ids.adoptado == null ? countAnimals((q) => q) : countAnimals((q) => q.neq('id_estado_actual', ids.adoptado)),
         byState(ids.enTratamiento),

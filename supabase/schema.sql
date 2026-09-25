@@ -1,6 +1,10 @@
 
 
 
+-- Esquema de la base de datos (volcado de Supabase, backend v1.1 + scripts de seguridad).
+-- Orden: funciones (RPC) → tablas → claves y restricciones → índices → políticas RLS → permisos.
+-- Todas las RPC son SECURITY DEFINER con search_path vacío: se ejecutan con permisos del dueño,
+-- validan primero que la usuaria esté activa y referencian objetos con su esquema (public.x).
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
@@ -45,6 +49,8 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA "extensions";
 
 
 
+-- Función interna (prefijo "_"): cierra el historial vigente y abre uno nuevo. No se expone al
+-- navegador; la usan las RPC de procesos (hogar, adopción, devolución) y cambiar_estado_animal.
 CREATE OR REPLACE FUNCTION "public"."_cambiar_estado_animal"("p_id_animal" bigint, "p_id_nuevo_estado" bigint, "p_motivo_cambio" "text" DEFAULT NULL::"text", "p_observaciones" "text" DEFAULT NULL::"text") RETURNS "void"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO ''
@@ -133,6 +139,7 @@ $$;
 ALTER FUNCTION "public"."_cambiar_estado_animal"("p_id_animal" bigint, "p_id_nuevo_estado" bigint, "p_motivo_cambio" "text", "p_observaciones" "text") OWNER TO "postgres";
 
 
+-- RPC de administración de usuarias: reactiva una cuenta (activo = true).
 CREATE OR REPLACE FUNCTION "public"."activar_usuario"("p_id_usuario" "uuid") RETURNS "void"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO ''
@@ -169,6 +176,7 @@ $$;
 ALTER FUNCTION "public"."activar_usuario"("p_id_usuario" "uuid") OWNER TO "postgres";
 
 
+-- RPC: la usuaria cambia solo su propio nombre (auth.uid()); public.usuario no tiene UPDATE directo.
 CREATE OR REPLACE FUNCTION "public".actualizar_mi_nombre(p_nombre text)
 RETURNS void
 LANGUAGE plpgsql
@@ -203,6 +211,7 @@ ALTER FUNCTION "public"."actualizar_mi_nombre"("p_nombre" "text") OWNER TO "post
 COMMENT ON FUNCTION "public"."actualizar_mi_nombre"("p_nombre" "text") IS 'La usuaria activa actualiza solo su propio nombre en public.usuario.';
 
 
+-- RPC: asigna parte de un gasto a un animal validando que la suma no supere el total (RN-57).
 CREATE OR REPLACE FUNCTION "public"."asignar_gasto_animal"("p_id_gasto" bigint, "p_id_animal" bigint, "p_monto_asignado" bigint) RETURNS bigint
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO ''
@@ -305,6 +314,8 @@ $_$;
 ALTER FUNCTION "public"."asignar_gasto_animal"("p_id_gasto" bigint, "p_id_animal" bigint, "p_monto_asignado" bigint) OWNER TO "postgres";
 
 
+-- RPC de cambio manual de estado. Rechaza estados reservados a procesos y animales con
+-- permanencia o adopción activa (refuerzo del script de seguridad 03).
 CREATE OR REPLACE FUNCTION "public"."cambiar_estado_animal"("p_id_animal" bigint, "p_id_nuevo_estado" bigint, "p_motivo_cambio" "text" DEFAULT NULL::"text", "p_observaciones" "text" DEFAULT NULL::"text") RETURNS "void"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO ''
@@ -391,6 +402,7 @@ $$;
 ALTER FUNCTION "public"."cambiar_estado_animal"("p_id_animal" bigint, "p_id_nuevo_estado" bigint, "p_motivo_cambio" "text", "p_observaciones" "text") OWNER TO "postgres";
 
 
+-- RPC: cierra la permanencia actual y abre otra en el nuevo hogar, en una sola transacción.
 CREATE OR REPLACE FUNCTION "public"."cambiar_hogar_temporal"("p_id_animal" bigint, "p_id_nuevo_hogar" bigint, "p_fecha_cambio" "date", "p_observaciones" "text" DEFAULT NULL::"text") RETURNS bigint
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO ''
@@ -489,6 +501,8 @@ $$;
 ALTER FUNCTION "public"."cambiar_hogar_temporal"("p_id_animal" bigint, "p_id_nuevo_hogar" bigint, "p_fecha_cambio" "date", "p_observaciones" "text") OWNER TO "postgres";
 
 
+-- Trigger sobre auth.users (ver infrastructure.sql): crea el perfil en public.usuario al invitar
+-- a una usuaria. El correo NO se copia: se lee siempre desde Supabase Auth.
 CREATE OR REPLACE FUNCTION "public"."crear_usuario_publico"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO ''
@@ -514,6 +528,7 @@ $$;
 ALTER FUNCTION "public"."crear_usuario_publico"() OWNER TO "postgres";
 
 
+-- RPC: desactiva una cuenta sin borrarla; impide autodesactivarse y dejar el sistema sin usuarias activas (RN-59).
 CREATE OR REPLACE FUNCTION "public"."desactivar_usuario"("p_id_usuario" "uuid") RETURNS "void"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO ''
@@ -593,6 +608,8 @@ $$;
 ALTER FUNCTION "public"."desactivar_usuario"("p_id_usuario" "uuid") OWNER TO "postgres";
 
 
+-- Base de la seguridad: la usan todas las políticas RLS y las RPC. true solo si la sesión (auth.uid())
+-- corresponde a un perfil con activo = true. Una cuenta desactivada pierde acceso aunque su sesión siga vigente.
 CREATE OR REPLACE FUNCTION "public"."es_usuario_activo"() RETURNS boolean
     LANGUAGE "sql" STABLE SECURITY DEFINER
     SET "search_path" TO ''
@@ -609,6 +626,7 @@ $$;
 ALTER FUNCTION "public"."es_usuario_activo"() OWNER TO "postgres";
 
 
+-- RPC: cierra la permanencia activa y registra la nueva situación (estado) del animal.
 CREATE OR REPLACE FUNCTION "public"."finalizar_hogar_temporal"("p_id_animal" bigint, "p_fecha_salida" "date", "p_id_nuevo_estado" bigint, "p_observaciones" "text" DEFAULT NULL::"text") RETURNS "void"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO ''
@@ -695,6 +713,8 @@ $$;
 ALTER FUNCTION "public"."finalizar_hogar_temporal"("p_id_animal" bigint, "p_fecha_salida" "date", "p_id_nuevo_estado" bigint, "p_observaciones" "text") OWNER TO "postgres";
 
 
+-- RPC: crea la permanencia y deja al animal En hogar temporal. Bloquea la fila del animal (FOR UPDATE)
+-- para evitar dos ingresos simultáneos.
 CREATE OR REPLACE FUNCTION "public"."ingresar_hogar_temporal"("p_id_animal" bigint, "p_id_hogar" bigint, "p_fecha_ingreso" "date", "p_observaciones" "text" DEFAULT NULL::"text") RETURNS bigint
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO ''
@@ -803,6 +823,7 @@ $$;
 ALTER FUNCTION "public"."ingresar_hogar_temporal"("p_id_animal" bigint, "p_id_hogar" bigint, "p_fecha_ingreso" "date", "p_observaciones" "text") OWNER TO "postgres";
 
 
+-- RPC de lectura: une public.usuario con el correo de auth.users (tabla no accesible desde el navegador).
 CREATE OR REPLACE FUNCTION "public".listar_usuarias()
 RETURNS TABLE (
     id_usuario uuid,
@@ -836,6 +857,8 @@ ALTER FUNCTION "public"."listar_usuarias"() OWNER TO "postgres";
 COMMENT ON FUNCTION "public"."listar_usuarias"() IS 'Usuarias internas con su correo de Supabase Auth (solo lectura) para Configuración → Usuarias.';
 
 
+-- RPC: elimina solo una relación profesional ↔ esterilización ingresada por error; nunca el profesional
+-- ni la última relación del animal.
 CREATE OR REPLACE FUNCTION "public".quitar_profesional_esterilizacion(p_id_esterilizacion_profesional bigint)
 RETURNS void
 LANGUAGE plpgsql
@@ -886,6 +909,7 @@ ALTER FUNCTION "public"."quitar_profesional_esterilizacion"("p_id_esterilizacion
 COMMENT ON FUNCTION "public"."quitar_profesional_esterilizacion"("p_id_esterilizacion_profesional" bigint) IS 'Corrige una asociación profesional–esterilización ingresada por error. No elimina al profesional ni permite dejar al animal sin profesionales.';
 
 
+-- RPC: crea la adopción (Activa), cierra la permanencia en hogar si existe y deja al animal Adoptado.
 CREATE OR REPLACE FUNCTION "public"."registrar_adopcion"("p_id_animal" bigint, "p_id_adoptante" bigint, "p_fecha_adopcion" "date", "p_observaciones" "text" DEFAULT NULL::"text") RETURNS bigint
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO ''
@@ -1006,6 +1030,7 @@ $$;
 ALTER FUNCTION "public"."registrar_adopcion"("p_id_animal" bigint, "p_id_adoptante" bigint, "p_fecha_adopcion" "date", "p_observaciones" "text") OWNER TO "postgres";
 
 
+-- RPC de alta: valida microchip único, crea el animal en estado Rescatado y su primer historial.
 CREATE OR REPLACE FUNCTION "public"."registrar_animal"("p_id_especie" bigint, "p_id_rango_etario" bigint, "p_nombre" character varying, "p_sexo" character varying, "p_tamano" character varying, "p_fecha_nacimiento" "date", "p_fecha_rescate" "date", "p_lugar_rescate" character varying, "p_caracteristicas" "text", "p_personalidad" "text", "p_historia_rescate" "text", "p_observaciones" "text", "p_microchip" character varying, "p_estado_registro_nacional" character varying) RETURNS bigint
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO ''
@@ -1116,6 +1141,8 @@ $$;
 ALTER FUNCTION "public"."registrar_animal"("p_id_especie" bigint, "p_id_rango_etario" bigint, "p_nombre" character varying, "p_sexo" character varying, "p_tamano" character varying, "p_fecha_nacimiento" "date", "p_fecha_rescate" "date", "p_lugar_rescate" character varying, "p_caracteristicas" "text", "p_personalidad" "text", "p_historia_rescate" "text", "p_observaciones" "text", "p_microchip" character varying, "p_estado_registro_nacional" character varying) OWNER TO "postgres";
 
 
+-- RPC usada por la Edge Function subir-archivo-drive: registra ARCHIVO y lo asocia a su contexto
+-- (animal, adopción, gasto, proyecto, esterilización o Fundación) en una sola transacción.
 CREATE OR REPLACE FUNCTION "public"."registrar_archivo"("p_id_categoria_archivo" bigint, "p_nombre_archivo" character varying, "p_nombre_original" character varying, "p_mime_type" character varying, "p_id_externo" character varying, "p_fecha_documento" "date", "p_descripcion" "text", "p_tipo_contexto" character varying, "p_id_contexto" bigint DEFAULT NULL::bigint) RETURNS bigint
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO ''
@@ -1281,6 +1308,7 @@ $$;
 ALTER FUNCTION "public"."registrar_archivo"("p_id_categoria_archivo" bigint, "p_nombre_archivo" character varying, "p_nombre_original" character varying, "p_mime_type" character varying, "p_id_externo" character varying, "p_fecha_documento" "date", "p_descripcion" "text", "p_tipo_contexto" character varying, "p_id_contexto" bigint) OWNER TO "postgres";
 
 
+-- RPC: finaliza la adopción como Devuelto (queda en el historial) y asigna la nueva situación del animal.
 CREATE OR REPLACE FUNCTION "public"."registrar_devolucion"("p_id_adopcion" bigint, "p_fecha_devolucion" "date", "p_id_nuevo_estado" bigint, "p_motivo" "text" DEFAULT NULL::"text", "p_observaciones" "text" DEFAULT NULL::"text") RETURNS "void"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO ''
@@ -1373,6 +1401,7 @@ $$;
 ALTER FUNCTION "public"."registrar_devolucion"("p_id_adopcion" bigint, "p_fecha_devolucion" "date", "p_id_nuevo_estado" bigint, "p_motivo" "text", "p_observaciones" "text") OWNER TO "postgres";
 
 
+-- RPC: registra un contacto posterior a la adopción; la fecha no puede ser anterior a la adopción.
 CREATE OR REPLACE FUNCTION "public"."registrar_seguimiento"("p_id_adopcion" bigint, "p_fecha" "date", "p_medio_contacto" character varying, "p_situacion_animal" "text" DEFAULT NULL::"text", "p_observaciones" "text" DEFAULT NULL::"text") RETURNS bigint
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO ''
@@ -1427,6 +1456,8 @@ SET default_tablespace = '';
 SET default_table_access_method = "heap";
 
 
+-- Tablas. Convención: id_* bigint como PK, FK con prefijo fk_, CHECK con prefijo chk_ y UNIQUE con uq_.
+-- Los catálogos tienen columna activo: se desactivan en lugar de borrarse, para conservar el historial.
 CREATE TABLE IF NOT EXISTS "public"."adopcion" (
     "id_adopcion" bigint NOT NULL,
     "id_animal" bigint NOT NULL,
@@ -2553,6 +2584,8 @@ CREATE INDEX "idx_seguimiento_fecha" ON "public"."seguimiento" USING "btree" ("f
 
 
 
+-- Índices únicos parciales: garantizan en la BD reglas de negocio de "un solo registro vigente"
+-- (una adopción activa por animal, un historial abierto, una permanencia activa, un documento por esterilización).
 CREATE UNIQUE INDEX "uq_adopcion_animal_activa" ON "public"."adopcion" USING "btree" ("id_animal") WHERE ("fecha_finalizacion" IS NULL);
 
 
@@ -2748,6 +2781,9 @@ ALTER TABLE ONLY "public"."usuario"
 
 
 
+-- Políticas RLS: todas exigen es_usuario_activo() y se aplican solo al rol authenticated.
+-- anon no tiene políticas, por lo que no ve ni modifica ninguna fila. No existen políticas DELETE.
+-- Qué columnas puede escribir cada tabla lo limitan además los GRANT del final (script de seguridad 09).
 CREATE POLICY "Usuarios activos pueden actualizar adopciones" ON "public"."adopcion" FOR UPDATE TO "authenticated" USING ("public"."es_usuario_activo"()) WITH CHECK ("public"."es_usuario_activo"());
 
 
@@ -3100,6 +3136,7 @@ CREATE POLICY "Usuarios activos pueden insertar tipos de atención sanitaria" ON
 
 
 
+-- RLS activado en todas las tablas: sin una política que lo permita, la fila no es visible.
 ALTER TABLE "public"."adopcion" ENABLE ROW LEVEL SECURITY;
 
 
@@ -3195,6 +3232,8 @@ ALTER TABLE "public"."usuario" ENABLE ROW LEVEL SECURITY;
 ALTER PUBLICATION "supabase_realtime" OWNER TO "postgres";
 
 
+-- Permisos. Las RPC y Edge Functions escriben con privilegios propios; el navegador (authenticated)
+-- solo recibe SELECT y la escritura mínima por tabla/columna. anon tiene SELECT, pero RLS no le devuelve filas.
 GRANT USAGE ON SCHEMA "public" TO "postgres";
 GRANT USAGE ON SCHEMA "public" TO "anon";
 GRANT USAGE ON SCHEMA "public" TO "authenticated";
@@ -3349,6 +3388,7 @@ GRANT USAGE ON SCHEMA "public" TO "service_role";
 
 
 
+-- Funciones: se revoca el acceso por defecto (PUBLIC) y se concede EXECUTE solo a quien corresponde.
 REVOKE ALL ON FUNCTION "public"."_cambiar_estado_animal"("p_id_animal" bigint, "p_id_nuevo_estado" bigint, "p_motivo_cambio" "text", "p_observaciones" "text") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."_cambiar_estado_animal"("p_id_animal" bigint, "p_id_nuevo_estado" bigint, "p_motivo_cambio" "text", "p_observaciones" "text") TO "service_role";
 
@@ -3509,6 +3549,7 @@ GRANT ALL ON SEQUENCE "public"."adoptante_id_adoptante_seq" TO "service_role";
 
 GRANT SELECT ON TABLE "public"."animal" TO "anon";
 GRANT SELECT ON TABLE "public"."animal" TO "authenticated";
+-- Solo columnas descriptivas: estado, activo y carpeta Drive se modifican únicamente por RPC o Edge Function.
 GRANT UPDATE(nombre, id_especie, id_rango_etario, sexo, "tamaño", fecha_nacimiento, fecha_rescate, lugar_rescate, caracteristicas, personalidad, historia_rescate, observaciones, microchip, estado_registro_nacional, foto_principal_path) ON TABLE "public"."animal" TO "authenticated";
 GRANT ALL ON TABLE "public"."animal" TO "service_role";
 
@@ -3719,6 +3760,7 @@ GRANT ALL ON SEQUENCE "public"."gasto_id_gasto_seq" TO "service_role";
 
 
 GRANT SELECT ON TABLE "public"."historial_estado" TO "anon";
+-- Tabla de proceso: solo lectura para el navegador; la escriben exclusivamente las RPC.
 GRANT SELECT ON TABLE "public"."historial_estado" TO "authenticated";
 GRANT ALL ON TABLE "public"."historial_estado" TO "service_role";
 

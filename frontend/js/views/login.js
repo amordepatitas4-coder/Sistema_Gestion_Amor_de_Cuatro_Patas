@@ -85,6 +85,7 @@ export default {
         const password = form.querySelector('#loginPassword');
         const toggle = form.querySelector('#togglePassword');
 
+        // Aviso recibido desde app.js: sesión cerrada, expirada, cuenta inactiva o enlace inválido.
         const info = NOTICES[notice] ?? (typeof notice === 'object' && notice ? notice : null);
         if (info) showFormNotice(form, info.text, info.type);
 
@@ -114,6 +115,7 @@ export default {
             submit: ({ email: e, password: p }) => session.signIn(e, p),
             onError: (err, message) => {
                 showFormErrors(form, { _form: message });
+                // Tras un error se limpia la contraseña (no queda escrita en pantalla).
                 password.value = '';
                 password.focus();
             },
@@ -142,6 +144,7 @@ export default {
         bindForm(recoveryForm, {
             context: 'Recuperación de contraseña',
             busyLabel: 'Enviando…',
+            // Se normaliza el correo porque Supabase Auth lo compara en minúsculas.
             collect: (fd) => ({ email: String(fd.get('email') ?? '').trim().toLowerCase() }),
             validate: ({ email: e }) => {
                 if (!e) return { email: 'Ingresa tu correo electrónico.' };

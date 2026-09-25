@@ -19,6 +19,7 @@ import {
 } from './logic.js';
 
 /** Última consulta del listado, para volver desde la ficha con los mismos filtros. */
+// Variable de módulo: sobrevive mientras la app está abierta y permite volver al listado con los mismos filtros.
 export let lastListQuery = {};
 
 export default {
@@ -59,6 +60,7 @@ export default {
         }));
 
         const adoptado = findByName(catalogs.estado, ESTADOS.ADOPTADO);
+        // Una sola solicitud firma las URLs de todas las fotos del listado.
         const photoUrls = await signedPhotoUrls(animals.map((a) => a.foto_principal_path));
         const body = outlet.querySelector('#animalsBody');
 
@@ -119,6 +121,7 @@ export default {
         const summary = body.querySelector('#filterSummary');
         const results = body.querySelector('#animalResults');
 
+        // Redibuja solo los resultados con los datos ya cargados (sin nuevas consultas a Supabase).
         const draw = () => {
             const filtered = applyFilters(animals, filters, { adoptadoId: adoptado?.id ?? null });
             render(summary, filterSummary(filters, filtered.length, animals.length, catalogs));

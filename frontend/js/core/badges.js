@@ -8,6 +8,7 @@
 
 import { html } from './ui.js';
 
+// Estilo por nombre de estado; un estado nuevo del catálogo usa el estilo genérico.
 const STATE_STYLES = {
     'Rescatado': { cls: 'badge-state-rescatado', icon: 'bi-life-preserver' },
     'En tratamiento': { cls: 'badge-state-tratamiento', icon: 'bi-bandaid' },

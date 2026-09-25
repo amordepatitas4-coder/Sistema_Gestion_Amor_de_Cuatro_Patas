@@ -23,9 +23,11 @@ export function stayDays(ingreso, salida, today = todayISO()) {
     const a = parseISODate(ingreso);
     const b = parseISODate(salida ?? today);
     if (!a || !b) return null;
+    // Diferencia en milisegundos convertida a días (86.400.000 ms por día).
     return Math.max(0, Math.round((b - a) / 86400000));
 }
 
+// Cuenta filas por categoría y ordena de mayor a menor (para el resumen del informe).
 function countBy(rows, keyFn) {
     const map = new Map();
     rows.forEach((r) => {
@@ -218,6 +220,7 @@ export const REPORTS = [
 ];
 
 /** Claves reservadas de la URL que ningún filtro puede usar. */
+// "tipo" identifica el informe en la URL; por eso el filtro de atenciones se llama tipo_atencion.
 export const RESERVED_KEYS = ['tipo'];
 
 export const findReport = (key) => REPORTS.find((r) => r.key === key) ?? null;
