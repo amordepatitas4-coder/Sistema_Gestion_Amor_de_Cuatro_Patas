@@ -67,5 +67,6 @@ supabase/    Base de datos, seguridad y funciones del servidor
 - Sin eliminación de registros históricos.
 - Credenciales y claves de servicio solo en el servidor; archivos privados en Storage y en Drive.
 
+## Estado
 
 MVP implementado, desplegado y validado. Quedan pendientes los últimos requerimientos solicitados por la Fundación: estado de esterilización de los animales, actualización de la identidad visual e importación de la ficha del adoptante (sección 23 de la Ficha Maestra).
