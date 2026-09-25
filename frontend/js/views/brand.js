@@ -4,7 +4,7 @@
 // Espacio reemplazable para el logo oficial: cuando la Fundación
 // entregue el archivo PNG/SVG, copiarlo en assets/ y asignar su
 // ruta a LOGO_SRC. Mientras sea null se muestra un distintivo
-// con icono (no se usa la captura de referencia como logo).
+// con icono.
 // ============================================================
 
 import { html } from '../core/ui.js';

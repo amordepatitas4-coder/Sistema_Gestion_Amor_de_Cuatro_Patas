@@ -40,14 +40,15 @@ node --test tests/session.test.mjs
 | `documents-logic.test.mjs` | Documentos: contexto de cada archivo (incluida asociación 1:1 de Fundación), búsqueda, filtros y fechas |
 | `reports-definitions.test.mjs` | Informes: filtros contextuales, claves de URL, rango de fechas, totales desde las filas, profesional N:M y exportación |
 | `settings-logic.test.mjs` | Configuración: catálogos contra columnas reales de `schema.sql`, valores protegidos, rango etario, contraseña y reglas de activación/desactivación |
+| `permissions.test.mjs` | Coherencia entre los privilegios por columna del script de seguridad 09 y las columnas que escribe el frontend |
 | `write-config.test.mjs` | Generación de `js/config.js` en el despliegue: solo URL + clave pública; rechaza `service_role` / `sb_secret_` |
 
 ## Alcance
 
 Estas pruebas cubren lógica pura (sin DOM ni Supabase). Las integraciones reales
 (Auth, PostgREST/RPC, Storage, Edge Functions, Google Drive) se verifican manualmente o
-desde el navegador según `docs/PLAN_PRUEBAS_ACEPTACION.md`, con registros QA
-identificados. Los scripts SQL de verificación del backend están en
+desde el navegador con registros de prueba identificados (ver
+`docs/PRUEBAS_Y_VALIDACION.md`). Los scripts SQL de verificación del backend están en
 `supabase/security/`.
 
 Para agregar pruebas: crear `tests/<modulo>.test.mjs` importando el módulo con ruta
