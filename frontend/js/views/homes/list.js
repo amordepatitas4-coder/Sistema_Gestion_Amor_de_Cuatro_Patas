@@ -1,5 +1,5 @@
 // ============================================================
-// Módulo Hogares temporales (Prompt Maestro §12.1).
+// Módulo Hogares temporales.
 //
 // Muestra responsable, contacto, dirección, observaciones, estado
 // activo y animales alojados actualmente. No muestra capacidad

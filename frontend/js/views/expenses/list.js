@@ -1,5 +1,5 @@
 // ============================================================
-// Módulo Gastos (Prompt Maestro §14): listado con filtros por
+// Módulo Gastos: listado con filtros por
 // período, categoría y animal; total, asignado y no asignado.
 // ============================================================
 

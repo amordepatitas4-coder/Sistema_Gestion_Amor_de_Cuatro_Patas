@@ -117,7 +117,7 @@ export function isValidMicrochip(value) {
 // ------------------------------------------------------------
 // RUT chileno
 //
-// Formato almacenado (decisión 23/09/2026): "12345678-9"
+// Formato almacenado (decisión de diseño): "12345678-9"
 // sin puntos, con guion, K mayúscula y dígito verificador válido.
 // ------------------------------------------------------------
 

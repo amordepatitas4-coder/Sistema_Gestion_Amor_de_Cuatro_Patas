@@ -7,7 +7,7 @@
 //     resuelven en la consulta;
 //   - columns: columnas legibles (sin IDs técnicos ni datos de Drive);
 //   - summary: totales calculados exclusivamente desde las filas
-//     obtenidas (no se inventan cifras: Prompt §22.3).
+//     obtenidas.
 // ============================================================
 
 import { parseISODate, todayISO } from '../../core/format.js';

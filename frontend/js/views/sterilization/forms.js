@@ -1,13 +1,13 @@
 // ============================================================
 // Formularios del módulo Proyectos de esterilización.
 //
-// Proyecto (Prompt §17.2): INSERT proyecto → crear-carpeta-proyecto.
+// Proyecto: INSERT proyecto → crear-carpeta-proyecto.
 //   Si Drive falla, el proyecto permanece creado y se ofrece
 //   reintento desde su detalle (PA-PRO-03). Si el INSERT falla sin
 //   respuesta, se busca un proyecto idéntico creado después de abrir
 //   el formulario y se continúa con él (sin exigir nombres únicos).
 //
-// Alta en nómina (Prompt §18, flujo conceptual):
+// Alta en nómina (flujo conceptual):
 //   1. capturar y validar TODO antes de bloquear (datos, filas de
 //      profesionales y el File del documento: REG-04, REG-06);
 //   2. verificar el tipo real del documento (PDF, JPG, PNG o WebP);
@@ -276,7 +276,7 @@ export async function retryProjectFolder(button, idProyecto, onDone) {
 // ============================================================
 // Selector de profesionales (N:M) con creación rápida en línea.
 // No abre un segundo modal: el formulario principal conserva sus
-// valores mientras se crea el profesional (Prompt §25).
+// valores mientras se crea el profesional.
 // ============================================================
 
 // Filas dinámicas "profesional + función"; excludeIds oculta profesionales ya asociados a la esterilización.

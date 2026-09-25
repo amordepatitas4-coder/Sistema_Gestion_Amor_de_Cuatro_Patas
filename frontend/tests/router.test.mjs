@@ -23,7 +23,7 @@ test('Detecta respuestas de Supabase Auth en la URL', () => {
     assert.ok(!R.isAuthCallback('#/panel'));
 });
 
-test('Menú: 9 módulos en el orden del Prompt Maestro §5.2', () => {
+test('Menú: 9 módulos en el orden definido', () => {
     assert.deepEqual(NAV_ITEMS.map((n) => n.label), ['Panel principal', 'Animales', 'Hogares temporales', 'Adopciones', 'Gastos', 'Proyectos de esterilización', 'Documentos', 'Informes', 'Configuración']);
     for (const item of NAV_ITEMS) assert.ok(R.matchRoute(ROUTES, item.path), item.path);
     assert.ok(R.matchRoute(ROUTES, '/login').route.public);
@@ -37,7 +37,7 @@ test('Ficha con pestañas y listado no se confunden (REG-09)', () => {
     assert.equal(R.matchRoute(ROUTES, '/hogares').route.path, '/hogares');
 });
 
-test('Rutas de Esterilización y Configuración (Etapas 8 y 11)', () => {
+test('Rutas de Esterilización y Configuración', () => {
     assert.equal(R.matchRoute(ROUTES, '/esterilizacion').route.path, '/esterilizacion');
     assert.deepEqual(R.matchRoute(ROUTES, '/esterilizacion/2/nomina').params, { id: '2', tab: 'nomina' });
     assert.equal(R.matchRoute(ROUTES, '/esterilizacion/2/nomina').route.module.path, '/esterilizacion');
@@ -47,7 +47,7 @@ test('Rutas de Esterilización y Configuración (Etapas 8 y 11)', () => {
     assert.ok(!ROUTES.some((r) => r.load && String(r.load).includes('placeholder') && ['/esterilizacion', '/documentos', '/informes', '/configuracion'].includes(r.path)));
 });
 
-test('Anclas internas ("#main") no son rutas (enlace Saltar al contenido, Etapa 12)', () => {
+test('Anclas internas ("#main") no son rutas (enlace Saltar al contenido)', () => {
     assert.equal(R.isRouteHash('#main'), false);
     assert.equal(R.isRouteHash('#/panel'), true);
     assert.equal(R.isRouteHash(''), true);

@@ -1,5 +1,5 @@
 // ============================================================
-// Módulo Proyectos de esterilización (Prompt Maestro §17.1):
+// Módulo Proyectos de esterilización:
 // tarjetas con nombre, estado, período, entidad financiante y
 // cantidad de animales registrados. Sin meta/cupo de animales.
 // Filtros en la URL: #/esterilizacion?q=…&estado=…

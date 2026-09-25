@@ -34,7 +34,7 @@ export function formatBytes(bytes) {
 }
 
 // ------------------------------------------------------------
-// Difusión (RF-14, RF-15, RN-29..RN-33, Prompt Maestro §16)
+// Difusión (RF-14, RF-15, RN-29..RN-33)
 //
 // Solo información autorizada de la ficha: nombre, especie, sexo,
 // edad/rango, tamaño, personalidad, historia y características.

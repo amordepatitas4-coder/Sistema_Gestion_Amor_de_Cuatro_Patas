@@ -1,8 +1,8 @@
 // ============================================================
-// Acceso a datos: cuenta y usuarias (Etapa 11).
+// Acceso a datos: cuenta y usuarias.
 //
 // - Identidad y credenciales: Supabase Auth (fuente de verdad).
-//   El correo NO se duplica en public.usuario (RN / Ficha §26.3).
+//   El correo NO se duplica en public.usuario.
 // - public.usuario solo tiene política SELECT: el nombre cambia solo
 //   mediante actualizar_mi_nombre y activo solo mediante las RPC
 //   activar_usuario / desactivar_usuario (esta última impide la

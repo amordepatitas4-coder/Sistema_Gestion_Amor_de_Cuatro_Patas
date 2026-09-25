@@ -1,5 +1,5 @@
 // ============================================================
-// Panel principal (Etapa 2, Prompt Maestro §6 / Ficha §29.2).
+// Panel principal.
 //
 // KPI exactos: Animales activos · En tratamiento · En hogar
 // temporal · Adoptados · Rescatados este mes. Sin KPI

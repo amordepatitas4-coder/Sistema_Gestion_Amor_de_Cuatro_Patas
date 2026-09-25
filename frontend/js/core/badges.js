@@ -1,9 +1,9 @@
 // ============================================================
-// Badges de estado consistentes en toda la aplicación (§40, PA-UX-05).
+// Badges de estado consistentes en toda la aplicación (PA-UX-05).
 //
 // El estado formal proviene de ESTADO.nombre_estado. El indicador
 // "💚 Disponible para adopción" para animales En hogar temporal es
-// SOLO visual: no se guarda ni reemplaza el estado formal (§7.4).
+// SOLO visual: no se guarda ni reemplaza el estado formal.
 // ============================================================
 
 import { html } from './ui.js';

@@ -6,7 +6,7 @@
 //   RN-57 (suma asignada <= total; la igualdad es válida).
 // - No existe una RPC que cree gasto + asignaciones en una sola
 //   transacción: el proceso es de varios pasos y la interfaz
-//   informa explícitamente un resultado parcial (Prompt §14.4).
+//   informa explícitamente un resultado parcial.
 // - No hay eliminación de gastos ni de asignaciones (sin DELETE).
 // ============================================================
 

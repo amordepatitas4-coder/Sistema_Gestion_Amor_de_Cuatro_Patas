@@ -29,7 +29,7 @@ test('Período del proyecto', () => {
     assert.equal(S.projectPeriod({}, f), 'Sin período definido');
 });
 
-test('Código sugerido EST-00N editable (§18.2)', () => {
+test('Código sugerido EST-00N editable', () => {
     assert.equal(S.suggestNextCode([]), 'EST-001');
     assert.equal(S.suggestNextCode(['EST-001', 'EST-009', 'OTRO-50']), 'EST-010');
     assert.equal(S.suggestNextCode(['est-120']), 'EST-121');

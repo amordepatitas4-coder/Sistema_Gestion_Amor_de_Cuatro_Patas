@@ -1,6 +1,6 @@
 // ============================================================
 // Genera js/config.js en el servicio de despliegue a partir de
-// variables de entorno (Etapa 13, despliegue de prueba).
+// variables de entorno (despliegue de prueba).
 //
 //   SUPABASE_URL=https://xxxx.supabase.co \
 //   SUPABASE_ANON_KEY=<clave anon o publishable> \

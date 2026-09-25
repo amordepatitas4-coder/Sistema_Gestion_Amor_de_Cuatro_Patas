@@ -1,7 +1,7 @@
 // ============================================================
 // Ficha integral del animal: #/animales/:id/:tab
 //
-// Pestañas EXACTAS (Prompt Maestro §9):
+// Pestañas EXACTAS:
 //   Resumen · Salud · Hogares · Adopción · Gastos · Archivos · Historial · Difusión
 // Cada pestaña es una ruta propia: navegar a Historial nunca
 // redirige al Dashboard (REG-09) y el botón Atrás funciona.

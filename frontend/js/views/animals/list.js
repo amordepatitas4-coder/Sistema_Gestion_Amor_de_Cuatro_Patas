@@ -2,7 +2,7 @@
 // Módulo Animales: listado en tarjetas o lista, búsqueda y filtros.
 //
 // - Los filtros viven en la URL (#/animales?estado=…) para que un
-//   filtro aplicado desde el Dashboard quede visible (§6.3, REG-02).
+//   filtro aplicado desde el Dashboard quede visible (REG-02).
 // - Cada tarjeta/fila es un enlace a la ficha: funciona desde el
 //   primer render y con teclado (REG-01, PA-ACC-01).
 // ============================================================

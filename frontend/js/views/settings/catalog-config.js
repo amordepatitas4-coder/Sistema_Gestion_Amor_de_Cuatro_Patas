@@ -1,6 +1,5 @@
 // ============================================================
-// Configuración EXPLÍCITA de cada catálogo (Prompt §23.3, §28;
-// PA-CAT-01..05). No se asume que todos tengan "nombre +
+// Configuración EXPLÍCITA de cada catálogo (PA-CAT-01..05). No se asume que todos tengan "nombre +
 // descripcion": cada uno declara sus columnas reales, largos y
 // reglas. Lógica pura (sin DOM ni Supabase).
 //

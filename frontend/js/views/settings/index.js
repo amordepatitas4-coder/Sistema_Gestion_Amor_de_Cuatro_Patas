@@ -1,9 +1,9 @@
 // ============================================================
-// Configuración (Prompt Maestro §23): #/configuracion/:seccion
+// Configuración: #/configuracion/:seccion
 //   cuenta     → Mi cuenta (nombre, correo de Auth, contraseña, salir)
 //   usuarios   → Usuarias: invitar, activar, desactivar (RPC / EF)
 //   catalogos  → Catálogos con metadatos explícitos (sin DELETE)
-// La sección seleccionada queda marcada (§40, PA-NAV).
+// La sección seleccionada queda marcada (PA-NAV).
 // No se incluye "Sistema": no hay opciones técnicas necesarias.
 // ============================================================
 

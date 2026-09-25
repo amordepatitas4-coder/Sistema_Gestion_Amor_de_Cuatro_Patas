@@ -1,7 +1,7 @@
 // ============================================================
 // Envío seguro de formularios.
 //
-// Implementa el patrón obligatorio (CLAUDE.md §9 / Prompt §27):
+// Implementa el patrón obligatorio:
 //   1. prevenir submit normal;
 //   2. capturar FormData y archivos;
 //   3. validar;

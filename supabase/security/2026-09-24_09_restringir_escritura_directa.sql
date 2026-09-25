@@ -2,7 +2,7 @@
 -- SISTEMA WEB DE GESTIÓN DE RESCATE Y ADOPCIÓN ANIMAL
 -- Fundación Amor de Cuatro Patas
 --
--- Corrección S-1 (QA Etapa 13) — 24/09/2026
+-- Corrección S-1 — 24/09/2026
 --
 -- Problema: las tablas tenían GRANT ALL para anon y authenticated, y
 -- las políticas RLS permitían INSERT/UPDATE a toda usuaria activa. Por

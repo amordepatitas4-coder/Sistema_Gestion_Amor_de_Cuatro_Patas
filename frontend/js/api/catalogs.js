@@ -3,7 +3,7 @@
 //
 // No se deducen nombres de PK ni columnas: cada catálogo declara
 // su tabla, clave primaria, campo visible y columnas reales
-// (Prompt Maestro §23.3 y §28; REG-11).
+// (REG-11).
 // ============================================================
 
 import { supabase } from '../supabase.js';

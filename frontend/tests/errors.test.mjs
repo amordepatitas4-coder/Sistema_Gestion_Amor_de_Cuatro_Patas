@@ -27,7 +27,7 @@ test('Errores propios y desconocidos', async () => {
     assert.equal(await describeError({ weird: true }), MESSAGES.generic);
 });
 
-test('Edge Functions: detalles técnicos se reemplazan por mensajes comprensibles (Etapa 12)', async () => {
+test('Edge Functions: detalles técnicos se reemplazan por mensajes comprensibles', async () => {
     const { functionMessage, MESSAGES: M } = E;
     assert.equal(functionMessage('Faltan variables de entorno requeridas.'), M.service);
     assert.equal(functionMessage('Google Drive respondió 403: The user does not have sufficient permissions'), M.drive);

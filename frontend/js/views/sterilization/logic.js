@@ -15,7 +15,7 @@ export const DOC_CATEGORY = 'Documento de esterilización';
 export const DOC_MAX_BYTES = 10 * 1024 * 1024; // límite de subir-archivo-drive
 
 /**
- * Tipos admitidos para el documento de esterilización (revisión 23/09/2026):
+ * Tipos admitidos para el documento de esterilización:
  * PDF o fotografía del documento físico. Deben coincidir con la
  * verificación de subir-archivo-drive (firma del contenido).
  */
@@ -267,7 +267,7 @@ export async function readDocumentType(file) {
 }
 
 // ------------------------------------------------------------
-// Alta multipaso segura de reintentar (revisión 23/09/2026)
+// Alta multipaso segura de reintentar
 //
 // - Animal: UNIQUE(id_proyecto, codigo). Si el INSERT falla (p. ej. se
 //   perdió la respuesta) se busca el código: si existe con los MISMOS

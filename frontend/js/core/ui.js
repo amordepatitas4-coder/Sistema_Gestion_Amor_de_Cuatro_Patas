@@ -74,7 +74,7 @@ export function pageHeader({ title, subtitle = '', actions = '' }) {
 
 // ------------------------------------------------------------
 // Estados de pantalla: carga, vacío (sin datos / sin resultados)
-// y error. Diferenciados visualmente según el Prompt Maestro §24.
+// y error, diferenciados visualmente.
 // ------------------------------------------------------------
 
 export function loadingState(text = 'Cargando información…') {
@@ -229,7 +229,7 @@ export function openModal({ title, body, size = '', onHidden = null }) {
     element.addEventListener('click', (event) => {
         if (event.target.closest('[data-modal-close]')) api.close();
     });
-    // Foco inicial razonable (§25): primer campo editable. Solo con puntero
+    // Foco inicial razonable: primer campo editable. Solo con puntero
     // preciso (mouse/teclado) para no abrir el teclado en celulares.
     element.addEventListener('shown.bs.modal', () => {
         shown = true;
@@ -260,7 +260,7 @@ export function openModal({ title, body, size = '', onHidden = null }) {
 }
 
 // ------------------------------------------------------------
-// Filtros plegables en celular (Etapa 12).
+// Filtros plegables en celular.
 //
 // Las columnas marcadas con .filter-extra se ocultan en pantallas
 // pequeñas hasta pulsar "Más filtros"; en escritorio siempre se ven.
@@ -297,7 +297,7 @@ export function collapsibleFilters(form) {
 }
 
 // ------------------------------------------------------------
-// Tablas apiladas en celular (Etapa 12).
+// Tablas apiladas en celular.
 //
 // Copia el texto de cada encabezado a data-label en sus celdas; en
 // pantallas pequeñas el CSS muestra cada fila como tarjeta con

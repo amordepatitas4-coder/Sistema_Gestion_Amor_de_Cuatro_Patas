@@ -1,6 +1,6 @@
 /* ============================================================
    Sistema de Gestión — Fundación Amor de Cuatro Patas
-   Identidad visual sobre Bootstrap 5.3 (Prompt Maestro §4).
+   Identidad visual sobre Bootstrap 5.3.
 
    Azul petróleo estructura la interfaz; el fucsia es acento de
    identidad (nunca color de error). Colores semánticos estándar.
@@ -17,7 +17,7 @@
     --acp-bg: #F7F9FA;
     --acp-surface: #FFFFFF;
     --acp-text: #263238;
-    --acp-muted: #58656C;   /* ≥ 4.5:1 sobre fondos claros (WCAG AA, Etapa 12) */
+    --acp-muted: #58656C;   /* ≥ 4.5:1 sobre fondos claros (WCAG AA) */
     --acp-line: #DDE5E8;
 
     /* Semánticos */
@@ -62,7 +62,7 @@ body {
 }
 
 /* ------------------------------------------------------------
-   Botones (jerarquía §4.3)
+   Botones
    ------------------------------------------------------------ */
 .btn {
     --bs-btn-font-weight: 600;
@@ -152,7 +152,7 @@ body {
     font-size: 1.25rem;
 }
 
-/* Foco visible y consistente (§32) */
+/* Foco visible y consistente */
 :focus-visible {
     outline: 3px solid rgba(49, 93, 109, .55);
     outline-offset: 2px;
@@ -541,7 +541,7 @@ body {
 }
 
 /* ------------------------------------------------------------
-   Estados: carga, vacío, sin resultados, error (§24)
+   Estados: carga, vacío, sin resultados, error
    ------------------------------------------------------------ */
 .state-block {
     display: flex;
@@ -1176,7 +1176,7 @@ a.kpi-card:hover {
 }
 
 /* ------------------------------------------------------------
-   Impresión (informes, etapa 10)
+   Impresión (informes)
    ------------------------------------------------------------ */
 @media print {
     .sidebar,
@@ -1197,7 +1197,7 @@ a.kpi-card:hover {
 }
 
 /* ------------------------------------------------------------
-   Proyectos de esterilización (Etapa 8)
+   Proyectos de esterilización
    ------------------------------------------------------------ */
 .project-card {
     position: relative;
@@ -1237,7 +1237,7 @@ a.kpi-card:hover {
 .table-responsive { position: relative; }
 
 /* ------------------------------------------------------------
-   Informes (Etapa 10)
+   Informes
    ------------------------------------------------------------ */
 .report-cards {
     display: grid;
@@ -1310,7 +1310,7 @@ a.kpi-card:hover {
 }
 
 /* ------------------------------------------------------------
-   Configuración → Catálogos (Etapa 11)
+   Configuración → Catálogos
    ------------------------------------------------------------ */
 .catalog-layout { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 1rem; align-items: start; }
 .catalog-nav { padding: .6rem; }
@@ -1335,7 +1335,7 @@ a.kpi-card:hover {
 }
 
 /* ------------------------------------------------------------
-   Etapa 12: objetivos táctiles en pantallas táctiles (celular/tablet)
+   Objetivos táctiles en pantallas táctiles (celular/tablet)
    ------------------------------------------------------------ */
 .photo-button { min-height: 32px; }
 
@@ -1429,7 +1429,7 @@ a.kpi-card:hover {
 
 /* ------------------------------------------------------------
    Textos largos sin espacios (correos, códigos, nombres extensos)
-   no deben ensanchar la página (Etapa 12).
+   no deben ensanchar la página.
    ------------------------------------------------------------ */
 .page-title, .page-subtitle, .modal-title,
 .card-panel h1, .card-panel h2, .card-panel h3,

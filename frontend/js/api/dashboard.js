@@ -1,5 +1,5 @@
 // ============================================================
-// Indicadores del Panel principal (Ficha Maestra §29.2).
+// Indicadores del Panel principal.
 //
 // Todos se calculan sobre animales con registro activo
 // (ANIMAL.activo = true). "Animales activos" es un concepto de

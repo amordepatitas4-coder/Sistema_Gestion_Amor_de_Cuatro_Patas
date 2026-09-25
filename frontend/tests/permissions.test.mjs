@@ -1,4 +1,4 @@
-// Regresión S-1 (Etapa 13): lo que el frontend escribe directamente debe estar
+// Regresión S-1: lo que el frontend escribe directamente debe estar
 // concedido por supabase/security/2026-09-24_09_restringir_escritura_directa.sql,
 // y las tablas de proceso NO deben recibir escritura directa.
 // Se leen los archivos como texto (los módulos de api/ dependen del CDN de Supabase).

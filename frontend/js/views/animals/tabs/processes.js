@@ -19,7 +19,7 @@ import {
 import { renderFilesSection } from '../../files/section.js';
 
 // ------------------------------------------------------------
-// Adopción (Etapa 5)
+// Adopción
 // ------------------------------------------------------------
 export async function renderAdoptionTab(container, { animal, catalogs, navigate, reloadAll }) {
     const adoptions = await listAdoptionsByAnimal(animal.id_animal);
@@ -72,7 +72,7 @@ export async function renderAdoptionTab(container, { animal, catalogs, navigate,
 }
 
 // ------------------------------------------------------------
-// Gastos (Etapa 6)
+// Gastos
 // ------------------------------------------------------------
 export async function renderExpensesTab(container, { animal, navigate, reloadTab }) {
     const rows = await listExpensesByAnimal(animal.id_animal);
@@ -114,7 +114,7 @@ export async function renderExpensesTab(container, { animal, navigate, reloadTab
 }
 
 // ------------------------------------------------------------
-// Archivos (Etapa 7): carpeta Drive del animal + archivos propios
+// Archivos: carpeta Drive del animal + archivos propios
 // ------------------------------------------------------------
 export async function renderFilesTab(container, { animal, reloadAll }) {
     const hasFolder = Boolean(animal.id_carpeta_drive);
@@ -155,7 +155,7 @@ export async function renderFilesTab(container, { animal, reloadAll }) {
 }
 
 // ------------------------------------------------------------
-// Difusión (Etapa 7): texto base y prompt editables, sin IA.
+// Difusión: texto base y prompt editables, sin IA.
 // ------------------------------------------------------------
 export async function renderDiffusionTab(container, { animal }) {
     const data = diffusionData(animal);

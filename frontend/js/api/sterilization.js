@@ -1,5 +1,5 @@
 // ============================================================
-// Acceso a datos: proyectos de esterilización (Etapa 8).
+// Acceso a datos: proyectos de esterilización.
 //
 // Tablas: PROYECTO_ESTERILIZACION, ANIMAL_ESTERILIZACION,
 // PROFESIONAL, ESTERILIZACION_PROFESIONAL (N:M) y

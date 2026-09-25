@@ -4,7 +4,7 @@
 --
 -- Refuerzo de integridad sobre backend v1.1 — 23/09/2026
 --
--- Huecos corregidos (detectados en el análisis de la Etapa 0):
+-- Huecos corregidos:
 --
 --   1. cambiar_estado_animal permitía un cambio manual de estado
 --      mientras el animal tenía una permanencia activa en hogar

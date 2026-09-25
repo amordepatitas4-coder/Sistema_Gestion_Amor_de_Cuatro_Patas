@@ -1,5 +1,5 @@
 // ============================================================
-// Acceso a datos: módulo Documentos (buscador transversal, Etapa 9).
+// Acceso a datos: módulo Documentos (buscador transversal).
 //
 // Lee ARCHIVO con todas sus asociaciones (animal, adopción, gasto,
 // proyecto, esterilización y Fundación) para mostrar el contexto.

@@ -1,7 +1,7 @@
 // ============================================================
 // Optimización de la fotografía principal antes de Storage.
 // Convierte a WebP, limita el lado mayor y respeta el tamaño
-// máximo del bucket (RN-27, Prompt Maestro §8.3).
+// máximo del bucket (RN-27).
 // ============================================================
 
 import { AppError } from './errors.js';

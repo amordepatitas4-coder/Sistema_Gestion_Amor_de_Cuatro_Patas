@@ -4,7 +4,7 @@
 --
 -- Documento principal único por animal de esterilización — 23/09/2026
 --
--- Decisión funcional (revisión Etapa 8): cada animal de la nómina
+-- Decisión funcional: cada animal de la nómina
 -- de un proyecto tiene UN documento de esterilización (PDF, JPG,
 -- PNG o WebP). Hasta ahora la unicidad solo se controlaba en la
 -- interfaz; dos cargas simultáneas (dos pestañas o un reintento

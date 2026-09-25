@@ -2,7 +2,7 @@
 -- SISTEMA WEB DE GESTIÓN DE RESCATE Y ADOPCIÓN ANIMAL
 -- Fundación Amor de Cuatro Patas
 --
--- Correcciones aprobadas en la revisión de Etapas 8–11 — 23/09/2026
+-- Correcciones de integridad y gestión de usuarias — 23/09/2026
 --
 -- 1. quitar_profesional_esterilizacion(p_id_esterilizacion_profesional)
 --    Corrige una asociación profesional ↔ animal de esterilización

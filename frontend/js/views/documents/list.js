@@ -1,5 +1,5 @@
 // ============================================================
-// Módulo Documentos (Prompt Maestro §21): buscador transversal de
+// Módulo Documentos: buscador transversal de
 // los registros ARCHIVO ya relacionados con sus contextos.
 //
 // - No es un editor documental: solo buscar, filtrar y abrir en Drive

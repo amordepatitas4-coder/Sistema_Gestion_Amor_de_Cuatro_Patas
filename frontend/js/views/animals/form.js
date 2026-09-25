@@ -1,7 +1,7 @@
 // ============================================================
 // Formularios de animal: registro, edición y foto principal.
 //
-// Registro (Prompt Maestro §8.4):
+// Registro:
 //   1. capturar y validar todo (incluida la foto) antes de bloquear;
 //   2. RPC registrar_animal con la firma completa;
 //   3. desde este punto el animal EXISTE: el formulario se reemplaza

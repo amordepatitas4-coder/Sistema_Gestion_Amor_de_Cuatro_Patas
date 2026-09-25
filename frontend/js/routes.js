@@ -15,7 +15,7 @@
 
 const placeholder = () => import('./views/placeholder.js');
 
-/** Módulos del menú principal, en el orden definido por el Prompt Maestro §5.2. */
+/** Módulos del menú principal, en el orden de navegación definido para el sistema. */
 export const NAV_ITEMS = [
     { path: '/panel', label: 'Panel principal', icon: 'bi-grid-1x2', stage: 2 },
     { path: '/animales', label: 'Animales', icon: 'bi-heart', stage: 3 },

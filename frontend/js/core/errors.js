@@ -134,7 +134,7 @@ function describePostgrestError(err) {
 }
 
 /**
- * Mensaje de una Edge Function apto para la usuaria (Etapa 12).
+ * Mensaje de una Edge Function apto para la usuaria.
  * Los mensajes de negocio ya vienen redactados en español y se conservan;
  * los detalles técnicos (códigos de Google, configuración del servidor)
  * se reemplazan por una indicación comprensible.

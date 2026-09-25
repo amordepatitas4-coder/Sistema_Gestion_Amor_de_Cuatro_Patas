@@ -1,17 +1,17 @@
 // ============================================================
 // Detalle de un proyecto de esterilización: #/esterilizacion/:id/:tab
 //
-// Pestañas EXACTAS (Prompt Maestro §17.3, PA-PRO-04):
+// Pestañas EXACTAS (PA-PRO-04):
 //   Información · Nómina · Profesionales · Documentación
 //
-// - Nómina (§18): código, especie, sexo, microchip, Registro Nacional,
+// - Nómina: código, especie, sexo, microchip, Registro Nacional,
 //   fecha, lugar, profesional(es), documento y acciones.
 //   Documento de esterilización (PDF, JPG, PNG o WebP; uno por animal):
 //   "Adjuntar documento" si no existe; "Abrir documento" si existe.
-//   Sin "Reemplazar" en el MVP (decisión 23/09/2026).
-// - Profesionales (§19): derivados de la nómina
+//   Sin "Reemplazar" en el MVP (decisión validada con la Fundación).
+// - Profesionales: derivados de la nómina
 //   (PROYECTO → ANIMAL_ESTERILIZACION → ESTERILIZACION_PROFESIONAL → PROFESIONAL).
-// - Documentación (§20): archivos del proyecto (contexto 'proyecto'),
+// - Documentación: archivos del proyecto (contexto 'proyecto'),
 //   subcarpeta Documentación; distintos de las fichas de la nómina.
 // ============================================================
 

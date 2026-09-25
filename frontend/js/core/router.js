@@ -34,7 +34,7 @@ export function parseAuthCallback(hash) {
 /**
  * ¿El hash corresponde a una ruta de la aplicación? ("", "#", "#/…").
  * Un ancla interna como "#main" (enlace "Saltar al contenido") no es una
- * ruta y no debe llevar a "Página no encontrada" (Etapa 12).
+ * ruta y no debe llevar a "Página no encontrada".
  */
 export function isRouteHash(hash) {
     const value = String(hash ?? '');

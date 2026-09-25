@@ -3,7 +3,7 @@
 //
 // No existe RPC para atenciones: se inserta directamente (RLS lo
 // permite a usuarias activas). Registrar una atención NO cambia
-// el estado del animal (Ficha §28.2).
+// el estado del animal.
 // ============================================================
 
 import { supabase } from '../supabase.js';

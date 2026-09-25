@@ -44,7 +44,7 @@ test('Difusión: solo datos autorizados (PA-DIF-01/04)', () => {
     assert.ok(text.includes(D.CONTACT_PLACEHOLDER));
 });
 
-test('Difusión: prompt estructurado con la base de la Ficha §29.12 (PA-DIF-02)', () => {
+test('Difusión: prompt estructurado con el prompt base definido (PA-DIF-02)', () => {
     const prompt = D.buildDiffusionPrompt(D.diffusionData(animal));
     assert.ok(prompt.startsWith(D.PROMPT_BASE));
     assert.match(prompt, /- Personalidad: Juguetona/);

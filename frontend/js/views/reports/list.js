@@ -1,5 +1,5 @@
 // ============================================================
-// Módulo Informes (Prompt Maestro §22, Ficha §29.11).
+// Módulo Informes.
 //
 // - Tarjetas de tipo de informe: la seleccionada queda marcada de
 //   forma persistente (fondo + borde + aria-pressed; REG-08,

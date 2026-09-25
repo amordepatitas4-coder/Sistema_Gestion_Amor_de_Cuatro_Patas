@@ -1,5 +1,5 @@
 // ============================================================
-// Módulo Adopciones (Prompt Maestro §13): subsecciones
+// Módulo Adopciones: subsecciones
 //   #/adopciones            → Adopciones
 //   #/adopciones/adoptantes → Adoptantes
 // Sin postulaciones, cuestionarios ni puntajes.

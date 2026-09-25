@@ -1,7 +1,7 @@
 // ============================================================
-// Acceso a datos: módulo Informes (Etapa 10). Solo lectura.
+// Acceso a datos: módulo Informes. Solo lectura.
 //
-// Los informes no tienen entidad propia (Ficha §17.2): son consultas
+// Los informes no tienen entidad propia: son consultas
 // sobre los registros existentes. Los filtros sobre columnas propias
 // se aplican en la consulta; los que dependen de datos relacionados
 // (p. ej. especie del animal adoptado) se aplican en la lógica pura
