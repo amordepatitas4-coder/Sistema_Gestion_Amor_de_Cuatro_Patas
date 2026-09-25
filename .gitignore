@@ -26,3 +26,7 @@ npm-debug.log*
 
 # Configuración local del frontend
 frontend/js/config.js
+# Documentación interna de desarrollo (se conserva solo localmente)
+_interno/
+CLAUDE.md
+.claude/
