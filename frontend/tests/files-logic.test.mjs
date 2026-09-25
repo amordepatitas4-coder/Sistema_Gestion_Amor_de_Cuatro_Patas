@@ -51,6 +51,20 @@ test('Difusión: prompt estructurado con el prompt base definido (PA-DIF-02)', (
     assert.match(prompt, /No inventes información/);
 });
 
+test('Difusión: esterilización (solo lo que se sabe, concordando con el sexo)', () => {
+    const est = D.diffusionData({ ...animal, estado_esterilizacion: 'Esterilizado' });
+    assert.ok(D.buildDiffusionText(est).includes('Esterilizada'));
+    assert.match(D.buildDiffusionPrompt(est), /- Esterilización: Esterilizado/);
+    const macho = D.diffusionData({ ...animal, sexo: 'Macho', estado_esterilizacion: 'Esterilizado' });
+    assert.ok(D.buildDiffusionText(macho).includes('Esterilizado'));
+    const no = D.diffusionData({ ...animal, estado_esterilizacion: 'No esterilizado' });
+    assert.ok(!/sterilizad/.test(D.buildDiffusionText(no)), 'el texto base no destaca que no está esterilizado');
+    assert.match(D.buildDiffusionPrompt(no), /- Esterilización: No esterilizado/);
+    const sin = D.diffusionData({ ...animal, estado_esterilizacion: 'Sin información' });
+    assert.equal(sin.esterilizacion, null);
+    assert.match(D.buildDiffusionPrompt(sin), /- Esterilización: No registrado/);
+});
+
 test('Difusión: campos faltantes y sin nombre', () => {
     const d = D.diffusionData({ id_animal: 9, nombre: null, sexo: 'Desconocido' });
     assert.deepEqual(D.missingDiffusionFields(d), ['nombre', 'personalidad', 'historia del rescate', 'características']);

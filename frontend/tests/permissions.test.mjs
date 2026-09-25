@@ -7,8 +7,12 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 const read = (rel) => readFileSync(new URL(rel, import.meta.url), 'utf8');
-// Se descartan los comentarios SQL: solo cuentan las sentencias.
-const sql = read('../../supabase/security/2026-09-24_09_restringir_escritura_directa.sql').replace(/--.*$/gm, '');
+// Se descartan los comentarios SQL: solo cuentan las sentencias. El script 11 agrega
+// el permiso sobre ANIMAL.estado_esterilizacion a los privilegios del script 09.
+const sql = [
+    read('../../supabase/security/2026-09-24_09_restringir_escritura_directa.sql'),
+    read('../../supabase/security/2026-09-25_11_estado_esterilizacion.sql'),
+].join('\n').replace(/--.*$/gm, '');
 const api = {
     animals: read('../js/api/animals.js'),
     sterilization: read('../js/api/sterilization.js'),

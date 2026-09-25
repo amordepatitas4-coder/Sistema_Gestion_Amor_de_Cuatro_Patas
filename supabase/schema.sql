@@ -1031,7 +1031,8 @@ ALTER FUNCTION "public"."registrar_adopcion"("p_id_animal" bigint, "p_id_adoptan
 
 
 -- RPC de alta: valida microchip único, crea el animal en estado Rescatado y su primer historial.
-CREATE OR REPLACE FUNCTION "public"."registrar_animal"("p_id_especie" bigint, "p_id_rango_etario" bigint, "p_nombre" character varying, "p_sexo" character varying, "p_tamano" character varying, "p_fecha_nacimiento" "date", "p_fecha_rescate" "date", "p_lugar_rescate" character varying, "p_caracteristicas" "text", "p_personalidad" "text", "p_historia_rescate" "text", "p_observaciones" "text", "p_microchip" character varying, "p_estado_registro_nacional" character varying) RETURNS bigint
+-- p_estado_esterilizacion es opcional (por defecto 'Sin información').
+CREATE OR REPLACE FUNCTION "public"."registrar_animal"("p_id_especie" bigint, "p_id_rango_etario" bigint, "p_nombre" character varying, "p_sexo" character varying, "p_tamano" character varying, "p_fecha_nacimiento" "date", "p_fecha_rescate" "date", "p_lugar_rescate" character varying, "p_caracteristicas" "text", "p_personalidad" "text", "p_historia_rescate" "text", "p_observaciones" "text", "p_microchip" character varying, "p_estado_registro_nacional" character varying, "p_estado_esterilizacion" character varying DEFAULT 'Sin información'::character varying) RETURNS bigint
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO ''
     AS $$
@@ -1076,6 +1077,7 @@ BEGIN
 
 
     -- 4. Crear la ficha del animal con estado inicial Rescatado.
+    --    Si no se informa la esterilización, queda 'Sin información'.
     INSERT INTO public.animal (
         id_estado_actual,
         id_especie,
@@ -1091,7 +1093,8 @@ BEGIN
         historia_rescate,
         observaciones,
         microchip,
-        estado_registro_nacional
+        estado_registro_nacional,
+        estado_esterilizacion
     )
     VALUES (
         v_id_estado_rescatado,
@@ -1108,7 +1111,8 @@ BEGIN
         p_historia_rescate,
         p_observaciones,
         p_microchip,
-        p_estado_registro_nacional
+        p_estado_registro_nacional,
+        COALESCE(p_estado_esterilizacion, 'Sin información')
     )
     RETURNING id_animal INTO v_id_animal;
 
@@ -1138,7 +1142,7 @@ END;
 $$;
 
 
-ALTER FUNCTION "public"."registrar_animal"("p_id_especie" bigint, "p_id_rango_etario" bigint, "p_nombre" character varying, "p_sexo" character varying, "p_tamano" character varying, "p_fecha_nacimiento" "date", "p_fecha_rescate" "date", "p_lugar_rescate" character varying, "p_caracteristicas" "text", "p_personalidad" "text", "p_historia_rescate" "text", "p_observaciones" "text", "p_microchip" character varying, "p_estado_registro_nacional" character varying) OWNER TO "postgres";
+ALTER FUNCTION "public"."registrar_animal"("p_id_especie" bigint, "p_id_rango_etario" bigint, "p_nombre" character varying, "p_sexo" character varying, "p_tamano" character varying, "p_fecha_nacimiento" "date", "p_fecha_rescate" "date", "p_lugar_rescate" character varying, "p_caracteristicas" "text", "p_personalidad" "text", "p_historia_rescate" "text", "p_observaciones" "text", "p_microchip" character varying, "p_estado_registro_nacional" character varying, "p_estado_esterilizacion" character varying) OWNER TO "postgres";
 
 
 -- RPC usada por la Edge Function subir-archivo-drive: registra ARCHIVO y lo asocia a su contexto
@@ -1552,6 +1556,8 @@ CREATE TABLE IF NOT EXISTS "public"."animal" (
     "fecha_registro" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "microchip" character varying(15),
     "estado_registro_nacional" character varying(20),
+    "estado_esterilizacion" character varying(20) DEFAULT 'Sin información'::character varying NOT NULL,
+    CONSTRAINT "chk_animal_estado_esterilizacion" CHECK ((("estado_esterilizacion")::"text" = ANY ((ARRAY['Esterilizado'::character varying, 'No esterilizado'::character varying, 'Sin información'::character varying])::"text"[]))),
     CONSTRAINT "chk_animal_estado_registro_nacional" CHECK ((("estado_registro_nacional" IS NULL) OR (("estado_registro_nacional")::"text" = ANY ((ARRAY['Inscrito'::character varying, 'No inscrito'::character varying, 'No verificado'::character varying])::"text"[])))),
     CONSTRAINT "chk_animal_fechas" CHECK ((("fecha_nacimiento" IS NULL) OR ("fecha_nacimiento" <= "fecha_rescate"))),
     CONSTRAINT "chk_animal_microchip" CHECK ((("microchip" IS NULL) OR (("microchip")::"text" ~ '^[0-9]{15}$'::"text"))),
@@ -1561,6 +1567,9 @@ CREATE TABLE IF NOT EXISTS "public"."animal" (
 
 
 ALTER TABLE "public"."animal" OWNER TO "postgres";
+
+
+COMMENT ON COLUMN "public"."animal"."estado_esterilizacion" IS 'Situación de esterilización del animal rescatado: Esterilizado, No esterilizado o Sin información. Independiente de las atenciones sanitarias.';
 
 
 CREATE TABLE IF NOT EXISTS "public"."animal_archivo" (
@@ -3472,9 +3481,9 @@ GRANT ALL ON FUNCTION "public"."registrar_adopcion"("p_id_animal" bigint, "p_id_
 
 
 
-REVOKE ALL ON FUNCTION "public"."registrar_animal"("p_id_especie" bigint, "p_id_rango_etario" bigint, "p_nombre" character varying, "p_sexo" character varying, "p_tamano" character varying, "p_fecha_nacimiento" "date", "p_fecha_rescate" "date", "p_lugar_rescate" character varying, "p_caracteristicas" "text", "p_personalidad" "text", "p_historia_rescate" "text", "p_observaciones" "text", "p_microchip" character varying, "p_estado_registro_nacional" character varying) FROM PUBLIC;
-GRANT ALL ON FUNCTION "public"."registrar_animal"("p_id_especie" bigint, "p_id_rango_etario" bigint, "p_nombre" character varying, "p_sexo" character varying, "p_tamano" character varying, "p_fecha_nacimiento" "date", "p_fecha_rescate" "date", "p_lugar_rescate" character varying, "p_caracteristicas" "text", "p_personalidad" "text", "p_historia_rescate" "text", "p_observaciones" "text", "p_microchip" character varying, "p_estado_registro_nacional" character varying) TO "authenticated";
-GRANT ALL ON FUNCTION "public"."registrar_animal"("p_id_especie" bigint, "p_id_rango_etario" bigint, "p_nombre" character varying, "p_sexo" character varying, "p_tamano" character varying, "p_fecha_nacimiento" "date", "p_fecha_rescate" "date", "p_lugar_rescate" character varying, "p_caracteristicas" "text", "p_personalidad" "text", "p_historia_rescate" "text", "p_observaciones" "text", "p_microchip" character varying, "p_estado_registro_nacional" character varying) TO "service_role";
+REVOKE ALL ON FUNCTION "public"."registrar_animal"("p_id_especie" bigint, "p_id_rango_etario" bigint, "p_nombre" character varying, "p_sexo" character varying, "p_tamano" character varying, "p_fecha_nacimiento" "date", "p_fecha_rescate" "date", "p_lugar_rescate" character varying, "p_caracteristicas" "text", "p_personalidad" "text", "p_historia_rescate" "text", "p_observaciones" "text", "p_microchip" character varying, "p_estado_registro_nacional" character varying, "p_estado_esterilizacion" character varying) FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."registrar_animal"("p_id_especie" bigint, "p_id_rango_etario" bigint, "p_nombre" character varying, "p_sexo" character varying, "p_tamano" character varying, "p_fecha_nacimiento" "date", "p_fecha_rescate" "date", "p_lugar_rescate" character varying, "p_caracteristicas" "text", "p_personalidad" "text", "p_historia_rescate" "text", "p_observaciones" "text", "p_microchip" character varying, "p_estado_registro_nacional" character varying, "p_estado_esterilizacion" character varying) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."registrar_animal"("p_id_especie" bigint, "p_id_rango_etario" bigint, "p_nombre" character varying, "p_sexo" character varying, "p_tamano" character varying, "p_fecha_nacimiento" "date", "p_fecha_rescate" "date", "p_lugar_rescate" character varying, "p_caracteristicas" "text", "p_personalidad" "text", "p_historia_rescate" "text", "p_observaciones" "text", "p_microchip" character varying, "p_estado_registro_nacional" character varying, "p_estado_esterilizacion" character varying) TO "service_role";
 
 
 
@@ -3550,7 +3559,7 @@ GRANT ALL ON SEQUENCE "public"."adoptante_id_adoptante_seq" TO "service_role";
 GRANT SELECT ON TABLE "public"."animal" TO "anon";
 GRANT SELECT ON TABLE "public"."animal" TO "authenticated";
 -- Solo columnas descriptivas: estado, activo y carpeta Drive se modifican únicamente por RPC o Edge Function.
-GRANT UPDATE(nombre, id_especie, id_rango_etario, sexo, "tamaño", fecha_nacimiento, fecha_rescate, lugar_rescate, caracteristicas, personalidad, historia_rescate, observaciones, microchip, estado_registro_nacional, foto_principal_path) ON TABLE "public"."animal" TO "authenticated";
+GRANT UPDATE(nombre, id_especie, id_rango_etario, sexo, "tamaño", fecha_nacimiento, fecha_rescate, lugar_rescate, caracteristicas, personalidad, historia_rescate, observaciones, microchip, estado_registro_nacional, estado_esterilizacion, foto_principal_path) ON TABLE "public"."animal" TO "authenticated";
 GRANT ALL ON TABLE "public"."animal" TO "service_role";
 
 

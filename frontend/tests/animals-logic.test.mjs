@@ -51,11 +51,29 @@ test('Filtros: ida y vuelta con la URL', () => {
     assert.ok(!L.hasActiveFilters(L.readFilters(new URLSearchParams('modo=lista'))));
 });
 
-test('collectAnimal: 14 campos, "" → null, ids numéricos (REG-03/04)', () => {
+test('collectAnimal: 15 campos, "" → null, ids numéricos (REG-03/04)', () => {
     const v = L.collectAnimal(formData({ nombre: ' Luna Prueba QA ', id_especie: '1', id_rango_etario: '', sexo: 'Hembra', tamano: '', fecha_rescate: '2026-09-23', microchip: '000 000 000 000 101' }));
     assert.equal(v.nombre, 'Luna Prueba QA'); assert.equal(v.id_especie, 1); assert.equal(v.id_rango_etario, null);
     assert.equal(v.tamaño, null); assert.equal(v.microchip, '000000000000101'); assert.equal(v.estado_registro_nacional, null);
-    assert.equal(Object.keys(v).length, 14);
+    assert.equal(v.estado_esterilizacion, 'Sin información', 'sin selección: valor por defecto del backend');
+    assert.equal(Object.keys(v).length, 15);
+});
+
+test('Esterilización: valores del CHECK, validación y filtro del listado', () => {
+    assert.deepEqual(L.ESTERILIZACION, ['Esterilizado', 'No esterilizado', 'Sin información']);
+    const v = L.collectAnimal(formData({ id_especie: '1', sexo: 'Hembra', fecha_rescate: '2026-09-23', estado_esterilizacion: 'Esterilizado' }));
+    assert.equal(v.estado_esterilizacion, 'Esterilizado');
+    const ok = { id_especie: 1, sexo: 'Macho', fecha_rescate: '2026-09-23' };
+    assert.deepEqual(L.validateAnimal({ ...ok, estado_esterilizacion: 'No esterilizado' }), {});
+    assert.ok(L.validateAnimal({ ...ok, estado_esterilizacion: 'Castrado' }).estado_esterilizacion);
+    const lista = [
+        { id_animal: 1, nombre: 'A', estado_esterilizacion: 'Esterilizado' },
+        { id_animal: 2, nombre: 'B', estado_esterilizacion: 'Sin información' },
+    ];
+    const f = L.readFilters(new URLSearchParams('esterilizacion=Esterilizado'));
+    assert.ok(L.hasActiveFilters(f));
+    assert.deepEqual(L.applyFilters(lista, f).map((a) => a.id_animal), [1]);
+    assert.deepEqual(L.filtersToQuery(f), { esterilizacion: 'Esterilizado' });
 });
 
 test('validateAnimal alineada con CHECK del backend (PA-REG-03/04)', () => {

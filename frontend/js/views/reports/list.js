@@ -25,7 +25,7 @@ import { displayText, formatCLP, formatDate, formatLongDate, todayISO } from '..
 import { emptyState, errorState, html, loadingState, options, pageHeader, render, toast } from '../../core/ui.js';
 import { animalName } from '../animals/logic.js';
 import {
-    REGISTRO_NACIONAL, REPORTS, SEXOS, SITUACIONES_PERMANENCIA,
+    ESTERILIZACION, REGISTRO_NACIONAL, REPORTS, SEXOS, SITUACIONES_PERMANENCIA,
     describeFilters, findReport, readReportFilters, validateReportFilters,
 } from './definitions.js';
 
@@ -56,6 +56,7 @@ async function loadSources(report) {
     out.sexo = SEXOS;
     out.registro = REGISTRO_NACIONAL;
     out.situacion = SITUACIONES_PERMANENCIA;
+    out.esterilizacion = ESTERILIZACION;
     return out;
 }
 

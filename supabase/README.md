@@ -8,7 +8,7 @@ Esta carpeta contiene la definición del backend: base de datos PostgreSQL, segu
 | `seed.sql` | Catálogos iniciales (estados, especies, rangos etarios, tipos de atención, estados de adopción y de proyecto, categorías de gasto y de archivo). |
 | `infrastructure.sql` | Objetos administrados por Supabase fuera de `public`: trigger sobre `auth.users` que crea el perfil de cada usuaria y bucket privado `fotos-animales` con sus políticas. |
 | `functions/` | Edge Functions (Deno/TypeScript): `crear-carpeta-animal`, `crear-carpeta-proyecto`, `subir-archivo-drive`, `obtener-link-archivo` e `invitar-usuario`. |
-| `security/` | Scripts de refuerzo de seguridad aplicados sobre el proyecto (01, 03, 05, 07, 09) y sus scripts de verificación (02, 04, 06, 08, 10). |
+| `security/` | Scripts de cambios y refuerzos de seguridad aplicados sobre el proyecto (01, 03, 05, 07, 09, 11) y sus scripts de verificación (02, 04, 06, 08, 10, 12). |
 | `config.toml` | Configuración de Supabase CLI para desarrollo local (sin secretos; el registro público está deshabilitado). |
 
 ## Principios de diseño
@@ -30,6 +30,7 @@ Cada script de refuerzo va acompañado de un script de verificación que simula 
 | `2026-09-23_05_documento_esterilizacion_unico.sql` | `…_06_verificar_documento_esterilizacion.sql` | Un documento de esterilización por animal. |
 | `2026-09-23_07_profesionales_y_usuarias.sql` | `…_08_verificar_profesionales_y_usuarias.sql` | Relaciones con profesionales y gestión de usuarias. |
 | `2026-09-24_09_restringir_escritura_directa.sql` | `…_10_verificar_escritura_directa.sql` | Privilegios mínimos por tabla y columna. |
+| `2026-09-25_11_estado_esterilizacion.sql` | `…_12_verificar_estado_esterilizacion.sql` | Estado de esterilización del animal rescatado. |
 
 ## Instalación en un proyecto nuevo
 

@@ -28,7 +28,7 @@ function dateRange(q, column, f) {
 export async function fetchAnimalsReport(f) {
     let q = supabase.from('animal').select(`
         id_animal, nombre, sexo, tamaño, fecha_nacimiento, fecha_rescate, lugar_rescate, microchip,
-        estado_registro_nacional, id_estado_actual, id_especie, id_rango_etario,
+        estado_registro_nacional, estado_esterilizacion, id_estado_actual, id_especie, id_rango_etario,
         estado:estado!fk_animal_estado_actual(nombre_estado),
         especie:especie!fk_animal_especie(nombre),
         rango:rango_etario!fk_animal_rango_etario(nombre)`).eq('activo', true);
@@ -37,6 +37,7 @@ export async function fetchAnimalsReport(f) {
     if (f.estado) q = q.eq('id_estado_actual', f.estado);
     if (f.sexo) q = q.eq('sexo', f.sexo);
     if (f.rango) q = q.eq('id_rango_etario', f.rango);
+    if (f.esterilizacion) q = q.eq('estado_esterilizacion', f.esterilizacion);
     const { data, error } = await q.order('fecha_rescate', { ascending: false }).limit(LIMIT);
     raise(error);
     return data;

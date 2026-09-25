@@ -75,6 +75,8 @@ export function diffusionData(animal, today = new Date()) {
         personalidad: animal.personalidad?.trim() || null,
         historia: animal.historia_rescate?.trim() || null,
         caracteristicas: animal.caracteristicas?.trim() || null,
+        // 'Sin información' no se publica: solo se informa lo que se sabe.
+        esterilizacion: ['Esterilizado', 'No esterilizado'].includes(animal.estado_esterilizacion) ? animal.estado_esterilizacion : null,
     };
 }
 
@@ -88,7 +90,10 @@ export function missingDiffusionFields(d) {
 export function buildDiffusionText(d) {
     const nombre = d.nombre ?? 'Este peludito';
     const edad = d.edad ? `${d.edad} aprox.` : d.rango;
-    const descripcion = [d.especie, d.sexo, d.tamano ? `Tamaño ${d.tamano.toLowerCase()}` : null, edad]
+    // En el texto base solo se destaca cuando está esterilizado, concordando con el sexo del animal.
+    const esterilizado = d.esterilizacion === 'Esterilizado'
+        ? (d.sexo === 'Hembra' ? 'Esterilizada' : d.sexo === 'Macho' ? 'Esterilizado' : 'Esterilizado/a') : null;
+    const descripcion = [d.especie, d.sexo, d.tamano ? `Tamaño ${d.tamano.toLowerCase()}` : null, edad, esterilizado]
         .filter(Boolean).join(' · ');
     const lines = [
         `🐾 ${nombre} busca una familia 💗`,
@@ -118,6 +123,7 @@ export function buildDiffusionPrompt(d) {
         field('Sexo', d.sexo),
         field('Edad aproximada', d.edad ?? d.rango),
         field('Tamaño', d.tamano),
+        field('Esterilización', d.esterilizacion),
         field('Personalidad', d.personalidad),
         field('Características', d.caracteristicas),
         field('Historia del rescate', d.historia),

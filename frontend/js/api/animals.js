@@ -18,7 +18,7 @@ export const PHOTO_MAX_SIDE = 1400;
 
 const LIST_COLUMNS = `
     id_animal, nombre, sexo, tamaño, fecha_nacimiento, fecha_rescate, lugar_rescate,
-    microchip, estado_registro_nacional, foto_principal_path, id_estado_actual,
+    microchip, estado_registro_nacional, estado_esterilizacion, foto_principal_path, id_estado_actual,
     id_especie, id_rango_etario, fecha_registro,
     estado:estado!fk_animal_estado_actual(nombre_estado),
     especie:especie!fk_animal_especie(nombre),
@@ -27,7 +27,7 @@ const LIST_COLUMNS = `
 const DETAIL_COLUMNS = `
     id_animal, nombre, sexo, tamaño, fecha_nacimiento, fecha_rescate, lugar_rescate,
     caracteristicas, personalidad, historia_rescate, observaciones,
-    microchip, estado_registro_nacional, foto_principal_path, id_carpeta_drive,
+    microchip, estado_registro_nacional, estado_esterilizacion, foto_principal_path, id_carpeta_drive,
     id_estado_actual, id_especie, id_rango_etario, activo, fecha_registro,
     estado:estado!fk_animal_estado_actual(nombre_estado),
     especie:especie!fk_animal_especie(nombre),
@@ -39,7 +39,7 @@ export const EDITABLE_COLUMNS = [
     'nombre', 'id_especie', 'id_rango_etario', 'sexo', 'tamaño',
     'fecha_nacimiento', 'fecha_rescate', 'lugar_rescate',
     'caracteristicas', 'personalidad', 'historia_rescate', 'observaciones',
-    'microchip', 'estado_registro_nacional',
+    'microchip', 'estado_registro_nacional', 'estado_esterilizacion',
 ];
 
 function raise(error) {
@@ -69,7 +69,7 @@ export async function getAnimal(id) {
 }
 
 /**
- * RPC registrar_animal: se envían SIEMPRE los 14 parámetros (REG-03).
+ * RPC registrar_animal: se envían SIEMPRE los 15 parámetros (REG-03).
  * El estado inicial (Rescatado) y el primer historial los define la RPC.
  */
 export async function registerAnimal(values) {
@@ -88,6 +88,7 @@ export async function registerAnimal(values) {
         p_observaciones: values.observaciones,
         p_microchip: values.microchip,
         p_estado_registro_nacional: values.estado_registro_nacional,
+        p_estado_esterilizacion: values.estado_esterilizacion,
     };
     // La RPC crea el animal y su primer historial de estado en una misma transacción.
     const { data, error } = await supabase.rpc('registrar_animal', params);

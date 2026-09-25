@@ -11,9 +11,11 @@
 // ============================================================
 
 import { parseISODate, todayISO } from '../../core/format.js';
+import { ESTERILIZACION } from '../animals/logic.js';
 
 export const SEXOS = ['Macho', 'Hembra', 'Desconocido'];
 export const REGISTRO_NACIONAL = ['Inscrito', 'No inscrito', 'No verificado'];
+export { ESTERILIZACION };
 export const SITUACIONES_PERMANENCIA = [{ value: 'activa', label: 'Activa (en curso)' }, { value: 'finalizada', label: 'Finalizada' }];
 
 const animalLabel = (a) => a?.nombre?.trim() || (a ? `Animal sin nombre (N° ${a.id_animal})` : '—');
@@ -58,6 +60,7 @@ export const REPORTS = [
             { key: 'estado', label: 'Estado', type: 'select', source: 'estado' },
             { key: 'sexo', label: 'Sexo', type: 'select', source: 'sexo' },
             { key: 'rango', label: 'Rango etario', type: 'select', source: 'rango_etario' },
+            { key: 'esterilizacion', label: 'Esterilización', type: 'select', source: 'esterilizacion' },
         ],
         clientFilter: (rows) => rows,
         columns: [
@@ -68,10 +71,15 @@ export const REPORTS = [
             { label: 'Estado', value: (r) => r.estado?.nombre_estado },
             { label: 'Microchip', value: (r) => r.microchip, text: true },
             { label: 'Registro Nacional', value: (r) => r.estado_registro_nacional },
+            { label: 'Esterilización', value: (r) => r.estado_esterilizacion },
             { label: 'Fecha de rescate', value: (r) => r.fecha_rescate, type: 'date' },
             { label: 'Lugar de rescate', value: (r) => r.lugar_rescate },
         ],
-        summary: (rows) => [{ label: 'Animales', value: rows.length, kind: 'count', main: true }, ...countBy(rows, (r) => r.estado?.nombre_estado)],
+        summary: (rows) => [
+            { label: 'Animales', value: rows.length, kind: 'count', main: true },
+            ...countBy(rows, (r) => r.estado?.nombre_estado),
+            { label: 'Esterilizados', value: rows.filter((r) => r.estado_esterilizacion === 'Esterilizado').length, kind: 'count' },
+        ],
     },
     {
         key: 'adopciones',

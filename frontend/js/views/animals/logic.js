@@ -11,7 +11,7 @@ import { emptyToNull, isValidMicrochip, normalizeMicrochip, parseISODate, todayI
 // estado: id_estado, o "activos" = registro activo excepto Adoptado.
 // ------------------------------------------------------------
 
-export const FILTER_KEYS = ['q', 'estado', 'especie', 'sexo', 'desde', 'hasta'];
+export const FILTER_KEYS = ['q', 'estado', 'especie', 'sexo', 'esterilizacion', 'desde', 'hasta'];
 export const ESTADO_ACTIVOS = 'activos';
 
 export function readFilters(query) {
@@ -57,6 +57,7 @@ export function applyFilters(list, filters, { adoptadoId = null } = {}) {
         }
         if (filters.especie && String(a.id_especie) !== filters.especie) return false;
         if (filters.sexo && a.sexo !== filters.sexo) return false;
+        if (filters.esterilizacion && a.estado_esterilizacion !== filters.esterilizacion) return false;
         // Las fechas "YYYY-MM-DD" se pueden comparar como texto: el orden alfabético coincide con el cronológico.
         if (filters.desde && (!a.fecha_rescate || a.fecha_rescate < filters.desde)) return false;
         if (filters.hasta && (!a.fecha_rescate || a.fecha_rescate > filters.hasta)) return false;
@@ -71,6 +72,9 @@ export function applyFilters(list, filters, { adoptadoId = null } = {}) {
 export const SEXOS = ['Macho', 'Hembra', 'Desconocido'];
 export const TAMANOS = ['Pequeño', 'Mediano', 'Grande'];
 export const REGISTRO_NACIONAL = ['Inscrito', 'No inscrito', 'No verificado'];
+/** Valores del CHECK chk_animal_estado_esterilizacion; el último es el valor por defecto. */
+export const ESTERILIZACION = ['Esterilizado', 'No esterilizado', 'Sin información'];
+export const ESTERILIZACION_DEFAULT = 'Sin información';
 
 // Convierte el valor de un <select> en id numérico; cualquier otro valor se trata como vacío.
 const toId = (value) => {
@@ -99,6 +103,7 @@ export function collectAnimal(formData) {
         // Microchip vacío se envía como null: la restricción única del backend admite varios null pero no varios "".
         microchip: chip === '' ? null : chip,
         estado_registro_nacional: text('estado_registro_nacional'),
+        estado_esterilizacion: text('estado_esterilizacion') ?? ESTERILIZACION_DEFAULT,
     };
 }
 
@@ -123,6 +128,9 @@ export function validateAnimal(v) {
     }
     if (v.estado_registro_nacional && !REGISTRO_NACIONAL.includes(v.estado_registro_nacional)) {
         e.estado_registro_nacional = 'Selecciona una situación válida.';
+    }
+    if (v.estado_esterilizacion && !ESTERILIZACION.includes(v.estado_esterilizacion)) {
+        e.estado_esterilizacion = 'Selecciona una opción válida.';
     }
     if (v.nombre && v.nombre.length > 100) e.nombre = 'El nombre no puede superar 100 caracteres.';
     if (v.lugar_rescate && v.lugar_rescate.length > 255) e.lugar_rescate = 'El lugar no puede superar 255 caracteres.';

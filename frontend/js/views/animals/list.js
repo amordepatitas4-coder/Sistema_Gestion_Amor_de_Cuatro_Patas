@@ -15,7 +15,7 @@ import { formatDate } from '../../core/format.js';
 import { emptyState, errorState, html, loadingState, options, pageHeader, render, collapsibleFilters } from '../../core/ui.js';
 import { openRegisterAnimal } from './form.js';
 import {
-    ESTADO_ACTIVOS, SEXOS, animalName, applyFilters, filtersToQuery, hasActiveFilters, readFilters,
+    ESTADO_ACTIVOS, ESTERILIZACION, SEXOS, animalName, applyFilters, filtersToQuery, hasActiveFilters, readFilters,
 } from './logic.js';
 
 /** Última consulta del listado, para volver desde la ficha con los mismos filtros. */
@@ -92,6 +92,10 @@ export default {
                     <div class="col-6 col-lg-3 filter-extra">
                         <label class="form-label small" for="flSexo">Sexo</label>
                         <select class="form-select" id="flSexo" name="sexo">${options(SEXOS, filters.sexo, { placeholder: 'Todos' })}</select>
+                    </div>
+                    <div class="col-6 col-lg-3 filter-extra">
+                        <label class="form-label small" for="flEsterilizacion">Esterilización</label>
+                        <select class="form-select" id="flEsterilizacion" name="esterilizacion">${options(ESTERILIZACION, filters.esterilizacion, { placeholder: 'Todos' })}</select>
                     </div>
                     <div class="col-6 col-lg-3 filter-extra">
                         <label class="form-label small" for="flDesde">Rescatado desde</label>
@@ -192,6 +196,7 @@ function filterSummary(filters, shown, total, catalogs) {
     else if (filters.estado) chips.push(`Estado: ${catalogs.estado.find((e) => String(e.id) === filters.estado)?.nombre ?? '—'}`);
     if (filters.especie) chips.push(`Especie: ${catalogs.especie.find((e) => String(e.id) === filters.especie)?.nombre ?? '—'}`);
     if (filters.sexo) chips.push(`Sexo: ${filters.sexo}`);
+    if (filters.esterilizacion) chips.push(`Esterilización: ${filters.esterilizacion}`);
     if (filters.desde) chips.push(`Rescatado desde: ${formatDate(filters.desde)}`);
     if (filters.hasta) chips.push(`Rescatado hasta: ${formatDate(filters.hasta)}`);
     return html`

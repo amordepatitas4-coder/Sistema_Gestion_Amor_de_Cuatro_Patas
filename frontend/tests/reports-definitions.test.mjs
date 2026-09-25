@@ -72,8 +72,17 @@ test('Descripción de filtros aplicados y exportación sin columnas técnicas (P
     const rep = R.findReport('animales');
     assert.equal(R.describeFilters(rep, { desde: '', especie: '' }), 'Sin filtros (todos los registros)');
     assert.equal(R.describeFilters(rep, { especie: '1', sexo: 'Hembra' }, { especie: 'Canino' }), 'Especie: Canino · Sexo: Hembra');
-    const csv = toCSV(rep.columns, [{ id_animal: 6, nombre: 'Luna Prueba QA', sexo: 'Hembra', microchip: '000000000000101', fecha_rescate: '2026-09-01' }]);
+    const csv = toCSV(rep.columns, [{ id_animal: 6, nombre: 'Luna Prueba QA', sexo: 'Hembra', microchip: '000000000000101', estado_esterilizacion: 'Esterilizado', fecha_rescate: '2026-09-01' }]);
     const [header, line] = csv.replace('﻿', '').split('\r\n');
     assert.ok(!/id_|path|carpeta|externo/i.test(header));
-    assert.ok(line.startsWith('Luna Prueba QA;;Hembra;;;="000000000000101";;2026-09-01;'));
+    assert.ok(line.startsWith('Luna Prueba QA;;Hembra;;;="000000000000101";;Esterilizado;2026-09-01;'));
+});
+
+test('Informe de animales: filtro y conteo de esterilización', () => {
+    const rep = R.findReport('animales');
+    const flt = rep.filters.find((f) => f.key === 'esterilizacion');
+    assert.equal(flt.source, 'esterilizacion');
+    assert.deepEqual(R.ESTERILIZACION, ['Esterilizado', 'No esterilizado', 'Sin información']);
+    const resumen = rep.summary([{ estado_esterilizacion: 'Esterilizado' }, { estado_esterilizacion: 'Sin información' }]);
+    assert.equal(resumen.find((s) => s.label === 'Esterilizados').value, 1);
 });

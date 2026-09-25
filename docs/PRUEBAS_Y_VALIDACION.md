@@ -8,7 +8,7 @@ Criterio general: una funcionalidad no se considera terminada solo porque se vis
 
 - Herramienta: test runner integrado de Node.js (`node:test`), sin dependencias externas.
 - Ejecución (desde `frontend/`): `node --test "tests/*.test.mjs"`.
-- Resultado actual: **113 pruebas, 113 aprobadas**.
+- Resultado actual: **116 pruebas, 116 aprobadas**.
 - No requieren red ni credenciales: la sesión se prueba con un cliente de Supabase simulado.
 
 | Archivo | Cobertura |
@@ -25,7 +25,7 @@ Criterio general: una funcionalidad no se considera terminada solo porque se vis
 | `documents-logic.test.mjs` | Contexto de cada archivo, búsqueda y filtros. |
 | `reports-definitions.test.mjs` | Filtros por informe, fechas, totales y exportación CSV. |
 | `settings-logic.test.mjs` | Catálogos contra las columnas reales del esquema, valores protegidos, contraseña y reglas de usuarias. |
-| `permissions.test.mjs` | Coherencia entre los privilegios del script de seguridad 09 y las columnas que escribe el frontend. |
+| `permissions.test.mjs` | Coherencia entre los privilegios de los scripts de seguridad 09 y 11 y las columnas que escribe el frontend. |
 | `write-config.test.mjs` | Generación de la configuración pública del despliegue y rechazo de claves de servicio. |
 
 ## 2. Verificación del backend
@@ -39,6 +39,7 @@ Cada refuerzo de seguridad del backend tiene un script de verificación en `supa
 | 06 | Un único documento de esterilización por animal. |
 | 08 | Quitar relaciones profesional–esterilización, listar usuarias y editar el propio nombre. |
 | 10 | Privilegios mínimos: 21 escrituras directas prohibidas son rechazadas, las escrituras necesarias y las RPC siguen funcionando, y RLS permanece habilitado. |
+| 12 | Estado de esterilización: valores permitidos y rechazados, valor por defecto, llamada anterior de `registrar_animal` compatible, permisos del rol anónimo y configuración de seguridad de la función. |
 
 ## 3. Pruebas de integración
 
@@ -111,4 +112,4 @@ Pendientes (requieren cuentas o acciones que no se ejecutaron sobre cuentas real
 
 ## 7. Validación con la Fundación
 
-La propuesta fue validada con la Fundación en la reunión del 10 de septiembre de 2026 (ver Ficha Maestra, sección 3). Posteriormente, la Fundación solicitó tres mejoras (estado de esterilización de los animales, actualización de la identidad visual e importación de la ficha del adoptante), que se registran como pendientes en la sección 23 de la Ficha Maestra.
+La propuesta fue validada con la Fundación en la reunión del 10 de septiembre de 2026 (ver Ficha Maestra, sección 3). Posteriormente, la Fundación solicitó tres mejoras: el estado de esterilización de los animales, ya implementado, y la actualización de la identidad visual y la importación de la ficha del adoptante, que siguen pendientes (sección 23 de la Ficha Maestra).

@@ -17,7 +17,7 @@ import { bindForm } from '../../core/forms.js';
 import { todayISO } from '../../core/format.js';
 import { optimizeToWebp, validateImageFile } from '../../core/images.js';
 import { html, openModal, options, render, toast } from '../../core/ui.js';
-import { REGISTRO_NACIONAL, SEXOS, TAMANOS, animalName, collectAnimal, validateAnimal } from './logic.js';
+import { ESTERILIZACION, ESTERILIZACION_DEFAULT, REGISTRO_NACIONAL, SEXOS, TAMANOS, animalName, collectAnimal, validateAnimal } from './logic.js';
 
 const req = html`<span class="text-danger" aria-hidden="true">*</span>`;
 
@@ -52,15 +52,19 @@ function animalFields(v, catalogs, { withPhoto = false } = {}) {
                     <label class="form-label" for="fTamano">Tamaño</label>
                     <select class="form-select" id="fTamano" name="tamano">${options(TAMANOS, v.tamaño, { placeholder: 'Sin indicar' })}</select>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <label class="form-label" for="fMicrochip">Microchip</label>
                     <input class="form-control" id="fMicrochip" name="microchip" inputmode="numeric" maxlength="15"
                            autocomplete="off" value="${v.microchip ?? ''}" aria-describedby="fMicrochipHelp">
                     <div class="form-text" id="fMicrochipHelp">15 dígitos, sin espacios ni guiones.</div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <label class="form-label" for="fRegistro">Registro Nacional</label>
                     <select class="form-select" id="fRegistro" name="estado_registro_nacional">${options(REGISTRO_NACIONAL, v.estado_registro_nacional, { placeholder: 'Sin información' })}</select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="fEsterilizacion">Esterilización</label>
+                    <select class="form-select" id="fEsterilizacion" name="estado_esterilizacion">${options(ESTERILIZACION, v.estado_esterilizacion ?? ESTERILIZACION_DEFAULT, { placeholder: null })}</select>
                 </div>
             </div>
         </fieldset>

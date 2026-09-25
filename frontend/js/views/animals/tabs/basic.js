@@ -26,6 +26,7 @@ export async function renderSummaryTab(container, { animal }) {
             ${block('Lugar de rescate', animal.lugar_rescate)}
             ${block('Microchip', animal.microchip ?? 'No registrado')}
             ${block('Registro Nacional', animal.estado_registro_nacional ?? 'Sin información')}
+            ${block('Esterilización', animal.estado_esterilizacion)}
             ${block('Fecha de registro en el sistema', formatDateTime(animal.fecha_registro))}
         </dl>
         <dl class="info-text">
