@@ -51,7 +51,7 @@ supabase/    Base de datos, seguridad y funciones del servidor
 
 ## Cómo guiarse
 
-| Si quieres conocer… | Revisa |
+| Conocer… | Revisar |
 |---|---|
 | El proyecto completo (problema, requerimientos, arquitectura, modelo de datos, seguridad, módulos y pruebas) | `docs/Ficha_Maestra_Sistema_Fundacion_Amor_de_Cuatro_Patas` (versión `.md` para leer aquí y versión `.docx`) |
 | El código de la aplicación web | `frontend/README.md`; se recomienda comenzar por `frontend/js/app.js` y luego un módulo completo, como `frontend/js/views/animals/` |
