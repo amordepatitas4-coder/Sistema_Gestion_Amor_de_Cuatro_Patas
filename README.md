@@ -67,20 +67,5 @@ supabase/    Base de datos, seguridad y funciones del servidor
 - Sin eliminación de registros históricos.
 - Credenciales y claves de servicio solo en el servidor; archivos privados en Storage y en Drive.
 
-## Ejecución local
-
-```
-cd frontend
-cp js/config.example.js js/config.js     # completar la URL y la clave pública de Supabase
-python -m http.server 5500 --bind 127.0.0.1
-```
-
-Pruebas automáticas (Node.js 20 o superior), desde `frontend/`:
-
-```
-node --test "tests/*.test.mjs"
-```
-
-## Estado
 
 MVP implementado, desplegado y validado. Quedan pendientes los últimos requerimientos solicitados por la Fundación: estado de esterilización de los animales, actualización de la identidad visual e importación de la ficha del adoptante (sección 23 de la Ficha Maestra).
