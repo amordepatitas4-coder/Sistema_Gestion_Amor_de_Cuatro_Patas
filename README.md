@@ -2,7 +2,7 @@
 
 Sistema web de gestión de rescate y adopción animal, desarrollado para la **Fundación Amor de Cuatro Patas** como proyecto de Arquitectura de Software en modalidad Aprendizaje + Servicio.
 
-**Sistema desplegado:** <https://sistema-gestion-amor-de-cuatro-patas-frontend-v1.pages.dev/> (acceso solo para usuarias autorizadas de la Fundación).
+**Sistema desplegado:** <https://sistema-gestion-fundacion-amor-de-cuatro-patas.pages.dev/> (acceso solo para usuarias autorizadas de la Fundación).
 
 ## El proyecto en pocas palabras
 
