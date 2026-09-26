@@ -31,4 +31,6 @@ Cada script de refuerzo va acompañado de un script de verificación que simula 
 | `2026-09-23_07_profesionales_y_usuarias.sql` | `…_08_verificar_profesionales_y_usuarias.sql` | Relaciones con profesionales y gestión de usuarias. |
 | `2026-09-24_09_restringir_escritura_directa.sql` | `…_10_verificar_escritura_directa.sql` | Privilegios mínimos por tabla y columna. |
 
-El procedimiento de instalación se describe en `docs/DESPLIEGUE.md`.
+## Instalación en un proyecto nuevo
+
+En el editor SQL de Supabase se ejecutan, en orden, `schema.sql`, `seed.sql` e `infrastructure.sql`. `schema.sql` ya refleja el estado final, por lo que los scripts de `security/` no necesitan aplicarse; sus scripts de verificación sirven para comprobar la instalación. Las Edge Functions se despliegan con la verificación de JWT habilitada y sus credenciales se configuran como secretos del proyecto, nunca en el repositorio.

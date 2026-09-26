@@ -525,7 +525,7 @@ El frontend se publica como sitio estático en **Cloudflare Pages**, conectado a
 - el archivo `_headers` define los encabezados de seguridad, `noindex` y la política de caché;
 - en Supabase, las URL del sitio están autorizadas para las redirecciones de invitación y recuperación de contraseña.
 
-Las Edge Functions se despliegan en Supabase y sus secretos se configuran en el panel de Supabase. Los scripts SQL se ejecutan en el editor SQL de Supabase. El procedimiento completo se describe en `docs/DESPLIEGUE.md`.
+Las Edge Functions se despliegan en Supabase y sus secretos se configuran en el panel de Supabase. Los scripts SQL se ejecutan en el editor SQL de Supabase.
 
 ## 22. Pruebas y validación
 

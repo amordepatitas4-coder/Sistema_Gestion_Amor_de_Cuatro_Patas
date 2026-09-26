@@ -58,7 +58,7 @@ supabase/    Base de datos, seguridad y funciones del servidor
 | La base de datos y la seguridad | `supabase/README.md` y `supabase/schema.sql` |
 | La integración con Google Drive | `supabase/functions/` |
 | Cómo se probó el sistema | `docs/PRUEBAS_Y_VALIDACION.md` |
-| Cómo instalarlo y publicarlo | `docs/DESPLIEGUE.md` |
+| Cómo se instala y se publica | Sección 21 de la Ficha Maestra y `supabase/README.md` |
 
 ## Seguridad
 
