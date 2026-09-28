@@ -241,7 +241,7 @@ export function openAdoptionForm({ animal = null, animals = [], adopters, onSave
                 <div class="d-flex align-items-start gap-2">
                     <i class="bi bi-paperclip" aria-hidden="true"></i>
                     <div class="flex-grow-1 text-break">Se guardará en Drive: <strong>${archivo.name}</strong>${extra}</div>
-                    <button type="button" class="btn btn-sm btn-outline-secondary" id="aoQuitarCuestionario">Quitar</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary flex-shrink-0" id="aoQuitarCuestionario">Quitar</button>
                 </div>
             </div>` : '');
         fileInfo.querySelector('#aoQuitarCuestionario')?.addEventListener('click', () => {
