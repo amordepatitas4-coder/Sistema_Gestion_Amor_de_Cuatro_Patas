@@ -2,37 +2,38 @@
    Sistema de Gestión — Fundación Amor de Cuatro Patas
    Identidad visual sobre Bootstrap 5.3.
 
-   Azul petróleo estructura la interfaz; el fucsia es acento de
-   identidad (nunca color de error). Colores semánticos estándar.
+   El burdeo del logo estructura la interfaz; el rosado es solo
+   acento de identidad (nunca texto ni color de error). El rojo de
+   error es más vivo que el burdeo para no confundirlos.
    ============================================================ */
 
 :root {
     /* Paleta de la Fundación */
-    --acp-primary: #315D6D;
-    --acp-primary-dark: #244753;
-    --acp-primary-soft: #E8F1F4;
-    --acp-brand: #E91E63;
-    --acp-brand-soft: #FCE8EF;
-    --acp-burgundy: #9F171A;
-    --acp-bg: #F7F9FA;
+    --acp-primary: #780205;       /* burdeo del logo */
+    --acp-primary-dark: #5C0A0E;  /* menú lateral */
+    --acp-primary-soft: #F8ECEB;
+    --acp-brand: #FD054C;         /* rosado del logo: solo acentos */
+    --acp-brand-text: #C8003C;    /* rosado oscurecido cuando va como texto */
+    --acp-brand-soft: #FFE8EE;
+    --acp-bg: #FBF7F4;
     --acp-surface: #FFFFFF;
-    --acp-text: #263238;
-    --acp-muted: #58656C;   /* ≥ 4.5:1 sobre fondos claros (WCAG AA) */
-    --acp-line: #DDE5E8;
+    --acp-text: #2B2022;
+    --acp-muted: #66585A;   /* ≥ 4.5:1 sobre fondos claros (WCAG AA) */
+    --acp-line: #EADBD8;
 
     /* Semánticos */
     --acp-success: #2A7152;
     --acp-success-soft: #E8F5EE;
     --acp-warning: #9A6212;
     --acp-warning-soft: #FFF4DE;
-    --acp-danger: #B3261E;
-    --acp-danger-soft: #FCEAEA;
+    --acp-danger: #C4291C;
+    --acp-danger-soft: #FDECEA;
     --acp-info: #1F6FA8;
     --acp-info-soft: #E6F1FA;
 
     --acp-radius: 12px;
     --acp-radius-sm: 10px;
-    --acp-shadow: 0 6px 24px rgba(36, 71, 83, .08);
+    --acp-shadow: 0 6px 24px rgba(92, 10, 14, .08);
     --acp-sidebar-width: 264px;
     --acp-topbar-height: 64px;
 
@@ -41,19 +42,19 @@
     --bs-body-color: var(--acp-text);
     --bs-body-bg: var(--acp-bg);
     --bs-secondary-color: var(--acp-muted);
-    --bs-secondary-rgb: 88, 101, 108;
-    --bs-danger-rgb: 179, 38, 30;
+    --bs-secondary-rgb: 102, 88, 90;
+    --bs-danger-rgb: 196, 41, 28;
     --bs-success-rgb: 42, 113, 82;
     --bs-border-color: var(--acp-line);
     --bs-border-radius: var(--acp-radius-sm);
     --bs-border-radius-lg: var(--acp-radius);
     --bs-primary: var(--acp-primary);
-    --bs-primary-rgb: 49, 93, 109;
+    --bs-primary-rgb: 120, 2, 5;
     --bs-link-color: var(--acp-primary);
-    --bs-link-color-rgb: 49, 93, 109;
+    --bs-link-color-rgb: 120, 2, 5;
     --bs-link-hover-color: var(--acp-primary-dark);
-    --bs-link-hover-color-rgb: 36, 71, 83;
-    --bs-focus-ring-color: rgba(49, 93, 109, .35);
+    --bs-link-hover-color-rgb: 92, 10, 14;
+    --bs-focus-ring-color: rgba(120, 2, 5, .35);
 }
 
 body {
@@ -82,7 +83,7 @@ body {
     --bs-btn-active-border-color: var(--acp-primary-dark);
     --bs-btn-disabled-bg: var(--acp-primary);
     --bs-btn-disabled-border-color: var(--acp-primary);
-    --bs-btn-focus-shadow-rgb: 49, 93, 109;
+    --bs-btn-focus-shadow-rgb: 120, 2, 5;
 }
 
 .btn-outline-primary {
@@ -91,13 +92,13 @@ body {
     --bs-btn-hover-bg: var(--acp-primary);
     --bs-btn-hover-border-color: var(--acp-primary);
     --bs-btn-active-bg: var(--acp-primary-dark);
-    --bs-btn-focus-shadow-rgb: 49, 93, 109;
+    --bs-btn-focus-shadow-rgb: 120, 2, 5;
     background: var(--acp-surface);
 }
 
 .btn-outline-secondary {
     --bs-btn-color: var(--acp-muted);
-    --bs-btn-border-color: #AEB9BF;
+    --bs-btn-border-color: #CDB8B6;
     --bs-btn-hover-bg: var(--acp-muted);
     --bs-btn-hover-border-color: var(--acp-muted);
     --bs-btn-active-bg: var(--acp-text);
@@ -111,7 +112,7 @@ body {
     --bs-btn-border-color: var(--acp-danger);
     --bs-btn-hover-bg: var(--acp-danger);
     --bs-btn-hover-border-color: var(--acp-danger);
-    --bs-btn-active-bg: #8E1E18;
+    --bs-btn-active-bg: #9E2016;
     --bs-btn-disabled-color: var(--acp-danger);
     background: var(--acp-surface);
 }
@@ -128,17 +129,17 @@ body {
 .btn-danger {
     --bs-btn-bg: var(--acp-danger);
     --bs-btn-border-color: var(--acp-danger);
-    --bs-btn-hover-bg: #8E1E18;
-    --bs-btn-hover-border-color: #8E1E18;
+    --bs-btn-hover-bg: #9E2016;
+    --bs-btn-hover-border-color: #9E2016;
 }
 
 .btn-brand {
     --bs-btn-color: #fff;
-    --bs-btn-bg: var(--acp-brand);
-    --bs-btn-border-color: var(--acp-brand);
+    --bs-btn-bg: var(--acp-brand-text);
+    --bs-btn-border-color: var(--acp-brand-text);
     --bs-btn-hover-color: #fff;
-    --bs-btn-hover-bg: #C2185B;
-    --bs-btn-hover-border-color: #C2185B;
+    --bs-btn-hover-bg: #A30032;
+    --bs-btn-hover-border-color: #A30032;
     --bs-btn-focus-shadow-rgb: 233, 30, 99;
 }
 
@@ -154,7 +155,7 @@ body {
 
 /* Foco visible y consistente */
 :focus-visible {
-    outline: 3px solid rgba(49, 93, 109, .55);
+    outline: 3px solid rgba(120, 2, 5, .55);
     outline-offset: 2px;
 }
 
@@ -170,7 +171,7 @@ body {
 .form-control:focus,
 .form-select:focus {
     border-color: var(--acp-primary);
-    box-shadow: 0 0 0 .2rem rgba(49, 93, 109, .2);
+    box-shadow: 0 0 0 .2rem rgba(120, 2, 5, .2);
 }
 
 .form-label {
@@ -248,6 +249,41 @@ body {
     background: var(--acp-primary-dark);
 }
 
+/* Logo oficial: el nombre de la Fundación ya viene en la imagen. */
+.brand-has-logo {
+    flex-direction: column;
+    align-items: center;
+    gap: .5rem;
+    text-align: center;
+}
+
+.brand-plate {
+    display: block;
+    background: #fff;
+    border-radius: var(--acp-radius);
+    padding: .4rem .75rem;
+}
+
+.brand-has-logo .brand-logo {
+    display: block;
+    width: auto;
+    height: 100px;
+    border-radius: 0;
+    background: none;
+}
+
+.brand-has-logo .brand-system {
+    font-weight: 600;
+    letter-spacing: .02em;
+}
+
+.brand-light.brand-has-logo .brand-system { opacity: .85; }
+.brand-dark.brand-has-logo .brand-system { color: var(--acp-muted); opacity: 1; }
+
+/* En el login y la pantalla de carga el fondo ya es claro: sin placa y un poco más grande. */
+.brand-dark .brand-plate { padding: 0; background: none; }
+.brand-dark.brand-has-logo .brand-logo { height: 120px; }
+
 /* ------------------------------------------------------------
    Pantallas completas: login, arranque, errores
    ------------------------------------------------------------ */
@@ -268,7 +304,7 @@ body {
     background: var(--acp-surface);
     border: 1px solid var(--acp-line);
     border-radius: 18px;
-    box-shadow: 0 20px 60px rgba(36, 71, 83, .14);
+    box-shadow: 0 20px 60px rgba(92, 10, 14, .14);
     padding: 2rem 1.75rem;
 }
 
@@ -318,7 +354,16 @@ body {
 }
 
 .sidebar-brand {
+    flex: 1;
+    display: flex;
+    justify-content: center;
     text-decoration: none;
+}
+
+.sidebar-brand:focus-visible {
+    outline: 3px solid #fff;
+    outline-offset: 3px;
+    border-radius: var(--acp-radius);
 }
 
 .sidebar-nav {
@@ -601,7 +646,7 @@ body {
 .app-toast {
     border: 0;
     border-left: 5px solid var(--acp-info);
-    box-shadow: 0 10px 30px rgba(36, 71, 83, .18);
+    box-shadow: 0 10px 30px rgba(92, 10, 14, .18);
 }
 
 .app-toast .toast-icon { font-size: 1.1rem; }
@@ -706,10 +751,10 @@ body {
 .badge-state { border: 1px solid transparent; }
 .badge-state-rescatado { background: var(--acp-info-soft); color: var(--acp-info); border-color: #BFDAF0; }
 .badge-state-tratamiento { background: var(--acp-warning-soft); color: var(--acp-warning); border-color: #F2D9A6; }
-.badge-state-hogar { background: var(--acp-primary-soft); color: var(--acp-primary-dark); border-color: #C4DAE1; }
+.badge-state-hogar { background: var(--acp-primary-soft); color: var(--acp-primary-dark); border-color: #E8CBC8; }
 .badge-state-disponible { background: var(--acp-success-soft); color: var(--acp-success); border-color: #BFE3CF; }
 .badge-state-adoptado { background: var(--acp-primary-dark); color: #fff; }
-.badge-state-otro { background: #EEF1F2; color: var(--acp-text); }
+.badge-state-otro { background: #F3ECEA; color: var(--acp-text); }
 
 /* Indicador visual (no es estado): contorno, sin relleno sólido */
 .badge-availability {
@@ -721,7 +766,7 @@ body {
 .badge-soft-success { background: var(--acp-success-soft); color: var(--acp-success); }
 .badge-soft-warning { background: var(--acp-warning-soft); color: var(--acp-warning); }
 .badge-soft-info { background: var(--acp-info-soft); color: var(--acp-info); }
-.badge-soft-muted { background: #EEF1F2; color: var(--acp-muted); }
+.badge-soft-muted { background: #F3ECEA; color: var(--acp-muted); }
 
 /* ------------------------------------------------------------
    Dashboard: KPI clickeables
@@ -749,7 +794,7 @@ body {
 a.kpi-card:hover {
     transform: translateY(-2px);
     border-color: var(--acp-primary);
-    box-shadow: 0 10px 28px rgba(36, 71, 83, .14);
+    box-shadow: 0 10px 28px rgba(92, 10, 14, .14);
     color: var(--acp-text);
 }
 
@@ -779,7 +824,7 @@ a.kpi-card:hover {
 .kpi-warning { background: var(--acp-warning-soft); color: var(--acp-warning); }
 .kpi-teal { background: #E3F2F1; color: #1E6F6A; }
 .kpi-success { background: var(--acp-success-soft); color: var(--acp-success); }
-.kpi-brand { background: var(--acp-brand-soft); color: var(--acp-brand); }
+.kpi-brand { background: var(--acp-brand-soft); color: var(--acp-brand-text); }
 
 /* ------------------------------------------------------------
    Animales: filtros, tarjetas y lista
@@ -809,7 +854,7 @@ a.kpi-card:hover {
 
 .filter-chip {
     background: #fff;
-    border: 1px solid #C4DAE1;
+    border: 1px solid #E8CBC8;
     border-radius: 999px;
     padding: .15rem .65rem;
     font-size: .85rem;
@@ -991,8 +1036,8 @@ a.kpi-card:hover {
 }
 
 .info-block {
-    background: #F9FBFB;
-    border: 1px solid #EDF1F2;
+    background: #FCF8F6;
+    border: 1px solid #F1E6E3;
     border-radius: var(--acp-radius-sm);
     padding: .65rem .8rem;
 }
@@ -1037,8 +1082,8 @@ a.kpi-card:hover {
 .timeline-date { font-size: .8rem; color: var(--acp-muted); font-weight: 600; margin-bottom: .25rem; }
 
 .timeline-card {
-    background: #F9FBFB;
-    border: 1px solid #EDF1F2;
+    background: #FCF8F6;
+    border: 1px solid #F1E6E3;
     border-radius: var(--acp-radius-sm);
     padding: .7rem .9rem;
 }
@@ -1049,12 +1094,12 @@ a.kpi-card:hover {
 
 .current-home {
     padding: 1rem;
-    border: 1px solid #C4DAE1;
+    border: 1px solid #E8CBC8;
     background: var(--acp-primary-soft);
     border-radius: var(--acp-radius-sm);
 }
 
-.current-home.is-empty { background: #F9FBFB; border-color: var(--acp-line); }
+.current-home.is-empty { background: #FCF8F6; border-color: var(--acp-line); }
 
 /* Resumen de registro (pasos posteriores) */
 .post-step { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; padding: .3rem 0; }
@@ -1074,7 +1119,7 @@ a.kpi-card:hover {
     gap: .75rem;
 }
 
-.home-card.is-inactive { opacity: .8; background: #FBFCFC; }
+.home-card.is-inactive { opacity: .8; background: #FDFAF9; }
 
 .home-contact { display: grid; gap: .3rem; margin: 0; }
 .home-contact > div { display: flex; gap: .5rem; }
@@ -1082,7 +1127,7 @@ a.kpi-card:hover {
 .home-contact dd { margin: 0; }
 
 .occupants {
-    background: #F9FBFB;
+    background: #FCF8F6;
     border-radius: var(--acp-radius-sm);
     padding: .6rem .8rem;
 }
@@ -1104,8 +1149,8 @@ a.kpi-card:hover {
 }
 
 .expense-summary > div {
-    background: #F9FBFB;
-    border: 1px solid #EDF1F2;
+    background: #FCF8F6;
+    border: 1px solid #F1E6E3;
     border-radius: var(--acp-radius-sm);
     padding: .6rem .8rem;
     display: flex;
@@ -1114,7 +1159,7 @@ a.kpi-card:hover {
 
 .expense-summary span { font-size: .8rem; color: var(--acp-muted); font-weight: 600; }
 .expense-summary strong { font-size: 1.15rem; color: var(--acp-primary-dark); font-variant-numeric: tabular-nums; }
-.expense-summary.is-over > div:last-child { background: var(--acp-danger-soft); border-color: #F2C4C4; }
+.expense-summary.is-over > div:last-child { background: var(--acp-danger-soft); border-color: #F5C6C1; }
 .expense-summary.is-over > div:last-child strong { color: var(--acp-danger); }
 
 .allocation-row {
@@ -1144,7 +1189,7 @@ a.kpi-card:hover {
     align-items: center;
     gap: .75rem;
     padding: .7rem 0;
-    border-bottom: 1px solid #EDF1F2;
+    border-bottom: 1px solid #F1E6E3;
 }
 
 .file-item:last-child { border-bottom: 0; }
@@ -1208,7 +1253,7 @@ a.kpi-card:hover {
 }
 
 .project-card:hover,
-.project-card:focus-within { box-shadow: 0 6px 18px rgba(36, 71, 83, .14); transform: translateY(-1px); }
+.project-card:focus-within { box-shadow: 0 6px 18px rgba(92, 10, 14, .14); transform: translateY(-1px); }
 .project-card a.stretched-link:focus-visible { outline: none; }
 .project-card:focus-within { outline: 2px solid var(--acp-primary); outline-offset: 2px; }
 
@@ -1218,8 +1263,8 @@ a.kpi-card:hover {
 .prof-function { width: 230px; }
 
 .quick-create {
-    background: #F9FBFB;
-    border: 1px dashed #C4DAE1;
+    background: #FCF8F6;
+    border: 1px dashed #E8CBC8;
     border-radius: var(--acp-radius-sm);
     padding: .75rem;
 }
@@ -1257,17 +1302,17 @@ a.kpi-card:hover {
     border-radius: var(--acp-radius);
     padding: .85rem 1rem;
     color: var(--acp-text);
-    box-shadow: 0 1px 3px rgba(36, 71, 83, .06);
+    box-shadow: 0 1px 3px rgba(92, 10, 14, .06);
     transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
 }
 
-.report-card:hover { border-color: #9DBCC7; box-shadow: 0 4px 12px rgba(36, 71, 83, .12); }
+.report-card:hover { border-color: #D6A7A4; box-shadow: 0 4px 12px rgba(92, 10, 14, .12); }
 .report-card:focus-visible { outline: 3px solid var(--acp-primary); outline-offset: 2px; }
 
 .report-card.is-selected {
     border-color: var(--acp-primary);
     background: var(--acp-primary-soft);
-    box-shadow: inset 4px 0 0 var(--acp-brand), 0 4px 12px rgba(36, 71, 83, .12);
+    box-shadow: inset 4px 0 0 var(--acp-brand), 0 4px 12px rgba(92, 10, 14, .12);
 }
 
 .report-card-icon {
@@ -1288,7 +1333,7 @@ a.kpi-card:hover {
 .report-card-text span { font-size: .82rem; color: var(--acp-muted); }
 .report-card-check { position: absolute; top: .5rem; right: .6rem; color: var(--acp-primary); }
 
-.report-summary > div.is-main { background: var(--acp-primary-soft); border-color: #C4DAE1; }
+.report-summary > div.is-main { background: var(--acp-primary-soft); border-color: #E8CBC8; }
 .report-table th { white-space: nowrap; font-size: .85rem; }
 .report-table td { font-size: .88rem; }
 
