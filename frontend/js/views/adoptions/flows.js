@@ -3,21 +3,30 @@
 //
 //   Adoptante  → INSERT/UPDATE adoptante (RUT normalizado)
 //   Adopción   → RPC registrar_adopcion (cierra hogar activo, estado Adoptado)
+//                + cuestionario .docx opcional: rellena el adoptante y se
+//                  guarda en Drive como documento de la adopción
 //   Seguimiento→ RPC registrar_seguimiento (medio_contacto exacto)
 //   Devolución → RPC registrar_devolucion (adopción Devuelto + nueva situación)
 //
-// Sin cuestionarios, postulaciones ni puntajes (fuera del MVP).
+// Del cuestionario solo se usan los datos personales: sus respuestas no
+// se guardan ni se evalúan (postulaciones y puntajes están fuera del MVP).
 // ============================================================
 
 import {
     createAdopter, getActiveStay, registerAdoption, registerFollowUp, registerReturn, updateAdopter,
 } from '../../api/adoptions.js';
+import { loadCatalog } from '../../api/catalogs.js';
+import { uploadFile } from '../../api/files.js';
+import { docxTables, readDocxXml } from '../../core/docx.js';
+import { AppError, reportError } from '../../core/errors.js';
 import { bindForm } from '../../core/forms.js';
 import { emptyToNull, formatDate, todayISO } from '../../core/format.js';
 import { html, openModal, options, render, toast } from '../../core/ui.js';
 import { animalName } from '../animals/logic.js';
+import { SUGGESTED_CATEGORY } from '../files/logic.js';
 import {
-    MEDIOS_CONTACTO, collectAdopter, returnStateOptions, validateAdopter, validateAdoption, validateFollowUp, validateReturn,
+    EDAD_MAX, EDAD_MIN, FORM_FIELD_LABELS, MEDIOS_CONTACTO, adopterUpdates, collectAdopter, findAdopterByRut,
+    parseAdoptionForm, returnStateOptions, validateAdopter, validateAdoption, validateFollowUp, validateReturn,
 } from './logic.js';
 
 const req = html`<span class="text-danger" aria-hidden="true">*</span>`;
@@ -37,12 +46,17 @@ function reuse(modal, title, body) {
 // Adoptante (crear / editar)
 // ------------------------------------------------------------
 
-export function openAdopterForm({ adopter = null, existing = [], onSaved, modal = null, onCancel = null }) {
-    const a = adopter ?? {};
+// prefill: datos leídos del cuestionario (reemplazan a los registrados cuando no son nulos).
+// notice: aviso sobre el origen de los datos, visible sobre el formulario.
+export function openAdopterForm({ adopter = null, existing = [], onSaved, modal = null, onCancel = null, prefill = null, notice = null }) {
+    const a = { ...(adopter ?? {}) };
+    Object.entries(prefill ?? {}).forEach(([k, v]) => { if (v !== null && v !== undefined) a[k] = v; });
     const title = adopter ? 'Editar adoptante' : 'Nuevo adoptante';
     const body = html`
         <form id="adopterForm" novalidate>
             <div data-form-error hidden></div>
+            ${notice ? html`<div class="alert alert-info d-flex gap-2 align-items-start" role="status">
+                <i class="bi bi-file-earmark-word" aria-hidden="true"></i><div>${notice}</div></div>` : ''}
             <div class="row g-3">
                 <div class="col-md-7">
                     <label class="form-label" for="adNombre">Nombre completo ${req}</label>
@@ -66,6 +80,16 @@ export function openAdopterForm({ adopter = null, existing = [], onSaved, modal 
                     <label class="form-label" for="adDir">Dirección</label>
                     <textarea class="form-control" id="adDir" name="direccion" rows="2">${a.direccion ?? ''}</textarea>
                 </div>
+                <div class="col-md-3">
+                    <label class="form-label" for="adEdad">Edad</label>
+                    <input class="form-control" id="adEdad" name="edad" type="number" min="${EDAD_MIN}" max="${EDAD_MAX}" step="1"
+                           inputmode="numeric" value="${a.edad ?? ''}" aria-describedby="adEdadHelp">
+                    <div class="form-text" id="adEdadHelp">Mayor de edad.</div>
+                </div>
+                <div class="col-md-9">
+                    <label class="form-label" for="adOcupacion">Ocupación</label>
+                    <input class="form-control" id="adOcupacion" name="ocupacion" maxlength="100" value="${a.ocupacion ?? ''}">
+                </div>
                 <div class="col-12">
                     <label class="form-label" for="adObs">Observaciones</label>
                     <textarea class="form-control" id="adObs" name="observaciones" rows="2">${a.observaciones ?? ''}</textarea>
@@ -73,7 +97,7 @@ export function openAdopterForm({ adopter = null, existing = [], onSaved, modal 
             </div>
             ${onCancel ? html`<div class="modal-actions">
                 <button type="button" class="btn btn-outline-primary" id="adopterBack"><i class="bi bi-arrow-left" aria-hidden="true"></i> Volver</button>
-                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg" aria-hidden="true"></i> Registrar y continuar</button></div>`
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg" aria-hidden="true"></i> ${adopter ? 'Guardar y continuar' : 'Registrar y continuar'}</button></div>`
                 : actions(adopter ? 'Guardar cambios' : 'Registrar adoptante', 'bi-check-lg')}
         </form>`;
 
@@ -129,6 +153,14 @@ export function openAdoptionForm({ animal = null, animals = [], adopters, onSave
                 <div class="form-text" id="aoStay" aria-live="polite"></div>
             </div>
             <div class="mb-3">
+                <label class="form-label" for="aoCuestionario">Cuestionario de adopción (Word)</label>
+                <input class="form-control" type="file" id="aoCuestionario" aria-describedby="aoCuestionarioHelp"
+                       accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+                <div class="form-text" id="aoCuestionarioHelp">Opcional. Completa los datos del adoptante desde el documento
+                    (.docx) y lo guarda en Drive como documento de la adopción.</div>
+                <div id="aoCuestionarioInfo" class="mt-2" aria-live="polite"></div>
+            </div>
+            <div class="mb-3">
                 <label class="form-label" for="aoAdoptante">Adoptante ${req}</label>
                 <select class="form-select" id="aoAdoptante" name="adoptante" required>
                     ${options(adopters.map((a) => ({ value: a.id_adoptante, label: `${a.nombre} — ${a.rut}` })), preset.idAdoptante ?? '')}
@@ -174,19 +206,93 @@ export function openAdoptionForm({ animal = null, animals = [], adopters, onSave
     if (!animal) form.animal.addEventListener('change', () => loadStay(form.animal.value));
     loadStay(animal?.id_animal ?? form.animal.value);
 
-    // Crear un adoptante sin perder lo ya escrito: se guardan los valores y se restauran al volver.
-    m.body.querySelector('#aoNuevoAdoptante').addEventListener('click', () => {
+    // Cuestionario ya leído (se conserva al pasar al formulario del adoptante y volver).
+    let archivo = preset.archivo ?? null;
+    const fileInput = m.body.querySelector('#aoCuestionario');
+    const fileInfo = m.body.querySelector('#aoCuestionarioInfo');
+
+    // Pasar al formulario del adoptante sin perder lo ya escrito: se guardan los valores y se restauran al volver.
+    const toAdopterForm = ({ adopter = null, prefill = null, notice = null } = {}) => {
         const kept = {
             idAnimal: form.animal.value,
             fecha: form.fecha.value,
             observaciones: form.observaciones.value,
+            archivo,
         };
         openAdopterForm({
             modal: m,
+            adopter,
+            prefill,
+            notice,
             existing: adopters,
             onCancel: () => openAdoptionForm({ animal, animals, adopters, onSaved, preset: { ...kept, idAdoptante: form.adoptante.value }, modal: m }),
-            onSaved: (nuevo) => openAdoptionForm({ animal, animals, adopters: [...adopters, nuevo], onSaved, preset: { ...kept, idAdoptante: nuevo.id_adoptante }, modal: m }),
+            onSaved: (saved) => openAdoptionForm({
+                animal, animals, onSaved, modal: m,
+                adopters: adopter ? adopters.map((x) => (x.id_adoptante === saved.id_adoptante ? saved : x)) : [...adopters, saved],
+                preset: { ...kept, idAdoptante: saved.id_adoptante },
+            }),
         });
+    };
+    m.body.querySelector('#aoNuevoAdoptante').addEventListener('click', () => toAdopterForm());
+
+    const showAttached = (extra = '') => {
+        render(fileInfo, archivo ? html`
+            <div class="alert alert-success py-2 mb-0">
+                <div class="d-flex align-items-start gap-2">
+                    <i class="bi bi-paperclip" aria-hidden="true"></i>
+                    <div class="flex-grow-1 text-break">Se guardará en Drive: <strong>${archivo.name}</strong>${extra}</div>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="aoQuitarCuestionario">Quitar</button>
+                </div>
+            </div>` : '');
+        fileInfo.querySelector('#aoQuitarCuestionario')?.addEventListener('click', () => {
+            archivo = null;
+            fileInput.value = '';
+            showAttached();
+        });
+    };
+    showAttached();
+
+    fileInput.addEventListener('change', async () => {
+        const file = fileInput.files?.[0];
+        if (!file) return;
+        render(fileInfo, html`<div class="small text-secondary"><span class="spinner-border spinner-border-sm" aria-hidden="true"></span> Leyendo el cuestionario…</div>`);
+        let parsed;
+        try {
+            if (!/\.docx$/i.test(file.name)) throw new AppError('Selecciona el cuestionario en formato Word (.docx).');
+            parsed = parseAdoptionForm(docxTables(await readDocxXml(file)));
+            if (!parsed || parsed.found.length === 0) {
+                throw new AppError('No se encontraron los datos del adoptante en el documento. Revisa que sea el cuestionario de adopción de la Fundación.');
+            }
+        } catch (err) {
+            archivo = null;
+            fileInput.value = '';
+            const text = err instanceof AppError ? err.message : await reportError(err, 'Cuestionario de adopción');
+            render(fileInfo, html`<div class="alert alert-danger py-2 mb-0" role="alert">${text}</div>`);
+            return;
+        }
+        archivo = file;
+        const missing = parsed.missing.map((k) => FORM_FIELD_LABELS[k]).join(', ');
+        const registered = findAdopterByRut(adopters, parsed.data.rut);
+        if (!registered) {
+            // Adoptante nuevo: se abre su formulario con los datos leídos, para revisarlos antes de guardar.
+            toAdopterForm({
+                prefill: parsed.data,
+                notice: html`Datos leídos del cuestionario <strong>${file.name}</strong>. Revísalos antes de registrar.
+                    ${missing ? html`<br>No se encontraron: ${missing}.` : ''}`,
+            });
+            return;
+        }
+        // Adoptante ya registrado: se reconoce por el RUT y se selecciona.
+        form.adoptante.value = registered.id_adoptante;
+        const { fields } = adopterUpdates(registered, parsed.data);
+        showAttached(html`<br>Adoptante reconocido por su RUT: <strong>${registered.nombre}</strong>.
+            ${fields.length ? html`<br>El cuestionario trae datos distintos en: ${fields.map((k) => FORM_FIELD_LABELS[k]).join(', ')}.
+                <button type="button" class="btn btn-link btn-sm p-0 align-baseline" id="aoActualizarAdoptante">Revisar y actualizar sus datos</button>` : ''}`);
+        fileInfo.querySelector('#aoActualizarAdoptante')?.addEventListener('click', () => toAdopterForm({
+            adopter: registered,
+            prefill: parsed.data,
+            notice: html`Datos del adoptante registrado, actualizados con el cuestionario <strong>${file.name}</strong>. Revísalos antes de guardar.`,
+        }));
     });
 
     bindForm(form, {
@@ -200,15 +306,42 @@ export function openAdoptionForm({ animal = null, animals = [], adopters, onSave
         }),
         validate: (v) => validateAdoption(v, { fechaIngresoHogar }),
         submit: async (v) => {
+            const cuestionario = archivo;
             m.setBusy(true);
-            // La RPC hace todo en una transacción: adopción, cierre de hogar y cambio de estado del animal.
-            try { return await registerAdoption(v); } finally { m.setBusy(false); }
+            try {
+                // La RPC hace todo en una transacción: adopción, cierre de hogar y cambio de estado del animal.
+                const idAdopcion = await registerAdoption(v);
+                // Operación secundaria: si falla, la adopción ya quedó registrada y no debe repetirse.
+                let uploadError = null;
+                if (cuestionario) {
+                    try { await uploadQuestionnaire(idAdopcion, cuestionario, v.fecha); } catch (err) { uploadError = err; }
+                }
+                return { idAdopcion, cuestionario, uploadError };
+            } finally { m.setBusy(false); }
         },
-        onSuccess: async (idAdopcion) => {
+        onSuccess: async ({ idAdopcion, cuestionario, uploadError }) => {
             m.close();
-            toast('Adopción registrada.', 'success');
+            if (uploadError) {
+                const detail = await reportError(uploadError, 'Cuestionario de adopción');
+                toast(`La adopción quedó registrada, pero no fue posible guardar el cuestionario en Drive (${detail}). Súbelo desde los documentos de la adopción.`, 'warning', { delay: 12000 });
+            } else {
+                toast(cuestionario ? 'Adopción registrada y cuestionario guardado en Drive.' : 'Adopción registrada.', 'success');
+            }
             await onSaved?.(idAdopcion);
         },
+    });
+}
+
+// Guarda el cuestionario en Drive como documento de la adopción (Edge Function subir-archivo-drive).
+async function uploadQuestionnaire(idAdopcion, archivo, fecha) {
+    const categorias = await loadCatalog('categoria_archivo');
+    const categoria = categorias.find((c) => c.activo && c.nombre === SUGGESTED_CATEGORY.adopcion);
+    if (!categoria) throw new AppError(`la categoría "${SUGGESTED_CATEGORY.adopcion}" no está activa`);
+    await uploadFile('adopcion', idAdopcion, {
+        archivo,
+        idCategoria: categoria.id,
+        fechaDocumento: fecha,
+        descripcion: 'Cuestionario de adopción',
     });
 }
 

@@ -61,3 +61,34 @@ test('Devolución: excluye Adoptado y En hogar temporal; fecha válida (PA-DEV-0
     assert.ok(A.validateReturn({ fecha: '2026-09-01', idNuevoEstado: 4 }, '2026-09-23').fecha);
     assert.ok(A.validateReturn({ fecha: '2026-09-23' }, '2026-09-23').estado);
 });
+
+test('Adoptante: edad opcional entre 18 y 110 y ocupación de hasta 100 caracteres', () => {
+    const base = { nombre: 'QA', rut: '12345678-5' };
+    const ok = A.collectAdopter(formData({ ...base, edad: '34', ocupacion: ' Independiente ' }));
+    assert.equal(ok.edad, 34);
+    assert.equal(ok.ocupacion, 'Independiente');
+    assert.deepEqual(A.validateAdopter(ok), {});
+    assert.equal(A.collectAdopter(formData({ ...base, edad: '' })).edad, null);
+    for (const edad of ['17', '111', '30.5', 'abc']) {
+        assert.ok(A.validateAdopter(A.collectAdopter(formData({ ...base, edad }))).edad, `edad ${edad} debería rechazarse`);
+    }
+    assert.deepEqual(A.validateAdopter(A.collectAdopter(formData({ ...base, edad: '18' }))), {});
+    assert.ok(A.validateAdopter(A.collectAdopter(formData({ ...base, ocupacion: 'x'.repeat(101) }))).ocupacion);
+});
+
+test('Cuestionario: reconoce al adoptante registrado por su RUT, en cualquier formato', () => {
+    const adopters = [{ id_adoptante: 3, nombre: 'Adoptante Prueba QA', rut: '1-9' }, { id_adoptante: 4, nombre: 'Dos', rut: '11111111-1' }];
+    assert.equal(A.findAdopterByRut(adopters, '11.111.111-1')?.id_adoptante, 4);
+    assert.equal(A.findAdopterByRut(adopters, '12.345.678-5'), null);
+    assert.equal(A.findAdopterByRut(adopters, null), null);
+    assert.equal(A.findAdopterByRut(adopters, 'no es rut'), null);
+});
+
+test('Cuestionario: detecta datos distintos del adoptante registrado sin borrar los existentes', () => {
+    const registered = { id_adoptante: 4, nombre: 'Dos QA', rut: '11111111-1', telefono: '111', email: 'dos@qa.cl', edad: null, ocupacion: null };
+    const data = { nombre: 'dos qa', rut: '11111111-1', telefono: '222', email: null, direccion: null, edad: 40, ocupacion: 'Docente' };
+    const { fields, merged } = A.adopterUpdates(registered, data);
+    assert.deepEqual(fields, ['telefono', 'edad', 'ocupacion']); // el nombre solo cambia en mayúsculas
+    assert.equal(merged.email, 'dos@qa.cl'); // un dato vacío en el cuestionario no borra el registrado
+    assert.equal(merged.telefono, '222');
+});

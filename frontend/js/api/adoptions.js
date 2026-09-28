@@ -10,8 +10,8 @@
 
 import { supabase } from '../supabase.js';
 
-const ADOPTER_COLUMNS = 'id_adoptante, nombre, rut, telefono, email, direccion, observaciones';
-const ADOPTER_EDITABLE = ['nombre', 'rut', 'telefono', 'email', 'direccion', 'observaciones'];
+const ADOPTER_COLUMNS = 'id_adoptante, nombre, rut, telefono, email, direccion, edad, ocupacion, observaciones';
+const ADOPTER_EDITABLE = ['nombre', 'rut', 'telefono', 'email', 'direccion', 'edad', 'ocupacion', 'observaciones'];
 
 const ADOPTION_COLUMNS = `
     id_adopcion, id_animal, id_adoptante, fecha_adopcion, fecha_finalizacion, motivo_finalizacion, observaciones,

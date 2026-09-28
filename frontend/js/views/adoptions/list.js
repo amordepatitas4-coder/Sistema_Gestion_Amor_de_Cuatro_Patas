@@ -177,6 +177,8 @@ async function openAdopterDetail(adopter) {
                 <div class="info-block"><dt>Teléfono</dt><dd>${displayText(adopter.telefono)}</dd></div>
                 <div class="info-block"><dt>Correo</dt><dd class="text-break">${displayText(adopter.email)}</dd></div>
                 <div class="info-block"><dt>Dirección</dt><dd class="pre-line">${displayText(adopter.direccion)}</dd></div>
+                <div class="info-block"><dt>Edad</dt><dd>${adopter.edad ? `${adopter.edad} años` : displayText(null)}</dd></div>
+                <div class="info-block"><dt>Ocupación</dt><dd>${displayText(adopter.ocupacion)}</dd></div>
             </dl>
             ${adopter.observaciones ? html`<p class="pre-line small">${adopter.observaciones}</p>` : ''}
             <h3 class="h6 mt-3">Adopciones</h3>
