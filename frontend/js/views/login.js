@@ -77,6 +77,10 @@ export default {
                             <button type="button" class="btn btn-link btn-sm" id="backToLogin"><i class="bi bi-arrow-left" aria-hidden="true"></i> Volver a ingresar</button>
                         </div>
                     </section>
+
+                    <footer class="login-legal">
+                        <a href="privacidad.html">Política de privacidad</a> · <a href="condiciones.html">Condiciones de uso</a>
+                    </footer>
                 </section>
             </main>`);
 

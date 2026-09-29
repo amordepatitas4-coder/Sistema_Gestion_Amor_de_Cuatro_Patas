@@ -329,6 +329,72 @@ body {
     margin-bottom: 1.5rem;
 }
 
+.login-legal {
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--acp-line);
+    text-align: center;
+    font-size: .8rem;
+    color: var(--acp-muted);
+}
+
+.login-legal a { color: var(--acp-muted); }
+.login-legal a:hover { color: var(--acp-primary); }
+
+/* ------------------------------------------------------------
+   Páginas públicas: privacidad y condiciones de uso
+   ------------------------------------------------------------ */
+.legal-shell {
+    min-height: 100vh;
+    padding: 2rem 1rem;
+    background: var(--acp-bg);
+}
+
+.legal-card {
+    max-width: 760px;
+    margin: 0 auto;
+    background: var(--acp-surface);
+    border: 1px solid var(--acp-line);
+    border-radius: 18px;
+    box-shadow: var(--acp-shadow);
+    padding: 2rem 1.75rem;
+    line-height: 1.6;
+}
+
+.legal-head {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--acp-line);
+}
+
+.legal-logo { height: 110px; width: auto; }
+.legal-system { margin: .25rem 0 1rem; font-weight: 600; color: var(--acp-muted); }
+.legal-head h1 { font-size: 1.6rem; font-weight: 700; color: var(--acp-primary-dark); margin-bottom: .25rem; }
+.legal-date { color: var(--acp-muted); font-size: .9rem; margin: 0; }
+
+.legal-card h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--acp-primary-dark);
+    margin: 1.5rem 0 .5rem;
+}
+
+.legal-foot {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: .75rem;
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--acp-line);
+}
+
+@media (max-width: 575.98px) {
+    .legal-card { padding: 1.5rem 1.1rem; }
+    .legal-logo { height: 90px; }
+}
+
 /* ------------------------------------------------------------
    Layout autenticado
    ------------------------------------------------------------ */
