@@ -44,9 +44,38 @@ export function formatBytes(bytes) {
 // institucional: quedan como texto editable para completar.
 // ------------------------------------------------------------
 
-export const PROMPT_BASE = 'Redacta una publicación para redes sociales destinada a promover la adopción responsable de este animal. '
-    + 'Utiliza la información de su ficha, destacando su personalidad, características y situación actual. '
-    + 'Mantén un tono cercano, positivo y respetuoso. No inventes información que no se encuentre registrada.';
+// Prompt para una herramienta EXTERNA de generación de imágenes (ChatGPT, Gemini u otra):
+// pide un flyer con estructura e identidad visual fijas, para que las piezas sean coherentes entre sí.
+export const PROMPT_BASE = 'Diseña una imagen gráfica (flyer) para redes sociales que promueva la adopción responsable '
+    + 'del animal de la(s) fotografía(s) adjunta(s), para la Fundación Amor de Cuatro Patas, una fundación de rescate animal.';
+
+const PROMPT_DISENO = [
+    'Formato y estilo:',
+    '- Publicación cuadrada para redes sociales (1080 × 1080 px).',
+    '- Debe verse como una publicación institucional de una fundación de rescate: cálida, cercana, esperanzadora, amigable y profesional.',
+    '- Identidad visual de la Fundación: burdeo (#780205) como color estructural, fucsia (#FD054C) como acento, y blanco o tonos muy claros de fondo. Usa otros colores solo si son suaves y aportan.',
+    '- Composición limpia, con buena jerarquía visual y tipografías claras y legibles.',
+    '- Evita: exceso de colores, fondos recargados, exceso de texto, estilos infantiles exagerados y tipografías difíciles de leer.',
+    '',
+    'Fotografías:',
+    '- Usa la fotografía adjunta del animal como protagonista de la pieza.',
+    '- Si adjunto dos fotografías, usa una como principal y la otra como fotografía complementaria más pequeña.',
+    '- No inventes otro animal ni modifiques su aspecto físico (colores, pelaje, tamaño, rasgos). Solo puedes recortar, encuadrar o ajustar la iluminación.',
+    '',
+    'Estructura (de mayor a menor jerarquía):',
+    '1. El nombre del animal en grande: es el texto más destacado.',
+    '2. Un mensaje breve de adopción cerca del nombre, por ejemplo «BUSCA UNA FAMILIA» (puedes adaptarlo, con tono positivo y respetuoso).',
+    '3. La fotografía principal (y la secundaria, si existe).',
+    '4. Una ficha resumida con los datos indicados abajo (no es necesario mostrar la especie si es evidente en la foto).',
+    '5. Una presentación muy breve (1 a 3 frases) basada en su personalidad, características e historia, sin copiar textos largos.',
+    '6. Un llamado a la acción breve, por ejemplo «¿Quieres darle una oportunidad?».',
+    '7. El texto «Fundación Amor de Cuatro Patas» y un espacio reservado para incorporar después el logo oficial.',
+    '',
+    'Reglas:',
+    '- Usa solo la información indicada abajo; no inventes datos, características ni historia.',
+    '- No agregues teléfonos, correos, direcciones, redes sociales ni otros datos de contacto.',
+    '- Revisa que todos los textos de la imagen estén en español y bien escritos.',
+];
 
 export const CONTACT_PLACEHOLDER = '[Completar con el contacto oficial de la Fundación]';
 
@@ -111,24 +140,36 @@ export function buildDiffusionText(d) {
     return lines.filter((l) => l !== null).join('\n').replace(/\n{3,}/g, '\n\n');
 }
 
-/** Prompt estructurado y editable para usar en una herramienta externa. */
+// Valores que no aportan información y no deben llegar al flyer.
+const SIN_VALOR = ['no registrado', 'sin información', 'sin informacion', 'sin indicar', 'desconocido', 'null', 'undefined', '-', '—'];
+const hasValue = (v) => {
+    const t = String(v ?? '').trim();
+    return t !== '' && !SIN_VALOR.includes(t.toLowerCase());
+};
+
+/**
+ * Prompt estructurado y editable para generar un flyer en una herramienta externa de imágenes.
+ * Solo incluye los datos de la ficha que tienen valor: los vacíos o "sin información" se omiten
+ * para que el flyer no muestre textos como "No registrado".
+ */
 export function buildDiffusionPrompt(d) {
-    const field = (label, value) => `- ${label}: ${value ?? 'No registrado'}`;
+    const datos = [
+        ['Nombre', d.nombre],
+        ['Especie', d.especie],
+        ['Sexo', d.sexo],
+        d.edad ? ['Edad aproximada', d.edad] : ['Etapa de vida', d.rango],
+        ['Tamaño', d.tamano],
+        ['Esterilización', d.esterilizacion],
+        ['Personalidad', d.personalidad],
+        ['Características', d.caracteristicas],
+        ['Historia del rescate', d.historia],
+    ].filter(([, v]) => hasValue(v)).map(([label, v]) => `- ${label}: ${String(v).trim()}`);
     return [
         PROMPT_BASE,
         '',
-        'Información de la ficha:',
-        field('Nombre', d.nombre),
-        field('Especie', d.especie),
-        field('Sexo', d.sexo),
-        field('Edad aproximada', d.edad ?? d.rango),
-        field('Tamaño', d.tamano),
-        field('Esterilización', d.esterilizacion),
-        field('Personalidad', d.personalidad),
-        field('Características', d.caracteristicas),
-        field('Historia del rescate', d.historia),
+        ...PROMPT_DISENO,
         '',
-        `Cierra invitando a contactar a la Fundación Amor de Cuatro Patas (${CONTACT_PLACEHOLDER}).`,
-        'No incluyas datos personales de adoptantes, hogares temporales ni direcciones.',
+        'Información del animal:',
+        ...(datos.length ? datos : ['- (Sin datos registrados: usa solo la fotografía y el nombre de la Fundación.)']),
     ].join('\n');
 }

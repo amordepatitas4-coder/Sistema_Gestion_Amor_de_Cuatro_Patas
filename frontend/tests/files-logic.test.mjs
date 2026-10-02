@@ -44,11 +44,34 @@ test('Difusión: solo datos autorizados (PA-DIF-01/04)', () => {
     assert.ok(text.includes(D.CONTACT_PLACEHOLDER));
 });
 
-test('Difusión: prompt estructurado con el prompt base definido (PA-DIF-02)', () => {
+test('Difusión: prompt para generar un flyer con estructura e identidad fijas (PA-DIF-02)', () => {
     const prompt = D.buildDiffusionPrompt(D.diffusionData(animal));
     assert.ok(prompt.startsWith(D.PROMPT_BASE));
+    assert.match(prompt, /imagen gráfica \(flyer\)/);
+    assert.match(prompt, /#780205/);
+    assert.match(prompt, /#FD054C/);
+    assert.match(prompt, /dos fotografías/);
+    assert.match(prompt, /Fundación Amor de Cuatro Patas/);
+    assert.match(prompt, /no inventes datos/);
     assert.match(prompt, /- Personalidad: Juguetona/);
-    assert.match(prompt, /No inventes información/);
+    // La regla interna de exclusión ya no se muestra; tampoco se pide un contacto inventado.
+    assert.ok(!/adoptantes, hogares temporales/.test(prompt));
+    assert.ok(!prompt.includes(D.CONTACT_PLACEHOLDER));
+});
+
+test('Difusión: el prompt omite los datos vacíos o sin información', () => {
+    const vacio = D.diffusionData({ nombre: 'Flaco', sexo: 'Desconocido', estado_esterilizacion: 'Sin información', personalidad: '  ', especie: { nombre: 'Canino' } });
+    const prompt = D.buildDiffusionPrompt(vacio);
+    assert.match(prompt, /- Nombre: Flaco/);
+    assert.ok(!/No registrado|Sin información|Sin indicar|null|undefined/.test(prompt.split('Información del animal:')[1]));
+    for (const campo of ['Sexo', 'Esterilización', 'Personalidad', 'Tamaño', 'Edad aproximada', 'Etapa de vida']) {
+        assert.ok(!prompt.includes(`- ${campo}:`), `omite ${campo}`);
+    }
+    // Sin fecha de nacimiento se usa el rango etario como etapa de vida.
+    const rango = D.buildDiffusionPrompt(D.diffusionData({ nombre: 'Sol', rango: { nombre: 'Senior' } }));
+    assert.match(rango, /- Etapa de vida: Senior/);
+    // Datos escritos a mano como "Sin indicar" tampoco llegan al flyer.
+    assert.ok(!D.buildDiffusionPrompt({ nombre: 'X', caracteristicas: 'Sin indicar' }).includes('Características'));
 });
 
 test('Difusión: esterilización (solo lo que se sabe, concordando con el sexo)', () => {
@@ -62,7 +85,7 @@ test('Difusión: esterilización (solo lo que se sabe, concordando con el sexo)'
     assert.match(D.buildDiffusionPrompt(no), /- Esterilización: No esterilizado/);
     const sin = D.diffusionData({ ...animal, estado_esterilizacion: 'Sin información' });
     assert.equal(sin.esterilizacion, null);
-    assert.match(D.buildDiffusionPrompt(sin), /- Esterilización: No registrado/);
+    assert.ok(!D.buildDiffusionPrompt(sin).includes('Esterilización:'), 'sin información no se incluye');
 });
 
 test('Difusión: campos faltantes y sin nombre', () => {
